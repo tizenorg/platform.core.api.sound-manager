@@ -1,3 +1,11 @@
+capi-media-sound-manager (0.1.0-7) unstable; urgency=low
+
+  * add so version
+  * Git: slp-source.sec.samsung.net:slp/api/sound-manager
+  * Tag: capi-media-sound-manager_0.1.0-7
+
+ -- Seungkeun Lee <sngn.lee@samsung.com>  Tue, 14 Feb 2012 16:55:35 +0900
+
 capi-media-sound-manager (0.1.0-6) unstable; urgency=low
 
   * Update version
