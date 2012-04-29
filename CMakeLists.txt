@@ -25,6 +25,7 @@ SET(submodule "sound-manager")
 
 # for package file
 SET(dependents "mm-sound dlog capi-base-common mm-session")
+SET(pc_dependents "capi-base-common")
 
 # for deb
 SET(deb_dependents "libdlog-0 libmm-sound-0")
@@ -80,9 +81,8 @@ INSTALL(
         )
 
 SET(PC_NAME ${fw_name})
-SET(PC_REQUIRED ${dependents})
+SET(PC_REQUIRED ${pc_dependents})
 SET(PC_LDFLAGS -l${fw_name})
-SET(PC_CFLAGS -I\${includedir}/${service})
 
 CONFIGURE_FILE(
     ${fw_name}.pc.in

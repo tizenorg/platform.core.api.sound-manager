@@ -7,12 +7,12 @@ Build-Depends: debhelper (>= 5), libmm-sound-dev , capi-base-common-dev , dlog-d
 
 Package: capi-media-sound-manager
 Architecture: any
-Depends: ${shilbs:Depends}, ${misc:Depends} , libmm-sound-0, libmm-session-0
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: A Sound Manager library in Tizen Native API
 
 Package: capi-media-sound-manager-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, capi-media-sound-manager (= ${Source-Version}), dlog-dev, capi-base-common-dev, libmm-sound-dev, libmm-session-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}, capi-media-sound-manager (= ${Source-Version}), capi-base-common-dev
 Description: A Sound Manager library in Tizen Native API (DEV)
 
 Package: capi-media-sound-manager-dbg

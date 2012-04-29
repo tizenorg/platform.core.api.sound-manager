@@ -11,7 +11,7 @@
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
-* limitations under the License. 
+* limitations under the License.
 */
 
 
@@ -52,6 +52,19 @@ typedef enum
     SOUND_TYPE_CALL,            /**< Sound type for call */
 } sound_type_e;
 
+/**
+ * @brief Enumerations of volume key type
+ */
+typedef enum
+{
+    VOLUME_KEY_TYPE_NONE=-1,          /**< Volume key type for current played sound */
+    VOLUME_KEY_TYPE_SYSTEM=0,          /**< Volume key type for system sound */
+    VOLUME_KEY_TYPE_NOTIFICATION,    /**< Volume key type for notifications sound*/
+    VOLUME_KEY_TYPE_ALARM,           /**< Volume key type for alarm sound */
+    VOLUME_KEY_TYPE_RINGTONE,        /**< Volume key type for ringtones sound */
+    VOLUME_KEY_TYPE_MEDIA,           /**< Volume key type for media sound */
+    VOLUME_KEY_TYPE_CALL,            /**< Volume key type for call sound */
+} volume_key_type_e;
 
 /**
  * @brief Enumerations of sound route policy
@@ -251,22 +264,22 @@ void sound_manager_unset_route_policy_changed_cb(void);
 /**
  * @brief Gets the A2DP activation information.
  * @remarks If @a connected is @c true,  @a bt_name must be released with free() by you. If @a connected is @c false, @a bt_name is set to NULL.
- * @param[out] connected The Bluetooth A2DP connection status (@c true = connected, @c false = disconnected) 
+ * @param[out] connected The Bluetooth A2DP connection status (@c true = connected, @c false = disconnected)
  * @param[out] bt_name The Bluetooth A2DP connected device name
  * @return 0 on success, otherwise a negative error value.
  * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter 
- * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation  
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  */
 int sound_manager_get_a2dp_status(bool *connected, char **bt_name);
 
 
-/** 
+/**
  * @brief Sets the application's sound session type
  * @param[in] type The session type to set
  * @return 0 on success, otherwise a negative error value.
  * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter 
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
  */
 int sound_manager_set_session_type(sound_session_type_e type);
 
@@ -278,7 +291,7 @@ int sound_manager_set_session_type(sound_session_type_e type);
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
  * @post  sound_session_notify_cb() will be invoked
- * @see sound_manager_unset_session_notify_cb() 
+ * @see sound_manager_unset_session_notify_cb()
  * @see sound_session_notify_cb()
  */
 int sound_manager_set_session_notify_cb(sound_session_notify_cb callback, void *user_data);
@@ -289,6 +302,14 @@ int sound_manager_set_session_notify_cb(sound_session_notify_cb callback, void *
  */
 void sound_manager_unset_session_notify_cb(void);
 
+/**
+ * @brief Sets the volume key type
+ * @param[in] type The volume key type to set
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ */
+int sound_manager_set_volume_key_type(volume_key_type_e type);
 
 
 /**

@@ -283,3 +283,16 @@ void sound_manager_unset_session_notify_cb(void){
 	g_session_notify_cb_table.user_data  = NULL;
 }
 
+
+int sound_manager_set_volume_key_type(volume_key_type_e type){
+	if( type < VOLUME_KEY_TYPE_NONE || type > VOLUME_KEY_TYPE_CALL )
+		return __convert_sound_manager_error_code(__func__, SOUND_MANAGER_ERROR_INVALID_PARAMETER);
+	int ret;
+	if( type == VOLUME_KEY_TYPE_NONE )
+		ret = mm_sound_volume_primary_type_clear();
+	else
+		ret = mm_sound_volume_primary_type_set(type);
+
+	return __convert_sound_manager_error_code(__func__, ret);
+}
+
