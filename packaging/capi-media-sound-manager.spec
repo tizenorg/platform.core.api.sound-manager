@@ -5,6 +5,7 @@ Release:    8
 Group:      TO_BE/FILLED_IN
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
+Source1001: packaging/capi-media-sound-manager.manifest 
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(mm-sound)
@@ -29,6 +30,7 @@ A Sound Manager library in Tizen Native API (DEV)
 
 
 %build
+cp %{SOURCE1001} .
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 cmake . -DCMAKE_INSTALL_PREFIX=/usr -DFULLVER=%{version} -DMAJORVER=${MAJORVER}
 
@@ -45,9 +47,11 @@ rm -rf %{buildroot}
 
 
 %files
+%manifest capi-media-sound-manager.manifest
 %{_libdir}/libcapi-media-sound-manager.so.*
 
 %files devel
+%manifest capi-media-sound-manager.manifest
 %{_includedir}/media/sound_manager.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/libcapi-media-sound-manager.so
