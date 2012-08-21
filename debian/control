@@ -3,6 +3,7 @@ Source: capi-media-sound-manager
 Section: libs
 Priority: extra
 Maintainer: Seungkeun Lee <sngn.lee@samsung.com>, Kangho Hur<kagho.hur@samsung.com>
+Uploaders: Seungbae Shin <seungbae.shin@samsung.com>
 Build-Depends: debhelper (>= 5), libmm-sound-dev , capi-base-common-dev , dlog-dev, libmm-session-dev
 
 Package: capi-media-sound-manager

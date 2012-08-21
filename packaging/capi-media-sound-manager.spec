@@ -1,9 +1,10 @@
+#sbs-git:slp/api/sound-manager capi-media-sound-manager 0.1.0 6ac5ae741e8b8dc20b33fc82c3f74602b19732d4
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
-Version:    0.1.0
-Release:    8
+Version: 0.1.0
+Release:    13
 Group:      TO_BE/FILLED_IN
-License:    Apache-2.0
+License:    TO BE FILLED IN
 Source0:    %{name}-%{version}.tar.gz
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
@@ -14,7 +15,7 @@ Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
 %description
-A Sound Manager library in Tizen Native API
+A Sound Manager library in Tizen C API
 
 %package devel
 Summary:  Sound Manager library (Development)
@@ -22,7 +23,7 @@ Group:    TO_BE/FILLED_IN
 Requires: %{name} = %{version}-%{release}
 
 %description devel
-A Sound Manager library in Tizen Native API (DEV)
+A Sound Manager library in Tizen C API (DEV)
 
 %prep
 %setup -q

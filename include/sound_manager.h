@@ -111,6 +111,76 @@ typedef enum{
 	SOUND_SESSION_NOTIFY_RESUME, 		   /**< Resume : session interrupt of application has ended. */
 } sound_session_notify_e;
 
+/**
+ * @brief Enumerations of audio input device type.
+ */
+typedef enum{
+	SOUND_DEVICE_IN_MIC = 0x01, /**< Device builtin mic. */
+	SOUND_DEVICE_IN_WIRED_ACCESSORY = 0x02,  	/**< Wired input devices */
+	SOUND_DEVICE_IN_BT_SCO = 0x04,  	/**< Bluetooth SCO device */
+} sound_device_in_e;
+
+/**
+ * @brief Enumerations of audio output device type.
+ */
+typedef enum{
+	SOUND_DEVICE_OUT_SPEAKER = 0x01<<8, /**< Device builtin speaker */
+	SOUND_DEVICE_OUT_RECEIVER = 0x02<<8, /**< Device builtin receiver */
+	SOUND_DEVICE_OUT_WIRED_ACCESSORY = 0x04<<8,  	/**< Wired output devices such as headphone, headset, and so on. */
+	SOUND_DEVICE_OUT_BT_SCO = 0x08<<8, /**< Bluetooth SCO device */
+	SOUND_DEVICE_OUT_BT_A2DP = 0x10<<8,	/**< Bluetooth A2DP device */
+} sound_device_out_e;
+
+/**
+ * @brief Enumerations of route type.
+ */
+typedef enum{
+	SOUND_ROUTE_OUT_SPEAKER = SOUND_DEVICE_OUT_SPEAKER, /**< Routing audio output to builtin device such as internal speaker. */
+	SOUND_ROUTE_OUT_WIRED_ACCESSORY = SOUND_DEVICE_OUT_WIRED_ACCESSORY,/**< Routing audio output to wired accessory such as headphone, headset, and so on. */
+	SOUND_ROUTE_OUT_BLUETOOTH = SOUND_DEVICE_OUT_BT_A2DP, /**< Routing audio output to bluetooth A2DP. */
+	SOUND_ROUTE_IN_MIC = SOUND_DEVICE_IN_MIC, /**< Routing audio input to device builtin mic. */
+	SOUND_ROUTE_IN_WIRED_ACCESSORY = SOUND_DEVICE_IN_WIRED_ACCESSORY, /**< Routing audio input to wired accessory. */
+	SOUND_ROUTE_IN_MIC_OUT_RECEIVER = SOUND_DEVICE_IN_MIC |SOUND_DEVICE_OUT_RECEIVER, /**< Routing audio input to device builtin mic and routing audio output to builtin receiver*/
+	SOUND_ROUTE_IN_MIC_OUT_SPEAKER = SOUND_DEVICE_IN_MIC |SOUND_DEVICE_OUT_SPEAKER , /**< Routing audio input to device builtin mic and routing audio output to builtin speaker */
+	SOUND_ROUTE_IN_MIC_OUT_HEADPHONE = SOUND_DEVICE_IN_MIC | SOUND_DEVICE_OUT_WIRED_ACCESSORY,/**< Routing audio input to device builtin mic and routing audio output to headphone */
+	SOUND_ROUTE_INOUT_HEADSET = SOUND_DEVICE_IN_WIRED_ACCESSORY | SOUND_DEVICE_OUT_WIRED_ACCESSORY,	/**< Routing audio input and output to headset*/
+	SOUND_ROUTE_INOUT_BLUETOOTH = SOUND_DEVICE_IN_BT_SCO |SOUND_DEVICE_OUT_BT_SCO /**< Routing audio input and output to bluetooth SCO */
+} sound_route_e;
+
+/**
+ * @brief Enumerations of call session type
+ */
+typedef enum{
+	SOUND_SESSION_TYPE_CALL = 0,	/**< call type */
+	SOUND_SESSION_TYPE_VOIP,			/**<  voip type */
+} sound_call_session_type_e;
+
+/**
+ * @brief Enumerations of communication session type
+ */
+typedef enum{
+	SOUND_CALL_SESSION_MODE_VOICE = 0,		/**< normal voicecall mode */
+	SOUND_CALL_SESSION_MODE_RINGTONE,		/**< ringtone mode */
+	SOUND_CALL_SESSION_MODE_MEDIA,			/**< media on call mode */
+} sound_call_session_mode_e;
+
+/**
+ * @brief Enumerations of sound interrupted type
+ */
+typedef enum
+{
+		SOUND_INTERRUPTED_COMPLETED = 0, 				/**< Interrupt completed*/
+       SOUND_INTERRUPTED_BY_OTHER_APP, 				/**< Interrupted by another application*/
+       SOUND_INTERRUPTED_BY_CALL,						/**< Interrupted by incoming call*/
+       SOUND_INTERRUPTED_BY_EARJACK_UNPLUG,			/**< Interrupted by unplugging headphone*/
+       SOUND_INTERRUPTED_BY_RESOURCE_CONFLICT,		/**< Interrupted by resource conflict*/
+       SOUND_INTERRUPTED_BY_ALARM,					/**< Interrupted by alarm*/
+} sound_interrupted_code_e;
+
+/**
+ * @brief Sound call session handle type.
+ */
+typedef struct sound_call_session_s *sound_call_session_h;
 
 /**
  * @brief Called when the sound session notification has occured.
@@ -120,6 +190,16 @@ typedef enum{
  * @see sound_manager_set_session_notify_cb()
  */
 typedef void (*sound_session_notify_cb) (sound_session_notify_e notify, void *user_data);
+
+/**
+ * @brief Called when the playing sound was interrupted.
+ * @param[in]   code	The interrupted code
+ * @param[in]   user_data	The user data passed from the callback registration function
+ * @pre You should register this callback by sound_manager_set_interrupted_cb()
+ * @see sound_manager_set_interrupted_cb()
+ */
+typedef void(* sound_interrupted_cb)(sound_interrupted_code_e code, void *user_data);
+
 
 /**
  * @brief Called when the system volume has changed.
@@ -178,26 +258,6 @@ int sound_manager_set_volume(sound_type_e type, int volume);
 int sound_manager_get_volume(sound_type_e type, int *volume);
 
 /**
- * @brief Sets the application's sound route policy
- * @param[in]		route  The route policy to set
- * @return 0 on success, otherwise a negative error value
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @see sound_manager_get_route_policy()
- */
-int sound_manager_set_route_policy (sound_route_policy_e route);
-
-/**
- * @brief Gets the current application's route policy
- * @param[out]	route  The current route policy
- * @return 0 on success, otherwise a negative error value.
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @see sound_manager_set_route_policy()
- */
-int sound_manager_get_route_policy (sound_route_policy_e *route);
-
-/**
  * @brief Gets the current playing sound type
  * @param[out]		type The current sound type
  * @return 0 on success, otherwise a negative error value.
@@ -217,7 +277,7 @@ int sound_manager_get_current_sound_type(sound_type_e *type);
  * @return 0 on success, otherwise a negative error value.
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #SOUND_MANAGER_ERROR_NO_PLAYING_SOUND No playing sound 
+ * @retval #SOUND_MANAGER_ERROR_NO_PLAYING_SOUND No playing sound
  * @see sound_manager_get_current_sound_type()
  */
 int sound_manager_get_current_sound_device(sound_device_e *device);
@@ -240,26 +300,6 @@ int sound_manager_set_volume_changed_cb(sound_manager_volume_changed_cb callback
  * @see sound_manager_set_volume_changed_cb()
  */
 void sound_manager_unset_volume_changed_cb(void);
-
-/**
- * @brief Registers a callback function to be invoked when the route policy is changed.
- * @param[in]	callback	Callback function to indicate change in route policy 
- * @param[in]	user_data	The user data to be passed to the callback function
- * @return 0 on success, otherwise a negative error value.
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @post  sound_manager_route_policy_changed_cb() will be invoked
- * @see sound_manager_unset_route_policy_changed_cb()
- * @see sound_manager_route_policy_changed_cb()
- */
-int sound_manager_set_route_policy_changed_cb(sound_manager_route_policy_changed_cb callback, void *user_data);
-
-/**
- * @brief Unregisters the callback for sound route policy change
- * @see sound_manager_set_route_policy_changed_cb()
- */
-void sound_manager_unset_route_policy_changed_cb(void);
-
 
 /**
  * @brief Gets the A2DP activation information.
@@ -303,6 +343,27 @@ int sound_manager_set_session_notify_cb(sound_session_notify_cb callback, void *
 void sound_manager_unset_session_notify_cb(void);
 
 /**
+ * @brief Registers a callback function to be invoked when the playing sound was interrupted.
+ * @param[in]	callback	The interrupted callback function
+ * @param[in]	user_data	The user data to be passed to the callback function
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @post  sound_interrupted_cb() will be invoked
+ * @see sound_manager_unset_interrupted_cb()
+ * @see sound_interrupted_cb()
+ */
+int sound_manager_set_interrupted_cb(sound_interrupted_cb callback, void *user_data);
+
+/**
+ * @brief Unregisters the callback function which is called when the playing sound was interrupted
+ * @see sound_manager_set_interrupted_cb()
+ */
+void sound_manager_unset_interrupted_cb(void);
+
+
+
+/**
  * @brief Sets the volume key type
  * @param[in] type The volume key type to set
  * @return 0 on success, otherwise a negative error value.
@@ -311,10 +372,170 @@ void sound_manager_unset_session_notify_cb(void);
  */
 int sound_manager_set_volume_key_type(volume_key_type_e type);
 
+/**
+ * @brief Gets called iteratively to notify you of available route.
+ * @param[in]   route The available route
+ * @param[in]   user_data The user data passed from the foreach function
+ * @return @c true to continue with the next iteration of the loop, \n @c false to break out of the loop
+ * @pre  sound_manager_foreach_available_route() will invoke this callback.
+ * @see sound_manager_foreach_available_route()
+ */
+typedef bool(* sound_available_route_cb)(sound_route_e route, void *user_data);
+
+/**
+ * @brief Called when the available audio route is changed.
+ * @param[in]   route The audio route
+ * @param[in]   available The status of given route
+ * @param[in]   user_data The user data passed from the foreach function
+ * @pre  sound_manager_foreach_available_route() will invoke this callback.
+ * @see sound_manager_foreach_available_route()
+ */
+typedef void(* sound_available_route_changed_cb)(sound_route_e route, bool available, void *user_data);
+
+/**
+ * @brief Called when the audio route is changed.
+ * @param[in]   route The audio route
+ * @param[in]   user_data The user data passed from the callback registration function
+ * @pre  You should register this callback by sound_manager_set_active_device_changed_cb()
+ * @see sound_manager_set_active_device_changed_cb()
+ */
+typedef void(* sound_active_device_changed_cb)(sound_device_in_e in, sound_device_out_e out, void *user_data);
+
+/**
+ * @brief Retrieves all available audio routes by invoking a specific callback for each valid route.
+ * @param[in]	callback	The session notify callback function
+ * @param[in]	user_data	The user data to be passed to the callback function
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @post  sound_available_route_cb() will be invoked
+ * @see sound_available_route_cb()
+ */
+int sound_manager_foreach_available_route (sound_available_route_cb callback, void *user_data);
+
+/**
+ * @brief Changes the audio routes.
+ * @param[in] route The route to set
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see sound_manager_get_active_device()
+ */
+int sound_manager_set_active_route (sound_route_e route);
+
+/**
+ * @brief Changes the audio route.
+ * @param[out] in The current sound input device
+ * @param[out] in The current sound output device
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see sound_manager_set_active_route()
+ */
+int sound_manager_get_active_device (sound_device_in_e *in, sound_device_out_e *out);
+
+/**
+ * @brief Check if given audio route is available or not.
+ * @param[in] route The route to set
+ * @return 0 on success, otherwise a negative error value.
+ * @return @c true if the specified route is supported, \n else @c false
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ */
+bool sound_manager_is_route_available (sound_route_e route);
+
+/**
+ * @brief Registers a callback function to be invoked when the available status is changed.
+ * @param[in]	callback	The available status changed callback function
+ * @param[in]	user_data	The user data to be passed to the callback function
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @post  sound_available_route_changed_cb() will be invoked
+ * @see sound_manager_unset_available_route_changed_cb()
+ * @see sound_available_route_changed_cb()
+ */
+int sound_manager_set_available_route_changed_cb (sound_available_route_changed_cb callback, void *user_data);
+
+/**
+ * @brief Unregisters the callback function.
+ * @see sound_manager_set_available_route_changed_cb()
+ */
+void sound_manager_unset_available_route_changed_cb (void);
+
+/**
+ * @brief Registers a callback function to be invoked when the audio device is changed.
+ * @param[in]	callback	The session notify callback function
+ * @param[in]	user_data	The user data to be passed to the callback function
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @post  sound_active_device_changed_cb() will be invoked
+ * @see sound_manager_unset_active_device_changed_cb()
+ * @see sound_active_device_changed_cb()
+ */
+int sound_manager_set_active_device_changed_cb (sound_active_device_changed_cb callback, void *user_data);
+
+/**
+ * @brief Unregisters the callback function which is called when the route notification is occured.
+ * @see sound_manager_set_active_device_changed_cb()
+ */
+void sound_manager_unset_active_device_changed_cb (void);
+
+/**
+ * @brief Creates a call session handle.
+ * @remarks @a session must be released sound_manager_call_session_destroy() by you.
+ * @param[out]  session  A new handle to call session
+ * @retval #SOUND_MANAGER_ERROR_NONE Successful
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_OUT_OF_MEMORY Out of memory
+ * @see sound_manager_call_session_destroy()
+ */
+int sound_manager_call_session_create(sound_call_session_type_e type, sound_call_session_h *session);
+
+/**
+ * @brief Sets the call session mode.
+ *
+ * @param[in]   session The handle to call session
+ * @param[in]   mode  The call session mode
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Successful
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see sound_manager_call_session_get_mode()
+ */
+int sound_manager_call_session_set_mode(sound_call_session_h session, sound_call_session_mode_e mode);
+
+/**
+ * @brief Gets the call session mode.
+ *
+ * @param[in]   session The handle to call session
+ * @param[out]   mode  The call session mode
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Successful
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see sound_manager_call_session_set_mode()
+ */
+int  sound_manager_call_session_get_mode(sound_call_session_h session, sound_call_session_mode_e *mode);
+
+/**
+ * @brief Destroys the call session handle.
+ *
+ * @param[in]		session The handle to call session to be destroyed
+ * @return 0 on success, otherwise a negative error value.
+ * @retval #SOUND_MANAGER_ERROR_NONE Successful
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see sound_manager_call_session_create()
+ */
+int sound_manager_call_session_destroy(sound_call_session_h session);
 
 /**
  * @}
  */
+
+__attribute__ ((deprecated)) int sound_manager_set_route_policy (sound_route_policy_e route);
+__attribute__ ((deprecated)) int sound_manager_get_route_policy (sound_route_policy_e *route);
+__attribute__ ((deprecated)) int sound_manager_set_route_policy_changed_cb(sound_manager_route_policy_changed_cb callback, void *user_data);
+__attribute__ ((deprecated)) void sound_manager_unset_route_policy_changed_cb(void);
+
 
 #ifdef __cplusplus
 }
