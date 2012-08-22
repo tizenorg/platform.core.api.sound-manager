@@ -1,4 +1,3 @@
-#sbs-git:slp/api/sound-manager capi-media-sound-manager 0.1.0 6ac5ae741e8b8dc20b33fc82c3f74602b19732d4
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
 Version: 0.1.0
