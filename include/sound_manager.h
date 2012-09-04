@@ -67,24 +67,6 @@ typedef enum
 } volume_key_type_e;
 
 /**
- * @brief Enumerations of sound route policy
- */
-typedef enum {
-    SOUND_ROUTE_DEFAULT,        /**< Audio device priority: 1. bluetooth headset, 2. wired headset 3. built-in speaker and microphone. */
-    SOUND_ROUTE_IGNORE_A2DP,    /**< Audio device priority: 1. wired headset, 2. built-in speaker and microphone. */
-    SOUND_ROUTE_HANDSET_ONLY    /**< Use only built-in speaker and microphone */
-} sound_route_policy_e;
-
-/**
- * @brief Enumerations of sound device
- */
-typedef enum {
-    SOUND_DEVICE_NONE,          /**< Abnormal case */
-    SOUND_DEVICE_HANDSET,       /**< Speaker, Wired headset, Wired earpiece */
-    SOUND_DEVICE_BLUETOOTH      /**< Bluetooth */
-} sound_device_e;
-
-/**
  * @brief error codes for sound manager
  */
 typedef enum{
@@ -151,17 +133,19 @@ typedef enum{
  * @brief Enumerations of call session type
  */
 typedef enum{
-	SOUND_SESSION_TYPE_CALL = 0,	/**< call type */
-	SOUND_SESSION_TYPE_VOIP,			/**<  voip type */
+	SOUND_CALL_SESSION_TYPE_CALL = 0,	/**< call type */
+	SOUND_CALL_SESSION_TYPE_VOIP = 1,			/**<  voip type */
+	SOUND_SESSION_TYPE_CALL = 0,
+	SOUND_SESSION_TYPE_VOIP = 1,
 } sound_call_session_type_e;
 
 /**
  * @brief Enumerations of communication session type
  */
 typedef enum{
-	SOUND_CALL_SESSION_MODE_VOICE = 0,		/**< normal voicecall mode */
+	SOUND_CALL_SESSION_MODE_VOICE = 0,		/**< normal talking mode */
 	SOUND_CALL_SESSION_MODE_RINGTONE,		/**< ringtone mode */
-	SOUND_CALL_SESSION_MODE_MEDIA,			/**< media on call mode */
+	SOUND_CALL_SESSION_MODE_MEDIA,			/**< notification sound in call*/
 } sound_call_session_mode_e;
 
 /**
@@ -213,16 +197,6 @@ typedef void(* sound_interrupted_cb)(sound_interrupted_code_e code, void *user_d
 typedef void (*sound_manager_volume_changed_cb)(sound_type_e type, unsigned int volume, void *user_data);
 
 /**
- * @brief Called when the sound route policy has changes.
- * @param[in]   route The new sound route policy
- * @param[in]   user_data The user data passed from the callback registration function
- * @pre sound_manager_set_route_policy() will invoke this callback if you register it using sound_manager_set_route_policy_changed_cb()
- * @see sound_manager_set_route_policy_changed_cb()
- * @see sound_manager_unset_route_policy_changed_cb()
- */
-typedef void (*sound_manager_route_policy_changed_cb)(sound_route_policy_e route, void *user_data);
-
-/**
  * @brief Gets the maximum volume level supported for a particular sound type
  * @param[in]		type The sound type
  * @param[out]	max	The maximum volume level
@@ -264,23 +238,11 @@ int sound_manager_get_volume(sound_type_e type, int *volume);
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #SOUND_MANAGER_ERROR_NO_PLAYING_SOUND No playing sound
- * @see sound_manager_get_current_sound_device()
  * @see player_set_sound_type()
  * @see audio_out_create()
  * @see wav_player_start()
  */
 int sound_manager_get_current_sound_type(sound_type_e *type);
-
-/**
- * @brief Gets the current device type
- * @param[out]	device The current sound device
- * @return 0 on success, otherwise a negative error value.
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #SOUND_MANAGER_ERROR_NO_PLAYING_SOUND No playing sound
- * @see sound_manager_get_current_sound_type()
- */
-int sound_manager_get_current_sound_device(sound_device_e *device);
 
 /**
  * @brief Registers a callback function to be invoked when the volume level is changed.
@@ -530,12 +492,6 @@ int sound_manager_call_session_destroy(sound_call_session_h session);
 /**
  * @}
  */
-
-__attribute__ ((deprecated)) int sound_manager_set_route_policy (sound_route_policy_e route);
-__attribute__ ((deprecated)) int sound_manager_get_route_policy (sound_route_policy_e *route);
-__attribute__ ((deprecated)) int sound_manager_set_route_policy_changed_cb(sound_manager_route_policy_changed_cb callback, void *user_data);
-__attribute__ ((deprecated)) void sound_manager_unset_route_policy_changed_cb(void);
-
 
 #ifdef __cplusplus
 }

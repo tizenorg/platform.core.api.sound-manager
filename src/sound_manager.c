@@ -37,11 +37,6 @@ typedef struct {
 }_changed_volume_info_s;
 
 typedef struct {
-	void *user_data;
-	sound_manager_route_policy_changed_cb user_cb;
-}_changed_policy_info_s;
-
-typedef struct {
 	int is_registered;
 	void *user_data;
 	sound_session_notify_cb user_cb;
@@ -60,7 +55,6 @@ typedef struct {
 }_changed_active_device_info_s;
 
 static _changed_volume_info_s g_volume_changed_cb_table;
-static _changed_policy_info_s g_policy_changed_cb_table;
 static _session_notify_info_s g_session_notify_cb_table = {0, NULL, NULL, NULL, NULL};
 
 static void __volume_changed_cb(void *user_data)
@@ -73,18 +67,13 @@ static void __volume_changed_cb(void *user_data)
 		(g_volume_changed_cb_table.user_cb)(type, new_volume, g_volume_changed_cb_table.user_data);
 }
 
-static void __policy_changed_cb(void *user_data,  system_audio_route_t policy){
-	if( g_policy_changed_cb_table.user_cb)
-		g_policy_changed_cb_table.user_cb(policy, g_policy_changed_cb_table.user_data);
-}
-
 static void __session_notify_cb(session_msg_t msg, session_event_t event, void *user_data){
 	if(g_session_notify_cb_table.user_cb){
 		g_session_notify_cb_table.user_cb(msg, g_session_notify_cb_table.user_data);
 	}
 	if( g_session_notify_cb_table.interrupted_cb ){
 		sound_interrupted_code_e e = SOUND_INTERRUPTED_COMPLETED;
-		if( msg == MM_SESSION_MSG_STOP )
+		if( msg == MM_SESSION_MSG_RESUME )
 			e = SOUND_INTERRUPTED_COMPLETED;
 		else{
 			switch(event){
@@ -188,27 +177,6 @@ int sound_manager_get_volume(sound_type_e type, int *volume)
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_set_route_policy (sound_route_policy_e route)
-{
-	if( route < 0 || route > SOUND_ROUTE_HANDSET_ONLY)
-		return __convert_sound_manager_error_code(__func__, SOUND_MANAGER_ERROR_INVALID_PARAMETER);
-
-	int ret;
-	ret = mm_sound_route_set_system_policy(route);
-
-	return __convert_sound_manager_error_code(__func__, ret);
-}
-
-int sound_manager_get_route_policy (sound_route_policy_e *route)
-{
-	if( route == NULL)
-		return __convert_sound_manager_error_code(__func__, SOUND_MANAGER_ERROR_INVALID_PARAMETER);
-	int ret;
-	ret= mm_sound_route_get_system_policy((system_audio_route_t *)route);
-	
-	return __convert_sound_manager_error_code(__func__, ret);
-}
-
 int sound_manager_get_current_sound_type(sound_type_e *type)
 {
 	if(type == NULL)
@@ -216,15 +184,6 @@ int sound_manager_get_current_sound_type(sound_type_e *type)
 	int ret;
 	ret = mm_sound_volume_get_current_playing_type((volume_type_t *)type);
 	
-	return __convert_sound_manager_error_code(__func__, ret);
-}
-
-int sound_manager_get_current_sound_device(sound_device_e *device)
-{
-	if( device == NULL)
-		return __convert_sound_manager_error_code(__func__, SOUND_MANAGER_ERROR_INVALID_PARAMETER);
-	int ret;
-	ret = mm_sound_route_get_playing_device((system_audio_route_device_t*)device);
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -251,23 +210,6 @@ void sound_manager_unset_volume_changed_cb(void)
 	}
 	g_volume_changed_cb_table.user_cb = NULL;
 	g_volume_changed_cb_table.user_data = NULL;	
-}
-
-int sound_manager_set_route_policy_changed_cb(sound_manager_route_policy_changed_cb callback, void* user_data)
-{
-	if( callback == NULL)
-		return __convert_sound_manager_error_code(__func__, SOUND_MANAGER_ERROR_INVALID_PARAMETER);
-	g_policy_changed_cb_table.user_cb = callback;
-	g_policy_changed_cb_table.user_data = user_data;
-	mm_sound_route_add_change_callback(__policy_changed_cb, user_data);
-	return 0;
-}
-
-void sound_manager_unset_route_policy_changed_cb(void)
-{
-	mm_sound_route_remove_change_callback();
-	g_policy_changed_cb_table.user_cb = NULL;
-	g_policy_changed_cb_table.user_data = NULL;
 }
 
 int sound_manager_get_a2dp_status(bool *connected , char** bt_name){

@@ -1,7 +1,7 @@
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
 Version: 0.1.0
-Release:    13
+Release:    14
 Group:      TO_BE/FILLED_IN
 License:    TO BE FILLED IN
 Source0:    %{name}-%{version}.tar.gz
