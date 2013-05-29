@@ -1,0 +1,8 @@
+Change-Id: I30f248bfeb7a89dcb60398e02f0f6055e82d0b4b
+Code-Review+2: Anas Nashif
+Verified+1: Baptiste DURAND <baptiste.durand@eurogiciel.fr>
+Submitted-by: Anas Nashif
+Submitted-at: Wed, 29 May 2013 06:03:57 -0700
+Reviewed-on: https://review.tizen.org/gerrit/3741
+Project: platform/core/api/sound-manager
+Branch: refs/heads/tizen
