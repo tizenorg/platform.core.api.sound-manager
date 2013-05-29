@@ -212,7 +212,7 @@ int sound_manager_set_volume_changed_cb(sound_manager_volume_changed_cb callback
 {
 	if(callback == NULL)
 		return __convert_sound_manager_error_code(__func__, SOUND_MANAGER_ERROR_INVALID_PARAMETER);
-	int i;
+	long i;
 	g_volume_changed_cb_table.user_cb = callback;
 	g_volume_changed_cb_table.user_data = user_data;
 	for(i = 0 ; i <= MAX_VOLUME_TYPE ; i++)
