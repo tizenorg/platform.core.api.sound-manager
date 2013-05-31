@@ -1,2 +1,5 @@
+* Fri May 31 2013 Anas Nashif <anas.nashif@intel.com> accepted/tizen/20130529.151412@30f248b
+- Remove placeholders and cleanup spec
+
 * Wed May 29 2013 Baptiste DURAND <baptiste.durand@eurogiciel.fr> accepted/tizen/20130520.100831@9618ac0
 - Fix x64 compatibility
