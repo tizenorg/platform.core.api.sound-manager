@@ -1,0 +1,8 @@
+Change-Id: Icf15d56b4f8a8255cb5861cc0228c2c3172d7ca0
+Code-Review+2: Ryan Ware <ware@linux.intel.com>
+Verified+1: Ryan Ware <ware@linux.intel.com>
+Submitted-by: Ryan Ware <ware@linux.intel.com>
+Submitted-at: Mon, 08 Jul 2013 10:08:27 -0700
+Reviewed-on: https://review.tizen.org/gerrit/4380
+Project: platform/core/api/sound-manager
+Branch: refs/heads/tizen
