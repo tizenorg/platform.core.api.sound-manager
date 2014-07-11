@@ -1,7 +1,7 @@
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
 Version:    0.1.1
-Release:    1
+Release:    0
 Group:      Multimedia/API
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
@@ -28,13 +28,10 @@ A Sound Manager library in Tizen C API (DEV)
 %setup -q
 cp %{SOURCE1001} .
 
-
 %build
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %cmake . -DFULLVER=%{version} -DMAJORVER=${MAJORVER}
-
-
-make %{?jobs:-j%jobs}
+%__make %{?jobs:-j%jobs}
 
 %install
 %make_install
@@ -43,17 +40,13 @@ make %{?jobs:-j%jobs}
 
 %postun -p /sbin/ldconfig
 
-
 %files
 %manifest %{name}.manifest
 %license LICENSE.APLv2
 %{_libdir}/libcapi-media-sound-manager.so.*
-%manifest capi-media-sound-manager.manifest
 
 %files devel
 %manifest %{name}.manifest
 %{_includedir}/media/sound_manager.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/libcapi-media-sound-manager.so
-
-
