@@ -1,16 +1,13 @@
 SET(fw_test "${fw_name}-test")
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(${fw_test} REQUIRED mm-sound glib-2.0 gthread-2.0 capi-media-player)
+pkg_check_modules(${fw_test} REQUIRED mm-sound glib-2.0 gthread-2.0)
 FOREACH(flag ${${fw_test}_CFLAGS})
     SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
     MESSAGE(${flag})
 ENDFOREACH()
 
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -Wall")
-
-#ADD_EXECUTABLE("system-sensor" system-sensor.c)
-#TARGET_LINK_LIBRARIES("system-sensor" ${fw_name} ${${fw_test}_LDFLAGS})
 
 aux_source_directory(. sources)
 FOREACH(src ${sources})
