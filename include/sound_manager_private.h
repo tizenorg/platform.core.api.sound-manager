@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2011 Samsung Electronics Co., Ltd All Rights Reserved
+* Copyright (c) 2015 Samsung Electronics Co., Ltd All Rights Reserved
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 extern "C"
 {
 #endif
+#define LOG_TAG "TIZEN_N_SOUND_MANAGER"
 
 #include <stdio.h>
 #include <limits.h>
@@ -28,16 +29,103 @@ extern "C"
 #include <malloc.h>
 #include <unistd.h>
 #include <dlog.h>
+#include <pulse/error.h>
+#include <pulse/proplist.h>
+#include <pulse/channelmap.h>
+#include <pulse/pulseaudio.h>
+
+#include <gio/gio.h>
+#include <glib.h>
 #include <mm_session.h>
 #include <mm_session_private.h>
 #include <mm_sound.h>
+#include <mm_sound_focus.h>
 #include <mm_sound_private.h>
 #include "sound_manager_internal.h"
 
-#define SOUND_SESSION_TYPE_DEFAULT SOUND_SESSION_TYPE_MEDIA
+#define _CHECK_CONDITION(condition,error,msg)     \
+    if(condition) {} else \
+    { LOGE("[%s] %s(0x%08x)",__FUNCTION__, msg,error); return error;}; \
 
-typedef enum
-{
+#define SM_INSTANCE_CHECK(handle)   \
+        _CHECK_CONDITION(handle != NULL, SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER")
+
+#define SM_NULL_ARG_CHECK(arg)      \
+        _CHECK_CONDITION(arg != NULL,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER")
+
+#define SM_STATE_CHECK(handle,expected_state)       \
+        _CHECK_CONDITION(handle->state == expected_state,SOUND_MANAGER_ERROR_INVALID_STATE,"SOUND_MANAGER_ERROR_INVALID_STATE")
+
+#define SM_RANGE_ARG_CHECK(arg, min, max)      \
+        _CHECK_CONDITION(arg <= max,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER") \
+        _CHECK_CONDITION(arg >= min,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER")
+
+#define SOUND_SESSION_TYPE_DEFAULT SOUND_SESSION_TYPE_MEDIA
+#define SOUND_STREAM_INFO_ARR_MAX 128
+#define SOUND_STREAM_TYPE_LEN 64
+#define SOUND_STREAM_DIRECTION_MAX 2
+#define SOUND_DEVICE_TYPE_LEN 64
+
+typedef enum _sound_stream_direction {
+	SOUND_STREAM_DIRECTION_OUTPUT = 1,
+	SOUND_STREAM_DIRECTION_INPUT
+} sound_stream_direction_e;
+
+/* it should be synchronized with pulseaudio's */
+typedef enum stream_route_type {
+	STREAM_ROUTE_TYPE_AUTO,     /* the policy of decision device(s) is automatic and it's routing path is particular to one device */
+	STREAM_ROUTE_TYPE_AUTO_ALL, /* the policy of decision device(s) is automatic and it's routing path can be several devices */
+	STREAM_ROUTE_TYPE_MANUAL,   /* the policy of decision device(s) is manual */
+} stream_route_type;
+#define AVAIL_DEVICES_MAX 16
+#define AVAIL_FRAMEWORKS_MAX 16
+#define ROUTE_OPTIONS_MAX 16
+
+typedef struct _stream_conf_info_s {
+	int priority;
+	int route_type;
+	gchar *avail_in_devices[AVAIL_DEVICES_MAX];
+	gchar *avail_out_devices[AVAIL_DEVICES_MAX];
+	gchar *avail_frameworks[AVAIL_FRAMEWORKS_MAX];
+} stream_conf_info_s;
+
+typedef struct _manual_route_info_s {
+	char *route_in_devices[AVAIL_DEVICES_MAX];
+	char *route_out_devices[AVAIL_DEVICES_MAX];
+	int route_in_devices_idx[AVAIL_DEVICES_MAX];
+	int route_out_devices_idx[AVAIL_DEVICES_MAX];
+} manual_route_info_s;
+
+typedef struct _sound_stream_info_s {
+	unsigned int index;
+	char stream_type[SOUND_STREAM_TYPE_LEN];
+	pa_threaded_mainloop *pa_mainloop;
+	pa_context *pa_context;
+	stream_conf_info_s stream_conf_info;
+	sound_stream_focus_mask_e acquired_focus;
+	sound_stream_focus_state_changed_cb user_cb;
+	void *user_data;
+	manual_route_info_s manual_route_info;
+	char *route_options[ROUTE_OPTIONS_MAX];
+} sound_stream_info_s;
+sound_stream_info_s *sound_stream_info_arr[SOUND_STREAM_INFO_ARR_MAX];
+
+typedef enum {
+	_VSTREAM_STATE_READY,
+	_VSTREAM_STATE_RUNNING,
+} _vstream_state;
+
+typedef struct _virtual_stream_info_s {
+	_vstream_state state;
+	char stream_type[SOUND_STREAM_TYPE_LEN];
+	pa_threaded_mainloop *pa_mainloop;
+	pa_context *pa_context;
+	pa_stream *pa_stream[SOUND_STREAM_DIRECTION_MAX];
+	pa_proplist *pa_proplist;
+	stream_conf_info_s *stream_conf_info;
+} virtual_sound_stream_info_s;
+
+typedef enum {
 	_SESSION_MODE_RINGTONE = 0,                /**< session mode(voip/call) for ringtone */
 	_SESSION_MODE_VOICE_WITH_BUILTIN_RECEIVER, /**< session mode(voip/call) for during call with built-in receiver */
 	_SESSION_MODE_VOICE_WITH_BUILTIN_SPEAKER,  /**< session mode(voip/call) for during call with built-in speaker */
@@ -58,6 +146,11 @@ typedef struct {
 
 typedef struct {
 	void *user_data;
+	sound_stream_focus_state_watch_cb user_cb;
+}_focus_watch_info_s;
+
+typedef struct {
+	void *user_data;
 	sound_device_connected_cb user_cb;
 }_device_connected_info_s;
 
@@ -66,13 +159,62 @@ typedef struct {
 	sound_device_information_changed_cb user_cb;
 }_device_changed_info_s;
 
-int __convert_sound_manager_error_code(const char *func, int code);
+#define SOUND_STRNCPY(dst,src,size,err) \
+do { \
+	if(src != NULL && dst != NULL && size > 0) { \
+		strncpy(dst,src,size); \
+		dst[size-1] = '\0'; \
+	} else if(dst == NULL) { \
+		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
+		err = MM_ERROR_SOUND_INTERNAL; \
+	} else if(size <= 0) { \
+		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
+		err = MM_ERROR_SOUND_INTERNAL; \
+	} else { \
+		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
+		err = MM_ERROR_SOUND_INTERNAL; \
+	} \
+} while(0)
 
-void __session_interrupt_cb(session_msg_t msg, session_event_t event, void *user_data);
+void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
-int __set_session_mode(_session_mode_e mode);
+void _focus_watch_callback (mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
-int __get_session_mode(_session_mode_e *mode);
+int __convert_sound_manager_error_code (const char *func, int code);
+
+int __find_empty_slot (int *index);
+
+int __convert_stream_type (sound_stream_type_e enum_type, char *stream_type);
+
+int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char *stream_type);
+
+int __convert_stream_type_to_change_reason (const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
+
+int __convert_device_type (sound_device_type_e device_type_enum, char *device_type);
+
+int __convert_device_type_to_enum (char *device_type, sound_device_type_e *device_type_enum);
+
+const char* __convert_api_name (native_api_e api_name);
+
+int __get_stream_conf_info (const char *stream_type, stream_conf_info_s *info);
+
+int __set_manual_route_info (unsigned int index, manual_route_info_s *info);
+
+int __set_route_options (unsigned int index, char **route_options);
+
+void _pa_context_state_cb (pa_context *c, void *userdata);
+
+void _pa_stream_state_cb (pa_stream *s, void * userdata);
+
+void _session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data);
+
+int __set_session_mode (_session_mode_e mode);
+
+int __get_session_mode (_session_mode_e *mode);
+
+int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_stream_focus_state_changed_cb callback, void *user_data);
+
+int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h);
 
 #ifdef __cplusplus
 }

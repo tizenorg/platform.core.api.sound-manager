@@ -1,6 +1,6 @@
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
-Version:    0.2.28
+Version:    0.3.0
 Release:    0
 Group:      Multimedia/API
 License:    Apache-2.0
@@ -12,6 +12,8 @@ BuildRequires:  pkgconfig(mm-sound)
 BuildRequires:  pkgconfig(mm-session)
 BuildRequires:  pkgconfig(capi-base-common)
 BuildRequires:  pkgconfig(vconf)
+BuildRequires:  pkgconfig(libpulse)
+BuildRequires:  pkgconfig(gio-2.0)
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires(post): libprivilege-control
