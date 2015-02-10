@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include <sound_manager.h>
+#include <sound_manager_internal.h>
 #include <pthread.h>
 #include <glib.h>
 //#include <dlfcn.h>
@@ -58,6 +59,23 @@ enum
 	CURRENT_STATUS_UNSET_DEVICE_CONNECTED_CB,
 	CURRENT_STATUS_SET_DEVICE_INFO_CHANGED_CB,
 	CURRENT_STATUS_UNSET_DEVICE_INFO_CHANGED_CB,
+	CURRENT_STATUS_CREATE_STREAM_INFO,
+	CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING,
+	CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING,
+	CURRENT_STATUS_APPLY_STREAM_ROUTING,
+	CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING,
+	CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING,
+	CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS,
+	CURRENT_STATUS_ACQUIRE_FOCUS,
+	CURRENT_STATUS_RELEASE_FOCUS,
+	CURRENT_STATUS_GET_ACQUIRED_FOCUS,
+	CURRENT_STATUS_DESTROY_STREAM_INFO,
+	CURRENT_STATUS_SET_FOCUS_WATCH_CB,
+	CURRENT_STATUS_UNSET_FOCUS_WATCH_CB,
+	CURRENT_STATUS_CREATE_VIRTUAL_STREAM,
+	CURRENT_STATUS_START_VIRTUAL_STREAM,
+	CURRENT_STATUS_STOP_VIRTUAL_STREAM,
+	CURRENT_STATUS_DESTROY_VIRTUAL_STREAM
 };
 
 
@@ -66,6 +84,34 @@ static int g_menu_state = CURRENT_STATUS_MAINMENU;
 GMainLoop* g_loop;
 sound_device_list_h g_device_list = NULL;
 sound_device_mask_e g_device_mask = SOUND_DEVICE_ALL_MASK;
+sound_stream_info_h g_stream_info_h = NULL;
+virtual_sound_stream_h g_vstream_h = NULL;
+
+void focus_callback (sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data) {
+	int ret = 0;
+	sound_stream_focus_state_e playback_focus_state;
+	sound_stream_focus_state_e recording_focus_state;
+	g_print("*** FOCUS callback is called, stream_info(%p) ***\n", stream_info);
+	g_print(" - reason_for_change(%d), additional_info(%s), user_data(%p)\n", reason_for_change, additional_info, user_data);
+	ret = sound_manager_get_focus_state (stream_info, &playback_focus_state, &recording_focus_state);
+	if (!ret)
+		g_print(" - focus_state(playback_focus:%d, recording_focus:%d)\n", playback_focus_state, recording_focus_state);
+	if (playback_focus_state == SOUND_STREAM_FOCUS_STATE_ACQUIRED) {
+		g_print(" -- PLAYBACK_FOCUS acquired\n");
+	}
+	if (recording_focus_state == SOUND_STREAM_FOCUS_STATE_ACQUIRED) {
+		g_print(" -- FOCUS_RECORDING acquired\n");
+	}
+	g_print("*** FOCUS callback is ended, stream_info(%p) ****\n", stream_info);
+	return;
+}
+
+void focus_watch_callback (sound_stream_focus_mask_e  changed_focus_type, sound_stream_focus_state_e changed_focus_state, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data) {
+	g_print("*** FOCUS WATCH callback is called ***\n");
+	g_print(" - changed_focus_type(%d), changed_focus_state(%d), reason_for_change(%d), additional_info(%s), user_data(%p)\n",
+				changed_focus_type, changed_focus_state, reason_for_change, additional_info, user_data);
+	return;
+}
 
 void quit_program()
 {
@@ -74,123 +120,191 @@ void quit_program()
 
 void _interpret_main_menu(char *cmd)
 {
-		if (strncmp(cmd, "gx", 2) == 0)
+		if (strncmp(cmd, "gx", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_GET_MAX_VOLUME;
 		}
-		else if (strncmp(cmd, "sv", 2) == 0)
+	    else if (strncmp(cmd, "sv", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_SET_VOLUME;
-		}
-		else if (strncmp(cmd, "gv", 2) == 0)
+		}		
+		else if (strncmp(cmd, "gv", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_GET_VOLUME;
 		}
-		else if (strncmp(cmd, "st", 2) == 0)
+		else if (strncmp(cmd, "st", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_SET_CURRENT_SOUND_TYPE;
 		}
-		else if (strncmp(cmd, "gt", 2) == 0)
+		else if (strncmp(cmd, "gt", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_GET_CURRENT_SOUND_TYPE;
 		}
-		else if (strncmp(cmd, "ut", 2) == 0)
+		else if (strncmp(cmd, "ut", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_UNSET_CURRENT_SOUND_TYPE;
-		}
-		else if (strncmp(cmd, "vc", 2) == 0)
+		}		
+		else if (strncmp(cmd, "vc", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_SET_VOLUME_CHANGED_CB;
 		}
-		else if (strncmp(cmd, "uv", 2) == 0)
+		else if (strncmp(cmd, "uv", 3) == 0)
 		{
 			g_menu_state = CURRENT_STATUS_UNSET_VOLUME_CHANGED_CB;
 		}
-		else if (strncmp(cmd, "ss", 2) == 0 )
+		else if (strncmp(cmd, "ss", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_SESSION_TYPE;
-		}
-		else if (strncmp(cmd, "gs", 2) == 0 )
+		}		
+		else if (strncmp(cmd, "gs", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_SESSION_TYPE;
 		}
-		else if (strncmp(cmd, "sm", 2) == 0 )
+		else if (strncmp(cmd, "sm", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_MEDIA_SESSION_OPTION;
 		}
-		else if (strncmp(cmd, "gm", 2) == 0 )
+		else if (strncmp(cmd, "gm", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_MEDIA_SESSION_OPTION;
 		}
-		else if (strncmp(cmd, "sr", 2) == 0 )
+		else if (strncmp(cmd, "sr", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_MEDIA_SESSION_RESUMPTION_OPTION;
 		}
-		else if (strncmp(cmd, "gr", 2) == 0 )
+		else if (strncmp(cmd, "gr", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_MEDIA_SESSION_RESUMPTION_OPTION;
 		}
-		else if (strncmp(cmd, "so", 2) == 0 )
+		else if (strncmp(cmd, "so", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_VOIP_SESSION_MODE;
 		}
-		else if (strncmp(cmd, "go", 2) == 0 )
+		else if (strncmp(cmd, "go", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_VOIP_SESSION_MODE;
 		}
-		else if (strncmp(cmd, "sl", 2) == 0 )
+		else if (strncmp(cmd, "sl", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_CALL_SESSION_MODE;
 		}
-		else if (strncmp(cmd, "gc", 2) == 0 )
+		else if (strncmp(cmd, "gc", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_CALL_SESSION_MODE;
 		}
-		else if (strncmp(cmd, "sc", 2) == 0 )
+		else if (strncmp(cmd, "sc", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_SESSION_INTERRUPTED_CB;
 		}
-		else if (strncmp(cmd, "us", 2) == 0 )
+		else if (strncmp(cmd, "us", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_UNSET_SESSION_INTERRUPTED_CB;
 		}
-		else if (strncmp(cmd, "sk", 2) == 0 )
+		else if (strncmp(cmd, "sk", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_DEVICE_MASK;
 		}
-		else if (strncmp(cmd, "gk", 2) == 0 )
+		else if (strncmp(cmd, "gk", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_DEVICE_MASK;
 		}
-		else if (strncmp(cmd, "gl", 2) == 0 )
+		else if (strncmp(cmd, "gl", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_DEVICE_LIST;
 		}
-		else if (strncmp(cmd, "gn", 2) == 0 )
+		else if (strncmp(cmd, "gn", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_DEVICE_NEXT;
 		}
-		else if (strncmp(cmd, "gp", 2) == 0 )
+		else if (strncmp(cmd, "gp", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_GET_DEVICE_PREV;
 		}
-		else if (strncmp(cmd, "sd", 2) == 0 )
+		else if (strncmp(cmd, "sd", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_DEVICE_CONNECTED_CB;
 		}
-		else if (strncmp(cmd, "ud", 2) == 0 )
+		else if (strncmp(cmd, "ud", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_UNSET_DEVICE_CONNECTED_CB;
 		}
-		else if (strncmp(cmd, "si", 2) == 0 )
+		else if (strncmp(cmd, "si", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_DEVICE_INFO_CHANGED_CB;
 		}
-		else if (strncmp(cmd, "ui", 2) == 0 )
+		else if (strncmp(cmd, "ui", 3) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_UNSET_DEVICE_INFO_CHANGED_CB;
 		}
-		else if (strncmp(cmd, "q", 1) == 0 )
+		else if (strncmp(cmd, "csi", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_CREATE_STREAM_INFO;
+		}
+		else if (strncmp(cmd, "ads", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING;
+		}
+		else if (strncmp(cmd, "rds", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING;
+		}
+		else if (strncmp(cmd, "aps", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_APPLY_STREAM_ROUTING;
+		}
+		else if (strncmp(cmd, "aos", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING;
+		}
+		else if (strncmp(cmd, "ros", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING;
+		}
+		else if (strncmp(cmd, "aso", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS;
+		}
+		else if (strncmp(cmd, "afc", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_ACQUIRE_FOCUS;
+		}
+		else if (strncmp(cmd, "rfc", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_RELEASE_FOCUS;
+		}
+		else if (strncmp(cmd, "gfs", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_GET_ACQUIRED_FOCUS;
+		}
+		else if (strncmp(cmd, "sfw", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_SET_FOCUS_WATCH_CB;
+		}
+		else if (strncmp(cmd, "ufw", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_UNSET_FOCUS_WATCH_CB;
+		}
+		else if (strncmp(cmd, "dsi", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_DESTROY_STREAM_INFO;
+		}
+		else if (strncmp(cmd, "vcr", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_CREATE_VIRTUAL_STREAM;
+		}
+		else if (strncmp(cmd, "vsr", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_START_VIRTUAL_STREAM;
+		}
+		else if (strncmp(cmd, "vst", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_STOP_VIRTUAL_STREAM;
+		}
+		else if (strncmp(cmd, "vdt", 3) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_DESTROY_VIRTUAL_STREAM;
+		}
+		else if (strncmp(cmd, "q", 3) == 0 )
 		{
 			g_print("closing the test suite\n");
 			quit_program();
@@ -219,8 +333,8 @@ void display_sub_basic()
 	g_print("vc. Set Volume Changed CB \t");
 	g_print("uv. Unset Volume Changed CB \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
-	g_print("                                       SESSION MODULE \n");
-	g_print("-----------------------------------------------------------------------------------------\n");
+	g_print("                                    SESSION MODULE \n");
+	g_print("-----------------------------------------------------------------------------------------\n");	
 	g_print("ss. Set Session Type\t\t");
 	g_print("gs. Get Session Type\n");
 	g_print("sm. Set Media Session Option \t");
@@ -234,7 +348,7 @@ void display_sub_basic()
 	g_print("sc. Set Session Interruped CB \t");
 	g_print("us. Unset Session Interrupted CB \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
-	g_print("                                       DEVICE MODULE \n");
+	g_print("                                    DEVICE MODULE \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
 	g_print("sk. Set Devices Mask(default ALL)\t");
 	g_print("gk. Get Devices Mask\n");
@@ -245,7 +359,27 @@ void display_sub_basic()
 	g_print("ud. Unset Device Connenected CB\n");
 	g_print("si. Set Device Information Changed CB\t");
 	g_print("ui. Unset Device Information Changed CB\n");
-	g_print("\n");
+	g_print("-----------------------------------------------------------------------------------------\n");
+	g_print("                                    STREAM POLICY MODULE \n");
+	g_print("-----------------------------------------------------------------------------------------\n");
+	g_print("csi. Create Stream Info\t");
+	g_print("dsi. Destroy Stream Info\n");
+	g_print("ads. Add device for stream routing\t");
+	g_print("rds. Remove device for stream routing\t");
+	g_print("aps. Apply devices for stream routing\n");
+	g_print("afc. Acquire Focus\t");
+	g_print("rfc. Release Focus\t");
+	g_print("gfs. Get Focus State\n");
+	g_print("sfw. Set Focus State Watch CB\t");
+	g_print("ufw. Unset Focus State Watch CB\n");
+	g_print("aos. *Add option for stream routing\t");
+	g_print("ros. *Remove option for stream routing\t");
+	g_print("aso. *Apply options for stream routing\n");
+	g_print("vcr. *Create VStream\t");
+	g_print("vsr. *Start VStream\t");
+	g_print("vst. *Stop VStream\t");
+	g_print("vdt. *Destroy VStream\n");
+	g_print("                                                                 * is for internal usage.\n");
 	g_print("=========================================================================================\n");
 }
 
@@ -376,6 +510,74 @@ static void displaymenu()
 	else if (g_menu_state == CURRENT_STATUS_UNSET_DEVICE_INFO_CHANGED_CB)
 	{
 		g_print("*** press enter to unset device information changed cb\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_CREATE_STREAM_INFO)
+	{
+		g_print("*** input stream type to create stream information (0:media, 1:alarm, 2:notification, 3:ringtone-call, 4:voice-call)\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING)
+	{
+		g_print("*** input device type to add (0:built-in spk, 1:built-in rcv, 2:audio-jack, 3:bt)\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING)
+	{
+		g_print("*** input device type to remove (0:built-in spk, 1:built-in rcv, 2:audio-jack, 3:bt)\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_APPLY_STREAM_ROUTING)
+	{
+		g_print("*** press enter to apply devices for stream routing\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING)
+	{
+		g_print("*** input option to add\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING)
+	{
+		g_print("*** input option to remove\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS)
+	{
+		g_print("*** press enter to apply options for stream routing \n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_ACQUIRE_FOCUS)
+	{
+		g_print("*** input focus type to acquire (0:playback, 1:recording, 2:both)\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_RELEASE_FOCUS)
+	{
+		g_print("*** input focus type to release (0:playback, 1:recording, 2:both)\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_GET_ACQUIRED_FOCUS)
+	{
+		g_print("*** press enter to get focus state\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_DESTROY_STREAM_INFO)
+	{
+		g_print("*** press enter to destroy stream information\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_SET_FOCUS_WATCH_CB)
+	{
+		g_print("*** input focus type to watch for (0:playback, 1:recording, 2:both)\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_UNSET_FOCUS_WATCH_CB)
+	{
+		g_print("*** press enter to unset focus state watch cb\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_CREATE_VIRTUAL_STREAM)
+	{
+		g_print("*** press enter to create virtual stream\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_START_VIRTUAL_STREAM)
+	{
+		g_print("*** press enter to start virtual stream\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_STOP_VIRTUAL_STREAM)
+	{
+		g_print("*** press enter to stop virtual stream\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_DESTROY_VIRTUAL_STREAM)
+	{
+		g_print("*** press enter to destroy virtual stream\n");
 	}
 	else
 	{
@@ -1006,6 +1208,381 @@ static void interpret (char *cmd)
 				g_print("fail to unset device information changed cb\n");
 			else
 				g_print("success to unset device information changed cb\n");
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_CREATE_STREAM_INFO:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			int stream_type = 0;
+			sound_stream_type_e type = SOUND_STREAM_TYPE_MEDIA;
+			if (g_stream_info_h) {
+				g_print("fail to create stream information, g_stream_info_h(%p) is already set\n", g_stream_info_h);
+				reset_menu_state();
+				break;
+			}
+			stream_type = atoi(cmd);
+			switch(stream_type) {
+			case 0: /* media */
+				type = SOUND_STREAM_TYPE_MEDIA;
+				break;
+			case 1: /* alarm */
+				type = SOUND_STREAM_TYPE_ALARM;
+				break;
+			case 2: /* notification */
+				type = SOUND_STREAM_TYPE_NOTIFICATION;
+				break;
+			case 3: /* ringtone for call*/
+				type = SOUND_STREAM_TYPE_RINGTONE_CALL;
+				break;
+			case 4: /* voice call */
+				type = SOUND_STREAM_TYPE_VOICE_CALL;
+				break;
+			default:
+				type = SOUND_STREAM_TYPE_MEDIA;
+				break;
+			}
+			if (type == (int)SOUND_STREAM_TYPE_RINGTONE_CALL || type == (int)SOUND_STREAM_TYPE_VOICE_CALL) {
+				ret = sound_manager_create_stream_information_internal(type, focus_callback, NULL, &g_stream_info_h);
+			} else {
+				ret = sound_manager_create_stream_information(type, focus_callback, NULL, &g_stream_info_h);
+			}
+			if (ret) {
+				g_print("fail to sound_manager_create_stream_information(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			int device_type = 0;
+			sound_device_h device = NULL;
+			sound_device_type_e selected_type = SOUND_DEVICE_BUILTIN_SPEAKER;
+			sound_device_type_e type = SOUND_DEVICE_BUILTIN_SPEAKER;
+			bool need_to_go = false;
+			device_type = atoi(cmd);
+			switch(device_type) {
+			case 0: /* built-in spk */
+				selected_type = SOUND_DEVICE_BUILTIN_SPEAKER;
+				break;
+			case 1: /* built-in rcv */
+				selected_type = SOUND_DEVICE_BUILTIN_RECEIVER;
+				break;
+			case 2: /* audio-jack */
+				selected_type = SOUND_DEVICE_AUDIO_JACK;
+				break;
+			case 3: /* bt */
+				selected_type = SOUND_DEVICE_BLUETOOTH;
+				break;
+			default:
+				g_print("invalid argument, device_type(%d) is not valid for this feature\n", device_type);
+				reset_menu_state();
+				break;
+			}
+			if (!(ret = sound_manager_get_current_device_list(SOUND_DEVICE_ALL_MASK, &g_device_list))) {
+				g_print("success to get current device list\n");
+				while (!sound_manager_get_next_device(g_device_list, &device)) {
+					if (!(ret = sound_manager_get_device_type (device, &type))) {
+						if (selected_type == type) {
+							need_to_go = true;
+							break;
+						}
+					} else {
+						g_print("fail to get type of device, ret(0x%x)\n", ret);
+						reset_menu_state();
+						break;
+					}
+				}
+				if (need_to_go) {
+					ret = sound_manager_add_device_for_stream_routing (g_stream_info_h, device);
+					if (ret) {
+						g_print("failed to sound_manager_add_device_for_stream_routing(), ret(0x%x)\n", ret);
+					}
+				} else {
+					g_print("the device is not available now\n");
+				}
+				reset_menu_state();
+			} else {
+				g_print("fail to get current device list, ret(0x%x)\n", ret);
+				reset_menu_state();
+			}
+		}
+		break;
+		case CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			int device_type = 0;
+			sound_device_h device = NULL;
+			sound_device_type_e selected_type = SOUND_DEVICE_BUILTIN_SPEAKER;
+			sound_device_type_e type = SOUND_DEVICE_BUILTIN_SPEAKER;
+			bool need_to_go = false;
+			device_type = atoi(cmd);
+			switch(device_type) {
+			case 0: /* built-in spk */
+				selected_type = SOUND_DEVICE_BUILTIN_SPEAKER;
+				break;
+			case 1: /* built-in rcv */
+				selected_type = SOUND_DEVICE_BUILTIN_RECEIVER;
+				break;
+			case 2: /* audio-jack */
+				selected_type = SOUND_DEVICE_AUDIO_JACK;
+				break;
+			case 3: /* bt */
+				selected_type = SOUND_DEVICE_BLUETOOTH;
+				break;
+			default:
+				g_print("invalid argument, device_type(%d) is not valid for this feature\n", device_type);
+				reset_menu_state();
+				break;
+			}
+			if (!(ret = sound_manager_get_current_device_list(SOUND_DEVICE_ALL_MASK, &g_device_list))) {
+				g_print("success to get current device list\n");
+				while (!sound_manager_get_next_device(g_device_list, &device)) {
+					if (!(ret = sound_manager_get_device_type (device, &type))) {
+						if (selected_type == type) {
+							need_to_go = true;
+							break;
+						}
+					} else {
+						g_print("fail to get type of device, ret(0x%x)\n", ret);
+						reset_menu_state();
+						break;
+					}
+				}
+				if (need_to_go) {
+					ret = sound_manager_remove_device_for_stream_routing (g_stream_info_h, device);
+					if (ret) {
+						g_print("failed to sound_manager_remove_device_for_stream_routing(), ret(0x%x)\n", ret);
+					}
+				} else {
+					g_print("the device is not available now\n");
+				}
+				reset_menu_state();
+			} else {
+				g_print("fail to get current device list, ret(0x%x)\n", ret);
+				reset_menu_state();
+			}
+		}
+		break;
+		case CURRENT_STATUS_APPLY_STREAM_ROUTING:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			ret = sound_manager_apply_stream_routing (g_stream_info_h);
+			if (ret) {
+				g_print("failed to sound_manager_apply_stream_routing(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			ret = sound_manager_add_option_for_stream_routing (g_stream_info_h, cmd);
+			if (ret) {
+				g_print("failed to sound_manager_add_option_for_stream_routing(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			ret = sound_manager_remove_option_for_stream_routing (g_stream_info_h, cmd);
+			if (ret) {
+				g_print("failed to sound_manager_remove_option_for_stream_routing(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			ret = sound_manager_apply_stream_routing_options (g_stream_info_h);
+			if (ret) {
+				g_print("failed to sound_manager_apply_stream_routing_options(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_ACQUIRE_FOCUS:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			int focus_type = 0;
+			sound_stream_focus_mask_e focus_mask;
+			focus_type = atoi(cmd);
+			switch(focus_type) {
+			case 0: /* playback */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
+				break;
+			case 1: /* recording */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_RECORDING;
+				break;
+			case 2: /* all */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK | SOUND_STREAM_FOCUS_FOR_RECORDING;
+				break;
+			default:
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
+				break;
+			}
+			ret = sound_manager_acquire_focus(g_stream_info_h, focus_mask, NULL);
+			if (ret) {
+				g_print("fail to sound_manager_acquire_focus(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_RELEASE_FOCUS:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			int focus_type = 0;
+			sound_stream_focus_mask_e focus_mask;
+			focus_type = atoi(cmd);
+			switch(focus_type) {
+			case 0: /* playback */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
+				break;
+			case 1: /* recording */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_RECORDING;
+				break;
+			case 2: /* both */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK | SOUND_STREAM_FOCUS_FOR_RECORDING;
+				break;
+			default:
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
+				break;
+			}
+			ret = sound_manager_release_focus(g_stream_info_h, focus_mask, NULL);
+			if (ret) {
+				g_print("fail to sound_manager_acquire_focus(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_GET_ACQUIRED_FOCUS:
+		{
+			sound_stream_focus_state_e for_playback;
+			sound_stream_focus_state_e for_recording;
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			if(g_stream_info_h) {
+				ret = sound_manager_get_focus_state(g_stream_info_h, &for_playback, &for_recording);
+				if (ret) {
+					g_print("fail to sound_manager_get_focus_state(), ret(0x%x)\n", ret);
+				} else {
+					g_print("focus_state(playback:%d, capture:%d)\n", for_playback, for_recording);
+				}
+			} else {
+				g_print("please create stream info. first\n");
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_DESTROY_STREAM_INFO:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			ret = sound_manager_destroy_stream_information(g_stream_info_h);
+			if (ret) {
+				g_print("fail to sound_manager_destroy_stream_information(), ret(0x%x)\n", ret);
+			} else {
+				g_stream_info_h = NULL;
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_SET_FOCUS_WATCH_CB:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			int focus_type = 0;
+			sound_stream_focus_mask_e focus_mask;
+			focus_type = atoi(cmd);
+			switch(focus_type) {
+			case 0: /* playback */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
+				break;
+			case 1: /* recording */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_RECORDING;
+				break;
+			case 2: /* both */
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK | SOUND_STREAM_FOCUS_FOR_RECORDING;
+				break;
+			default:
+				focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
+				break;
+			}
+			ret = sound_manager_set_focus_state_watch_cb(focus_mask, focus_watch_callback, NULL);
+			if (ret) {
+				g_print("fail to sound_manager_set_focus_state_watch_cb(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_UNSET_FOCUS_WATCH_CB:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			ret = sound_manager_unset_focus_state_watch_cb();
+			if (ret) {
+				g_print("fail to sound_manager_unset_focus_state_watch_cb(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_CREATE_VIRTUAL_STREAM:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			if (!g_stream_info_h || g_vstream_h) {
+				g_print("fail to create virtual stream, g_stream_info_h(%p)/g_vstream_h(%p)\n", g_stream_info_h, g_vstream_h);
+				reset_menu_state();
+				break;
+			}
+			ret = sound_manager_create_virtual_stream(g_stream_info_h, &g_vstream_h);
+			if (ret) {
+				g_print("fail to sound_manager_create_virtual_stream(), ret(0x%x)\n", ret);
+			} else {
+				g_print("success to sound_manager_create_virtual_stream(), ret(0x%x)\n", ret);
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_START_VIRTUAL_STREAM:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			if (g_vstream_h) {
+				ret = sound_manager_start_virtual_stream(g_vstream_h);
+				if (ret) {
+					g_print("fail to sound_manager_start_virtual_stream(), ret(0x%x)\n", ret);
+				} else {
+					g_print("success to sound_manager_start_virtual_stream(), ret(0x%x)\n", ret);
+				}
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_STOP_VIRTUAL_STREAM:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			if (g_vstream_h) {
+				ret = sound_manager_stop_virtual_stream(g_vstream_h);
+				if (ret) {
+					g_print("fail to sound_manager_stop_virtual_stream(), ret(0x%x)\n", ret);
+				} else {
+					g_print("success to sound_manager_stop_virtual_stream(), ret(0x%x)\n", ret);
+				}
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_DESTROY_VIRTUAL_STREAM:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			if (g_vstream_h) {
+				ret = sound_manager_destroy_virtual_stream(g_vstream_h);
+				if (ret) {
+					g_print("fail to sound_manager_destroy_virtual_stream(), ret(0x%x)\n", ret);
+				} else {
+					g_print("success to sound_manager_destroy_virtual_stream(), ret(0x%x)\n", ret);
+				}
+				g_vstream_h = NULL;
+			}
 			reset_menu_state();
 		}
 		break;

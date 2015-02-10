@@ -16,62 +16,628 @@
 
 #include <sound_manager.h>
 #include <sound_manager_private.h>
-
 #include <mm_sound.h>
-#include <dlog.h>
+
+#define PA_BUS_NAME                                             "org.pulseaudio.Server"
+#define PA_STREAM_MANAGER_OBJECT_PATH                           "/org/pulseaudio/Ext/StreamManager"
+#define PA_STREAM_MANAGER_INTERFACE                             "org.pulseaudio.Ext.StreamManager"
+#define PA_STREAM_MANAGER_METHOD_NAME_GET_STREAM_INFO           "GetStreamInfo"
+#define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_DEVICES  "SetStreamRouteDevices"
+#define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTIONS  "SetStreamRouteOptions"
 
 extern _session_interrupt_info_s g_session_interrupt_cb_table;
 extern _session_mode_e g_cached_session_mode;
+extern _focus_watch_info_s g_focus_watch_cb_table;
+extern sound_stream_info_s* sound_stream_info_arr[SOUND_STREAM_INFO_ARR_MAX];
 
-int __convert_sound_manager_error_code(const char *func, int code) {
+int __convert_sound_manager_error_code (const char *func, int code) {
 	int ret = SOUND_MANAGER_ERROR_NONE;
 	char *errorstr = NULL;
 
-	switch(code)
-	{
-		case MM_ERROR_FILE_WRITE:
-		case MM_ERROR_INVALID_HANDLE:
-			ret = SOUND_MANAGER_ERROR_INVALID_OPERATION;
-			errorstr = "INVALID_OPERATION";
-			break;
-		case MM_ERROR_NONE:
-			ret = SOUND_MANAGER_ERROR_NONE;
-			errorstr = "ERROR_NONE";
-			break;
-		case MM_ERROR_INVALID_ARGUMENT:
-		case MM_ERROR_SOUND_INVALID_POINTER:
-			ret = SOUND_MANAGER_ERROR_INVALID_PARAMETER;
-			errorstr = "INVALID_PARAMETER";
-			break;
-		case MM_ERROR_SOUND_PERMISSION_DENIED:
-			ret = SOUND_MANAGER_ERROR_PERMISSION_DENIED;
-			errorstr = "PERMISSION_DENIED";
-			break;
-		case MM_ERROR_SOUND_NO_DATA:
-			ret = SOUND_MANAGER_ERROR_NO_DATA;
-			errorstr = "NO_DATA";
-			break;
-		case MM_ERROR_SOUND_INTERNAL:
-		case MM_ERROR_SOUND_VOLUME_CAPTURE_ONLY:
-			ret = SOUND_MANAGER_ERROR_INTERNAL;
-			errorstr = "INTERNAL";
-			break;
-		case MM_ERROR_POLICY_DUPLICATED:
-		case MM_ERROR_POLICY_INTERNAL:
-		case MM_ERROR_POLICY_BLOCKED:
-			ret = SOUND_MANAGER_ERROR_POLICY;
-			errorstr = "POLICY";
-			break;
-		case MM_ERROR_SOUND_VOLUME_NO_INSTANCE:
-			ret = SOUND_MANAGER_ERROR_NO_PLAYING_SOUND;
-			errorstr = "NO_PLAYING_SOUND";
-			break;
+	switch(code) {
+	case MM_ERROR_FILE_WRITE:
+	case MM_ERROR_INVALID_HANDLE:
+		ret = SOUND_MANAGER_ERROR_INVALID_OPERATION;
+		errorstr = "INVALID_OPERATION";
+		break;
+	case MM_ERROR_NONE:
+		ret = SOUND_MANAGER_ERROR_NONE;
+		errorstr = "ERROR_NONE";
+		break;
+	case MM_ERROR_INVALID_ARGUMENT:
+	case MM_ERROR_SOUND_INVALID_POINTER:
+		ret = SOUND_MANAGER_ERROR_INVALID_PARAMETER;
+		errorstr = "INVALID_PARAMETER";
+		break;
+	case MM_ERROR_SOUND_PERMISSION_DENIED:
+		ret = SOUND_MANAGER_ERROR_PERMISSION_DENIED;
+		errorstr = "PERMISSION_DENIED";
+		break;
+	case MM_ERROR_SOUND_NO_DATA:
+		ret = SOUND_MANAGER_ERROR_NO_DATA;
+		errorstr = "NO_DATA";
+		break;
+	case MM_ERROR_SOUND_INTERNAL:
+	case MM_ERROR_SOUND_VOLUME_CAPTURE_ONLY:
+	case MM_ERROR_OUT_OF_MEMORY:
+		ret = SOUND_MANAGER_ERROR_INTERNAL;
+		errorstr = "INTERNAL";
+		break;
+	case MM_ERROR_POLICY_DUPLICATED:
+	case MM_ERROR_POLICY_INTERNAL:
+	case MM_ERROR_POLICY_BLOCKED:
+		ret = SOUND_MANAGER_ERROR_POLICY;
+		errorstr = "POLICY";
+		break;
+	case MM_ERROR_SOUND_VOLUME_NO_INSTANCE:
+		ret = SOUND_MANAGER_ERROR_NO_PLAYING_SOUND;
+		errorstr = "NO_PLAYING_SOUND";
+		break;
+	case MM_ERROR_NOT_SUPPORT_API:
+	case MM_ERROR_SOUND_NOT_SUPPORTED_OPERATION:
+		ret = SOUND_MANAGER_ERROR_NOT_SUPPORTED;
+		errorstr = "NOT_SUPPORTED";
+		break;
+	case MM_ERROR_SOUND_INVALID_STATE:
+		ret = SOUND_MANAGER_ERROR_INVALID_STATE;
+		errorstr = "INVALID_STATE";
+		break;
 	}
-	LOGE("[%s] %s(0x%08x) : core frameworks error code(0x%08x)",func, errorstr, ret, code);
+	if (ret) {
+		LOGE("[%s] %s(0x%08x) : core frameworks error code(0x%08x)",func, errorstr, ret, code);
+	} else {
+		LOGD("[%s] %s(0x%08x) : core frameworks error code(0x%08x)",func, errorstr, ret, code);
+	}
 	return ret;
 }
 
-void __session_interrupt_cb(session_msg_t msg, session_event_t event, void *user_data){
+int __convert_stream_type (sound_stream_type_e stream_type_enum, char *stream_type)
+{
+	int ret = MM_ERROR_NONE;
+	switch (stream_type_enum) {
+	case SOUND_STREAM_TYPE_MEDIA:
+		SOUND_STRNCPY(stream_type,"media",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_SYSTEM:
+		SOUND_STRNCPY(stream_type,"system",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_ALARM:
+		SOUND_STRNCPY(stream_type,"alarm",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_NOTIFICATION:
+		SOUND_STRNCPY(stream_type,"notification",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_EMERGENCY:
+		SOUND_STRNCPY(stream_type,"emergency",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_VOICE_INFORMATION:
+		SOUND_STRNCPY(stream_type,"voice-information",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_VOICE_RECOGNITION:
+		SOUND_STRNCPY(stream_type,"voice-recognition",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_RINGTONE_VOIP:
+		SOUND_STRNCPY(stream_type,"ringtone-voip",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_VOIP:
+		SOUND_STRNCPY(stream_type,"voip",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	}
+	if (!strncmp(stream_type,"",SOUND_STREAM_TYPE_LEN)) {
+		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		LOGI("stream_type[%s]", stream_type);
+	}
+	return ret;
+}
+
+int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char *stream_type)
+{
+	int ret = MM_ERROR_NONE;
+
+	SM_NULL_ARG_CHECK(stream_type);
+
+	switch (stream_type_enum) {
+	case SOUND_STREAM_TYPE_RINGTONE_CALL:
+		SOUND_STRNCPY(stream_type,"ringtone-call",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_VOICE_CALL:
+		SOUND_STRNCPY(stream_type,"call-voice",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_VIDEO_CALL:
+		SOUND_STRNCPY(stream_type,"call-video",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_RADIO:
+		SOUND_STRNCPY(stream_type,"radio",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	case SOUND_STREAM_TYPE_LOOPBACK:
+		SOUND_STRNCPY(stream_type,"loopback",SOUND_STREAM_TYPE_LEN,ret);
+		break;
+	}
+	if (!strncmp(stream_type,"",SOUND_STREAM_TYPE_LEN)) {
+		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		LOGI("stream_type_for_internal[%s]", stream_type);
+	}
+	return ret;
+}
+
+int __convert_stream_type_to_change_reason (const char *stream_type, sound_stream_focus_change_reason_e *change_reason)
+{
+	int ret = MM_ERROR_NONE;
+
+	SM_NULL_ARG_CHECK(stream_type);
+	SM_NULL_ARG_CHECK(change_reason);
+
+	if (!strncmp(stream_type, "media", SOUND_STREAM_TYPE_LEN) ||
+		!strncmp(stream_type, "radio", SOUND_STREAM_TYPE_LEN) ||
+		!strncmp(stream_type, "loopback", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
+
+	} else if (!strncmp(stream_type, "system", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_SYSTEM;
+
+	} else if (!strncmp(stream_type, "alarm", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_ALARM;
+
+	} else if (!strncmp(stream_type, "notification", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_NOTIFICATION;
+
+	} else if (!strncmp(stream_type, "emergency", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_EMERGENCY;
+
+	} else if (!strncmp(stream_type, "voice-information", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_INFORMATION;
+
+	} else if (!strncmp(stream_type, "voice-recognition", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_RECOGNITION;
+
+	} else if (!strncmp(stream_type, "ringtone-voip", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "ringtone-call", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_RINGTONE;
+
+	} else if (!strncmp(stream_type, "voip", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_VOIP;
+
+	} else if (!strncmp(stream_type, "call-voice", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "call-video", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_CALL;
+	} else {
+		ret = MM_ERROR_INVALID_ARGUMENT;
+		LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
+	}
+	return ret;
+}
+
+int __convert_device_type (sound_device_type_e device_type_enum, char *device_type)
+{
+	int ret = MM_ERROR_NONE;
+
+	SM_NULL_ARG_CHECK(device_type);
+
+	switch (device_type_enum) {
+	case SOUND_DEVICE_BUILTIN_SPEAKER:
+		SOUND_STRNCPY(device_type,"builtin-speaker",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	case SOUND_DEVICE_BUILTIN_RECEIVER:
+		SOUND_STRNCPY(device_type,"builtin-receiver",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	case SOUND_DEVICE_BUILTIN_MIC:
+		SOUND_STRNCPY(device_type,"builtin-mic",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	case SOUND_DEVICE_AUDIO_JACK:
+		SOUND_STRNCPY(device_type,"audio-jack",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	case SOUND_DEVICE_BLUETOOTH:
+		SOUND_STRNCPY(device_type,"bt",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	case SOUND_DEVICE_HDMI:
+		SOUND_STRNCPY(device_type,"hdmi",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	case SOUND_DEVICE_USB_AUDIO:
+		SOUND_STRNCPY(device_type,"usb-audio",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	case SOUND_DEVICE_FORWARDING:
+		SOUND_STRNCPY(device_type,"forwarding",SOUND_DEVICE_TYPE_LEN,ret);
+		break;
+	}
+	if (!strncmp(device_type,"",SOUND_DEVICE_TYPE_LEN)) {
+		LOGE("could not find the device_type[%d] in this switch case statement", device_type_enum);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		LOGI("device_type[%s]", device_type);
+	}
+	return ret;
+}
+
+/* it will be deprecated after ready for changing device type that is from server to string */
+int __convert_device_type_to_enum (char *device_type, sound_device_type_e *device_type_enum)
+{
+	int ret = MM_ERROR_NONE;
+
+	SM_NULL_ARG_CHECK(device_type);
+	SM_NULL_ARG_CHECK(device_type_enum);
+
+	if (!strncmp(device_type, "builtin-speaker", SOUND_DEVICE_TYPE_LEN)) {
+		*device_type_enum = SOUND_DEVICE_BUILTIN_SPEAKER;
+	} else if (!strncmp(device_type, "builtin-receiver", SOUND_DEVICE_TYPE_LEN)) {
+		*device_type_enum = SOUND_DEVICE_BUILTIN_RECEIVER;
+	} else if (!strncmp(device_type, "builtin-mic", SOUND_DEVICE_TYPE_LEN)) {
+		*device_type_enum = SOUND_DEVICE_BUILTIN_MIC;
+	} else if (!strncmp(device_type, "audio-jack", SOUND_DEVICE_TYPE_LEN)) {
+		*device_type_enum = SOUND_DEVICE_AUDIO_JACK;
+	} else if (!strncmp(device_type, "bt", SOUND_DEVICE_TYPE_LEN)) {
+		*device_type_enum = SOUND_DEVICE_BLUETOOTH;
+	} else if (!strncmp(device_type, "hdmi", SOUND_DEVICE_TYPE_LEN)) {
+		*device_type_enum = SOUND_DEVICE_HDMI;
+	} else if (!strncmp(device_type, "usb-audio", SOUND_DEVICE_TYPE_LEN)) {
+		*device_type_enum = SOUND_DEVICE_USB_AUDIO;
+	} else {
+		ret = MM_ERROR_INVALID_ARGUMENT;
+		LOGE("not supported device_type(%s), err(0x%08x)", device_type, ret);
+	}
+
+	return ret;
+}
+
+const char* __convert_api_name (native_api_e api_name)
+{
+	const char* name = NULL;
+	switch (api_name) {
+	case NATIVE_API_SOUND_MANAGER:
+		name = "sound-manager";
+		break;
+	case NATIVE_API_PLAYER:
+		name = "player";
+		break;
+	case NATIVE_API_WAV_PLAYER:
+		name = "wav-player";
+		break;
+	case NATIVE_API_TONE_PLAYER:
+		name = "tone-player";
+		break;
+	case NATIVE_API_AUDIO_IO:
+		name = "audio-io";
+		break;
+	case NATIVE_API_RECORDER:
+		name = "recorder";
+		break;
+	}
+	return name;
+}
+
+void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data)
+{
+	int ret = MM_ERROR_NONE;
+	int i = 0;
+
+	LOGI(">> enter");
+
+	sound_stream_focus_change_reason_e change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
+	ret = __convert_stream_type_to_change_reason(reason_for_change, &change_reason);
+	if (ret) {
+		LOGE("failed to __convert_stream_type_to_enum(), reason_for_change(%s), err(0x%08x)", reason_for_change, ret);
+	} else {
+		for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
+			if (sound_stream_info_arr[i] && sound_stream_info_arr[i]->index == index) {
+				if (state ==  FOCUS_IS_RELEASED) {
+					sound_stream_info_arr[i]->acquired_focus &= ~focus_type;
+				} else if (state == FOCUS_IS_ACQUIRED) {
+					sound_stream_info_arr[i]->acquired_focus |= focus_type;
+				}
+				LOGI("[FOCUS USER CALLBACK(%p) START]", sound_stream_info_arr[i]->user_cb);
+				sound_stream_info_arr[i]->user_cb((sound_stream_info_h)sound_stream_info_arr[i], change_reason, additional_info, sound_stream_info_arr[i]->user_data);
+				LOGI("[FOCUS USER CALLBACK(%p) END]", sound_stream_info_arr[i]->user_cb);
+				break;
+			}
+		}
+		if (i == SOUND_STREAM_INFO_ARR_MAX) {
+			LOGE("could not find index(%d), failed to call user callback", index);
+		}
+	}
+
+	LOGI("<< leave");
+
+	return;
+}
+
+void _focus_watch_callback (mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data)
+{
+	int ret = MM_ERROR_NONE;
+	sound_stream_focus_change_reason_e change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
+	ret = __convert_stream_type_to_change_reason(reason_for_change, &change_reason);
+	if (ret)
+		LOGE("failed to __convert_stream_type_to_enum(), reason_for_change(%s), err(0x%08x)", reason_for_change, ret);
+	if (g_focus_watch_cb_table.user_cb)
+		g_focus_watch_cb_table.user_cb(focus_type, state, change_reason, additional_info, g_focus_watch_cb_table.user_data);
+	return;
+}
+
+void _pa_context_state_cb (pa_context *c, void *userdata)
+{
+	pa_context_state_t state;
+	sound_stream_info_s *stream_info_h = (sound_stream_info_s*)userdata;
+	assert(c);
+
+	state = pa_context_get_state(c);
+	LOGI ("[%p] context state = [%d]", stream_info_h, state);
+	switch (state) {
+	case PA_CONTEXT_READY:
+	case PA_CONTEXT_TERMINATED:
+	case PA_CONTEXT_FAILED:
+		pa_threaded_mainloop_signal(stream_info_h->pa_mainloop, 0);
+		break;
+	case PA_CONTEXT_UNCONNECTED:
+	case PA_CONTEXT_CONNECTING:
+	case PA_CONTEXT_AUTHORIZING:
+	case PA_CONTEXT_SETTING_NAME:
+		break;
+	}
+}
+
+void _pa_stream_state_cb (pa_stream *s, void * userdata)
+{
+	pa_stream_state_t state;
+	virtual_sound_stream_info_s *vstream_h = (virtual_sound_stream_info_s*)userdata;
+	assert(s);
+
+	state = pa_stream_get_state(s);
+	LOGI ("[%p] stream [%d] state = [%d]", vstream_h, pa_stream_get_index(s), state);
+
+	switch (state) {
+	case PA_STREAM_READY:
+	case PA_STREAM_FAILED:
+	case PA_STREAM_TERMINATED:
+		pa_threaded_mainloop_signal(vstream_h->pa_mainloop, 0);
+		break;
+	case PA_STREAM_UNCONNECTED:
+	case PA_STREAM_CREATING:
+		break;
+	}
+}
+
+int __get_stream_conf_info (const char *stream_type, stream_conf_info_s *info)
+{
+	int ret = MM_ERROR_NONE;
+	GVariant *result = NULL;
+	GVariant *child = NULL;
+	GDBusConnection *conn = NULL;
+	GError *err = NULL;
+
+	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
+	if (!conn && err) {
+		LOGE("g_bus_get_sync() error (%s)", err->message);
+		g_error_free (err);
+		ret = MM_ERROR_SOUND_INTERNAL;
+		return ret;
+	}
+	result = g_dbus_connection_call_sync (conn,
+							PA_BUS_NAME,
+							PA_STREAM_MANAGER_OBJECT_PATH,
+							PA_STREAM_MANAGER_INTERFACE,
+							PA_STREAM_MANAGER_METHOD_NAME_GET_STREAM_INFO,
+							g_variant_new ("(s)", stream_type),
+							G_VARIANT_TYPE("(vvvvv)"),
+							G_DBUS_CALL_FLAGS_NONE,
+							2000,
+							NULL,
+							&err);
+	if (!result && err) {
+		LOGE("g_dbus_connection_call_sync() error (%s)", err->message);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		GVariantIter iter;
+		GVariant *item = NULL;
+		gchar *name = NULL;
+		gsize size = 0;
+		int i = 0;
+
+		/* get priority */
+		child = g_variant_get_child_value(result, 0);
+		item = g_variant_get_variant(child);
+		info->priority = g_variant_get_int32(item);
+		g_variant_unref (item);
+		g_variant_unref (child);
+		LOGI ("priority(%d)", info->priority);
+
+		/* get route type */
+		child = g_variant_get_child_value(result, 1);
+		item = g_variant_get_variant(child);
+		info->route_type = g_variant_get_int32(item);
+		g_variant_unref (item);
+		g_variant_unref (child);
+		LOGI ("route_type(%d)", info->route_type);
+
+		/* get availabe in-devices */
+		child = g_variant_get_child_value(result, 2);
+		item = g_variant_get_variant(child);
+		size = g_variant_n_children(item);
+		LOGI ("num of avail-in-devices are %d", size);
+		g_variant_iter_init(&iter, item);
+		i = 0;
+		while (g_variant_iter_loop(&iter, "&s", &name)) {
+			if (size == 1 && !strncmp (name, "none", strlen("none"))) {
+				LOGI (" in-device is [%s], skip it", name);
+				break;
+			} else {
+				LOGI (" in-device name : %s", name);
+				info->avail_in_devices[i++] = strdup(name);
+			}
+		}
+		g_variant_iter_free (&iter);
+		g_variant_unref (item);
+		g_variant_unref (child);
+
+		/* get available out-devices */
+		child = g_variant_get_child_value(result, 3);
+		item = g_variant_get_variant(child);
+		size = g_variant_n_children(item);
+		LOGI ("num of avail-out-devices are %d", size);
+		g_variant_iter_init(&iter, item);
+		i = 0;
+		while (g_variant_iter_loop(&iter, "&s", &name)) {
+			if (size == 1 && !strncmp (name, "none", strlen("none"))) {
+				LOGI (" out-device is [%s], skip it", name);
+				break;
+			} else {
+				LOGI (" out-device name : %s", name);
+				info->avail_out_devices[i++] = strdup(name);
+			}
+		}
+		g_variant_iter_free (&iter);
+		g_variant_unref (item);
+		g_variant_unref (child);
+
+		/* get available frameworks */
+		child = g_variant_get_child_value(result, 4);
+		item = g_variant_get_variant(child);
+		size = g_variant_n_children(item);
+		LOGI ("num of avail-frameworks are %d", size);
+		g_variant_iter_init(&iter, item);
+		i = 0;
+		while (g_variant_iter_loop(&iter, "&s", &name)) {
+			if (size == 1 && !strncmp (name, "none", strlen("none"))) {
+				LOGI (" framework is [%s], skip it", name);
+				break;
+			} else {
+				LOGI (" framework name : %s", name);
+				info->avail_frameworks[i++] = strdup(name);
+			}
+		}
+		g_variant_iter_free (&iter);
+		g_variant_unref (item);
+		g_variant_unref (child);
+		g_variant_unref(result);
+	}
+	g_object_unref(conn);
+	return ret;
+}
+
+int __set_manual_route_info (unsigned int index, manual_route_info_s *info)
+{
+	int ret = MM_ERROR_NONE;
+	int i = 0;
+	GVariantBuilder *builder_for_in_devices;
+	GVariantBuilder *builder_for_out_devices;
+	GVariant *result = NULL;
+	GDBusConnection *conn = NULL;
+	GError *err = NULL;
+
+	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
+	if (!conn && err) {
+		LOGE("g_bus_get_sync() error (%s)", err->message);
+		g_error_free (err);
+		ret = MM_ERROR_SOUND_INTERNAL;
+		return ret;
+	}
+
+	builder_for_in_devices = g_variant_builder_new(G_VARIANT_TYPE("as"));
+	builder_for_out_devices = g_variant_builder_new(G_VARIANT_TYPE("as"));
+	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
+		if (info->route_in_devices[i]) {
+			g_variant_builder_add(builder_for_in_devices, "s", info->route_in_devices[i]);
+			LOGI("[IN] %s", info->route_in_devices[i]);
+		} else {
+			break;
+		}
+	}
+	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
+		if (info->route_out_devices[i]) {
+			g_variant_builder_add(builder_for_out_devices, "s", info->route_out_devices[i]);
+			LOGI("[OUT] %s", info->route_out_devices[i]);
+		} else {
+			break;
+		}
+	}
+
+	result = g_dbus_connection_call_sync (conn,
+							PA_BUS_NAME,
+							PA_STREAM_MANAGER_OBJECT_PATH,
+							PA_STREAM_MANAGER_INTERFACE,
+							PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_DEVICES,
+							g_variant_new ("(uasas)", index, builder_for_in_devices, builder_for_out_devices),
+							G_VARIANT_TYPE("(s)"),
+							G_DBUS_CALL_FLAGS_NONE,
+							2000,
+							NULL,
+							&err);
+	if (!result && err) {
+		LOGE("g_dbus_connection_call_sync() error (%s)", err->message);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		const gchar *dbus_ret = NULL;
+		g_variant_get(result, "(s)", &dbus_ret);
+		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
+		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
+			ret = MM_ERROR_SOUND_INVALID_STATE;
+		}
+		g_variant_unref(result);
+	}
+	g_variant_builder_unref(builder_for_in_devices);
+	g_variant_builder_unref(builder_for_out_devices);
+	g_object_unref(conn);
+	return ret;
+}
+
+int __set_route_options (unsigned int index, char **route_options)
+{
+	int ret = MM_ERROR_NONE;
+	int i = 0;
+	GVariantBuilder *builder;
+
+	GVariant *result = NULL;
+	GDBusConnection *conn = NULL;
+	GError *err = NULL;
+
+	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
+	if (!conn && err) {
+		LOGE("g_bus_get_sync() error (%s)", err->message);
+		g_error_free (err);
+		ret = MM_ERROR_SOUND_INTERNAL;
+		return ret;
+	}
+
+	builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
+	for (i = 0; i < ROUTE_OPTIONS_MAX; i++) {
+		if (route_options[i]) {
+			g_variant_builder_add(builder, "s", route_options[i]);
+			LOGI("[OPTIONS] %s", route_options[i]);
+		} else {
+			break;
+		}
+	}
+
+	result = g_dbus_connection_call_sync (conn,
+							PA_BUS_NAME,
+							PA_STREAM_MANAGER_OBJECT_PATH,
+							PA_STREAM_MANAGER_INTERFACE,
+							PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTIONS,
+							g_variant_new ("(uas)", index, builder),
+							G_VARIANT_TYPE("(s)"),
+							G_DBUS_CALL_FLAGS_NONE,
+							2000,
+							NULL,
+							&err);
+	if (!result && err) {
+		LOGE("g_dbus_connection_call_sync() error (%s)", err->message);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		const gchar *dbus_ret = NULL;
+		g_variant_get(result, "(s)", &dbus_ret);
+		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
+		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
+			ret = MM_ERROR_SOUND_INTERNAL;
+		}
+		g_variant_unref(result);
+	}
+	g_variant_builder_unref(builder);
+	g_object_unref(conn);
+	return ret;
+}
+
+void _session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data){
 	if( g_session_interrupt_cb_table.user_cb ){
 		sound_session_interrupted_code_e e = SOUND_SESSION_INTERRUPTED_COMPLETED;
 		if( msg == MM_SESSION_MSG_RESUME )
@@ -108,7 +674,7 @@ void __session_interrupt_cb(session_msg_t msg, session_event_t event, void *user
 	}
 }
 
-int __set_session_mode(_session_mode_e mode)
+int __set_session_mode (_session_mode_e mode)
 {
 	int ret = MM_ERROR_NONE;
 	mm_sound_route route = MM_SOUND_ROUTE_IN_MIC_OUT_SPEAKER;
@@ -208,7 +774,7 @@ ERROR_CASE:
 	return ret;
 }
 
-int __get_session_mode(_session_mode_e *mode)
+int __get_session_mode (_session_mode_e *mode)
 {
 	int ret = MM_ERROR_NONE;
 	int subsession = 0;
@@ -265,5 +831,170 @@ int __get_session_mode(_session_mode_e *mode)
 		break;
 	}
 ERROR_CASE:
+	return ret;
+}
+
+int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_stream_focus_state_changed_cb callback, void *user_data)
+{
+	int ret = MM_ERROR_NONE;
+	int pa_ret = PA_OK;
+	int i = 0;
+	if (!(stream_h->pa_mainloop = pa_threaded_mainloop_new()))
+		goto PA_ERROR;
+
+	if (!(stream_h->pa_context = pa_context_new(pa_threaded_mainloop_get_api(stream_h->pa_mainloop), "SOUND_MANAGER_STREAM_INFO")))
+		goto PA_ERROR;
+
+	pa_context_set_state_callback(stream_h->pa_context, _pa_context_state_cb, stream_h);
+
+	if (pa_context_connect(stream_h->pa_context, NULL, 0, NULL) < 0) {
+		pa_ret = pa_context_errno(stream_h->pa_context);
+		goto PA_ERROR;
+	}
+
+	pa_threaded_mainloop_lock(stream_h->pa_mainloop);
+
+	if (pa_threaded_mainloop_start(stream_h->pa_mainloop) < 0)
+		goto PA_ERROR_WITH_UNLOCK;
+
+	/* wait for ready state of the context */
+	for (;;) {
+		pa_context_state_t state;
+		state = pa_context_get_state(stream_h->pa_context);
+		if (state == PA_CONTEXT_READY)
+			break;
+		if (!PA_CONTEXT_IS_GOOD(state)) {
+			pa_ret = pa_context_errno(stream_h->pa_context);
+			goto PA_ERROR_WITH_UNLOCK;
+		}
+		pa_threaded_mainloop_wait(stream_h->pa_mainloop);
+	}
+
+	/* get uniq id of this context */
+	stream_h->index = pa_context_get_index(stream_h->pa_context);
+
+	/* get configuration information of this stream type */
+	ret = __get_stream_conf_info(stream_h->stream_type, &stream_h->stream_conf_info);
+	if (ret) {
+		goto PA_ERROR_WITH_UNLOCK;
+	} else {
+		LOGI("stream_conf_info : priority[%d], route type[%d]", stream_h->stream_conf_info.priority, stream_h->stream_conf_info.route_type);
+	}
+
+	pa_threaded_mainloop_unlock(stream_h->pa_mainloop);
+
+	/* register focus */
+	ret = mm_sound_register_focus(stream_h->index, stream_h->stream_type, _focus_state_change_callback, user_data);
+	if (ret == MM_ERROR_NONE) {
+		int i = 0;
+		stream_h->user_cb = callback;
+		stream_h->user_data = user_data;
+		for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
+			if (sound_stream_info_arr[i] == NULL) {
+				sound_stream_info_arr[i] = stream_h;
+				break;
+			}
+		}
+		if (i == SOUND_STREAM_INFO_ARR_MAX) {
+			LOGE("client sound stream info array is full");
+			ret = mm_sound_unregister_focus(stream_h->index);
+			goto PA_ERROR;
+		}
+	} else {
+		/* disconnect */
+		goto PA_ERROR;
+	}
+	goto SUCCESS;
+PA_ERROR_WITH_UNLOCK:
+	pa_threaded_mainloop_unlock(stream_h->pa_mainloop);
+PA_ERROR:
+	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
+		if (stream_h->stream_conf_info.avail_in_devices[i]) {
+			free(stream_h->stream_conf_info.avail_in_devices[i]);
+		} else {
+			break;
+		}
+	}
+	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
+		if (stream_h->stream_conf_info.avail_out_devices[i]) {
+			free(stream_h->stream_conf_info.avail_out_devices[i]);
+		} else {
+			break;
+		}
+	}
+	for (i = 0; i < AVAIL_FRAMEWORKS_MAX; i++) {
+		if (stream_h->stream_conf_info.avail_frameworks[i]) {
+			free(stream_h->stream_conf_info.avail_frameworks[i]);
+		} else {
+			break;
+		}
+	}
+	if (stream_h->pa_context) {
+		pa_context_disconnect(stream_h->pa_context);
+		pa_context_unref(stream_h->pa_context);
+		stream_h->pa_context = NULL;
+	}
+	if (stream_h->pa_mainloop) {
+		pa_threaded_mainloop_free(stream_h->pa_mainloop);
+		stream_h->pa_mainloop = NULL;
+	}
+	free(stream_h);
+	ret = MM_ERROR_SOUND_INTERNAL;
+	LOGE("pa_ret(%d), ret(%p)", pa_ret, ret);
+SUCCESS:
+	return ret;
+}
+
+int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
+{
+	int i = 0;
+	int ret = MM_ERROR_NONE;
+
+	if (stream_h->pa_context) {
+		pa_context_disconnect(stream_h->pa_context);
+		pa_context_unref(stream_h->pa_context);
+		stream_h->pa_context = NULL;
+	}
+
+	if (stream_h->pa_mainloop) {
+		pa_threaded_mainloop_free(stream_h->pa_mainloop);
+		stream_h->pa_mainloop = NULL;
+	}
+
+	/* unregister focus */
+	ret = mm_sound_unregister_focus(stream_h->index);
+
+	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
+		if (stream_h->stream_conf_info.avail_in_devices[i]) {
+			free(stream_h->stream_conf_info.avail_in_devices[i]);
+		}
+		if (stream_h->stream_conf_info.avail_out_devices[i]) {
+			free(stream_h->stream_conf_info.avail_out_devices[i]);
+		}
+		if (stream_h->manual_route_info.route_in_devices[i]) {
+			free (stream_h->manual_route_info.route_in_devices[i]);
+		}
+		if (stream_h->manual_route_info.route_out_devices[i]) {
+			free (stream_h->manual_route_info.route_out_devices[i]);
+		}
+	}
+	for (i = 0; i < AVAIL_FRAMEWORKS_MAX; i++) {
+		if (stream_h->stream_conf_info.avail_frameworks[i]) {
+			free(stream_h->stream_conf_info.avail_frameworks[i]);
+		}
+	}
+	for (i = 0; i < ROUTE_OPTIONS_MAX; i++) {
+		if (stream_h->route_options[i]) {
+			free(stream_h->route_options[i]);
+		}
+	}
+	for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
+		if (sound_stream_info_arr[i] && sound_stream_info_arr[i]->index == stream_h->index) {
+			sound_stream_info_arr[i] = NULL;
+			break;
+		}
+	}
+	free(stream_h);
+
 	return ret;
 }
