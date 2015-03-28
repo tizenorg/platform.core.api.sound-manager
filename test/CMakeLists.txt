@@ -7,7 +7,7 @@ FOREACH(flag ${${fw_test}_CFLAGS})
     MESSAGE(${flag})
 ENDFOREACH()
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -Wall")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -Wall -pie")
 
 aux_source_directory(. sources)
 FOREACH(src ${sources})
