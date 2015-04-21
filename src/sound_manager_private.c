@@ -24,6 +24,7 @@
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_STREAM_INFO           "GetStreamInfo"
 #define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_DEVICES  "SetStreamRouteDevices"
 #define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTIONS  "SetStreamRouteOptions"
+#define PA_STREAM_MANAGER_METHOD_NAME_GET_VOLUME_MAX_LEVEL      "GetVolumeMaxLevel"
 
 extern _session_interrupt_info_s g_session_interrupt_cb_table;
 extern _session_mode_e g_cached_session_mode;
@@ -211,7 +212,48 @@ int __convert_stream_type_to_change_reason (const char *stream_type, sound_strea
 	return ret;
 }
 
-int __convert_device_type (sound_device_type_e device_type_enum, char *device_type)
+int __convert_sound_type (sound_type_e sound_type, const char **volume_type)
+{
+	int ret = MM_ERROR_NONE;
+
+	SM_NULL_ARG_CHECK(volume_type);
+
+	switch (sound_type) {
+	case SOUND_TYPE_SYSTEM:
+		*volume_type = "system";
+		break;
+	case SOUND_TYPE_NOTIFICATION:
+		*volume_type = "notification";
+		break;
+	case SOUND_TYPE_ALARM:
+		*volume_type = "alarm";
+		break;
+	case SOUND_TYPE_RINGTONE:
+		*volume_type = "ringtone";
+		break;
+	case SOUND_TYPE_MEDIA:
+		*volume_type = "media";
+		break;
+	case SOUND_TYPE_CALL:
+		*volume_type = "call";
+		break;
+	case SOUND_TYPE_VOIP:
+		*volume_type = "voip";
+		break;
+	case SOUND_TYPE_VOICE:
+		*volume_type = "voice";
+		break;
+	}
+	if (!strncmp(*volume_type,"",SOUND_DEVICE_TYPE_LEN)) {
+		LOGE("could not find the sound_type[%d] in this switch case statement", sound_type);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		LOGI("volume_type[%s]", *volume_type);
+	}
+	return ret;
+}
+
+int __convert_device_type (sound_device_type_e device_type_enum, char **device_type)
 {
 	int ret = MM_ERROR_NONE;
 
@@ -219,35 +261,35 @@ int __convert_device_type (sound_device_type_e device_type_enum, char *device_ty
 
 	switch (device_type_enum) {
 	case SOUND_DEVICE_BUILTIN_SPEAKER:
-		SOUND_STRNCPY(device_type,"builtin-speaker",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "builtin-speaker";
 		break;
 	case SOUND_DEVICE_BUILTIN_RECEIVER:
-		SOUND_STRNCPY(device_type,"builtin-receiver",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "builtin-receiver";
 		break;
 	case SOUND_DEVICE_BUILTIN_MIC:
-		SOUND_STRNCPY(device_type,"builtin-mic",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "builtin-mic";
 		break;
 	case SOUND_DEVICE_AUDIO_JACK:
-		SOUND_STRNCPY(device_type,"audio-jack",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "audio-jack";
 		break;
 	case SOUND_DEVICE_BLUETOOTH:
-		SOUND_STRNCPY(device_type,"bt",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "bt";
 		break;
 	case SOUND_DEVICE_HDMI:
-		SOUND_STRNCPY(device_type,"hdmi",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "hdmi";
 		break;
 	case SOUND_DEVICE_USB_AUDIO:
-		SOUND_STRNCPY(device_type,"usb-audio",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "usb-audio";
 		break;
 	case SOUND_DEVICE_FORWARDING:
-		SOUND_STRNCPY(device_type,"forwarding",SOUND_DEVICE_TYPE_LEN,ret);
+		*device_type = "forwarding";
 		break;
 	}
-	if (!strncmp(device_type,"",SOUND_DEVICE_TYPE_LEN)) {
+	if (!strncmp(*device_type,"",SOUND_DEVICE_TYPE_LEN)) {
 		LOGE("could not find the device_type[%d] in this switch case statement", device_type_enum);
 		ret = MM_ERROR_SOUND_INTERNAL;
 	} else {
-		LOGI("device_type[%s]", device_type);
+		LOGI("device_type[%s]", *device_type);
 	}
 	return ret;
 }
@@ -406,12 +448,14 @@ int __get_stream_conf_info (const char *stream_type, stream_conf_info_s *info)
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
 
+	assert(stream_type);
+	assert(info);
+
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
 	if (!conn && err) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free (err);
-		ret = MM_ERROR_SOUND_INTERNAL;
-		return ret;
+		return MM_ERROR_SOUND_INTERNAL;
 	}
 	result = g_dbus_connection_call_sync (conn,
 							PA_BUS_NAME,
@@ -525,12 +569,13 @@ int __set_manual_route_info (unsigned int index, manual_route_info_s *info)
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
 
+	assert(info);
+
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
 	if (!conn && err) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free (err);
-		ret = MM_ERROR_SOUND_INTERNAL;
-		return ret;
+		return MM_ERROR_SOUND_INTERNAL;
 	}
 
 	builder_for_in_devices = g_variant_builder_new(G_VARIANT_TYPE("as"));
@@ -591,12 +636,13 @@ int __set_route_options (unsigned int index, char **route_options)
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
 
+	assert(route_options);
+
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
 	if (!conn && err) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free (err);
-		ret = MM_ERROR_SOUND_INTERNAL;
-		return ret;
+		return MM_ERROR_SOUND_INTERNAL;
 	}
 
 	builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
@@ -633,6 +679,52 @@ int __set_route_options (unsigned int index, char **route_options)
 		g_variant_unref(result);
 	}
 	g_variant_builder_unref(builder);
+	g_object_unref(conn);
+	return ret;
+}
+
+int __get_volume_max_level (const char *direction, const char *volume_type, unsigned int *max_level)
+{
+	int ret = MM_ERROR_NONE;
+
+	GVariant *result = NULL;
+	GDBusConnection *conn = NULL;
+	GError *err = NULL;
+
+	assert(direction);
+	assert(volume_type);
+	assert(max_level);
+
+	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
+	if (!conn && err) {
+		LOGE("g_bus_get_sync() error (%s)", err->message);
+		g_error_free (err);
+		return MM_ERROR_SOUND_INTERNAL;
+	}
+
+	result = g_dbus_connection_call_sync (conn,
+							PA_BUS_NAME,
+							PA_STREAM_MANAGER_OBJECT_PATH,
+							PA_STREAM_MANAGER_INTERFACE,
+							PA_STREAM_MANAGER_METHOD_NAME_GET_VOLUME_MAX_LEVEL,
+							g_variant_new ("(ss)", direction, volume_type),
+							G_VARIANT_TYPE("(us)"),
+							G_DBUS_CALL_FLAGS_NONE,
+							2000,
+							NULL,
+							&err);
+	if (!result && err) {
+		LOGE("g_dbus_connection_call_sync() error (%s)", err->message);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		const gchar *dbus_ret = NULL;
+		g_variant_get(result, "(us)", max_level, &dbus_ret);
+		LOGI("g_dbus_connection_call_sync() success, method return value is (%u, %s)", *max_level, dbus_ret);
+		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
+			ret = MM_ERROR_SOUND_INTERNAL;
+		}
+		g_variant_unref(result);
+	}
 	g_object_unref(conn);
 	return ret;
 }

@@ -28,16 +28,20 @@ _session_mode_e g_cached_session_mode = -1;
 
 int sound_manager_get_max_volume (sound_type_e type, int *max)
 {
-	int volume;
+	const char *volume_type = NULL;
+	unsigned int max_level = 0;
+	int ret = MM_ERROR_NONE;
 	if(max == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	if(type >= SOUND_TYPE_NUM || type < 0)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-	int ret = mm_sound_volume_get_step(type, &volume);
+	ret = __convert_sound_type (type, &volume_type);
+	if (!ret)
+		ret = __get_volume_max_level("out", volume_type, &max_level);
 
 	if(ret == 0)
-		*max = volume -1;	// actual volume step can be max step - 1
+		*max = (int)max_level -1;	// actual volume step can be max step - 1
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }
@@ -182,7 +186,7 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 	int i = 0;
 	int j = 0;
 	bool added_successfully = false;
-	char device_type_str[SOUND_DEVICE_TYPE_LEN] = {0,};
+	char *device_type_str = NULL;
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
@@ -197,7 +201,7 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
-		ret = __convert_device_type(device_type, device_type_str);
+		ret = __convert_device_type(device_type, &device_type_str);
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
@@ -264,7 +268,7 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 	int i = 0;
 	int j = 0;
 	bool removed_successfully = false;
-	char device_type_str[SOUND_DEVICE_TYPE_LEN] = {0,};
+	char *device_type_str = NULL;
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
@@ -279,7 +283,7 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
-		ret = __convert_device_type(device_type, device_type_str);
+		ret = __convert_device_type(device_type, &device_type_str);
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
