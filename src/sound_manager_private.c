@@ -852,7 +852,13 @@ int __set_session_mode (_session_mode_e mode)
 			goto ERROR_CASE;
 		}
 		/* route */
+
+#ifdef TMP_CODE
+		mm_sound_set_active_route(route); //not getting return value temporarily. when 2.4 feature for routing is fully implemented, it will be recoverd.
+#else
 		ret = mm_sound_set_active_route(route);
+#endif
+
 		if (ret != MM_ERROR_NONE) {
 			goto ERROR_CASE;
 		}
