@@ -26,6 +26,11 @@ _device_changed_info_s g_device_info_changed_cb_table = {NULL, NULL};
 sound_session_type_e g_cached_session = -1;
 _session_mode_e g_cached_session_mode = -1;
 
+#ifdef TMP_CODE
+/*temporary variable for set/get voip session mode. When 2.4  feature for routing is fully implemented, it will be removed.*/
+sound_session_voip_mode_e tmp_mode = -1;
+#endif
+
 int sound_manager_get_max_volume (sound_type_e type, int *max)
 {
 	const char *volume_type = NULL;
@@ -832,6 +837,11 @@ int sound_manager_set_voip_session_mode (sound_session_voip_mode_e mode)
 	}
 	ret = __set_session_mode ((_session_mode_e)mode);
 
+#ifdef TMP_CODE
+	/* temporary code. When 2.4 feature for routing is fully implemented, it will be removed. */
+	tmp_mode = mode;
+#endif
+
 	LOGI("<< leave : session=%p, mode=%d, ret=%p", session, mode, ret);
 
 	return __convert_sound_manager_error_code(__func__, ret);
@@ -857,6 +867,11 @@ int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode)
 	ret = __get_session_mode(&_mode);
 	if (ret == MM_ERROR_NONE)
 		*mode = (sound_session_voip_mode_e)_mode;
+
+#ifdef TMP_CODE
+	/* temporary code. When 2.4 feature for routing is fully implemented, it will be removed. */
+	*mode = tmp_mode;
+#endif
 
 	LOGI("returns : session=%p, mode=%d, ret=%p", session, *mode, ret);
 
