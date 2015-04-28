@@ -117,6 +117,7 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
 int sound_manager_add_option_for_stream_routing (sound_stream_info_h stream_info, const char *option);
 
 /**
+ * @internal
  * @brief Removes the option to the stream information for the stream routing.
  * @since_tizen 2.4
  * @param[in]	stream_info	The handle of stream information
@@ -137,6 +138,7 @@ int sound_manager_add_option_for_stream_routing (sound_stream_info_h stream_info
 int sound_manager_remove_option_for_stream_routing (sound_stream_info_h stream_info, const char *option);
 
 /**
+ * @internal
  * @brief Applies the stream routing options.
  * @since_tizen 2.4
  * @param[in]	stream_info	The handle of stream information

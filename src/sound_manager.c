@@ -487,7 +487,7 @@ int sound_manager_set_session_type (sound_session_type_e type)
 
 	LOGI(">> enter : type=%d", type);
 
-	if(type < SOUND_SESSION_TYPE_MEDIA || type >  SOUND_SESSION_TYPE_CALL)
+	if(type < SOUND_SESSION_TYPE_MEDIA || type >  SOUND_SESSION_TYPE_VOIP)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	switch(type) {
@@ -505,9 +505,6 @@ int sound_manager_set_session_type (sound_session_type_e type)
 		break;
 	case SOUND_SESSION_TYPE_VOIP:
 		new_session = MM_SESSION_TYPE_VOIP;
-		break;
-	case SOUND_SESSION_TYPE_CALL:
-		new_session = MM_SESSION_TYPE_CALL;
 		break;
 	}
 
@@ -568,8 +565,7 @@ int sound_manager_get_session_type (sound_session_type_e *type)
 	if (ret != 0)
 		cur_session = SOUND_SESSION_TYPE_DEFAULT;
 	if ((cur_session > MM_SESSION_TYPE_EMERGENCY) &&
-			(cur_session != MM_SESSION_TYPE_VOIP) &&
-			(cur_session != MM_SESSION_TYPE_CALL)) {
+			(cur_session != MM_SESSION_TYPE_VOIP)) {
 		if( g_cached_session != -1 )
 			cur_session = g_cached_session;
 		else //will be never reach here. just prevent code
@@ -592,9 +588,6 @@ int sound_manager_get_session_type (sound_session_type_e *type)
 		break;
 	case MM_SESSION_TYPE_VOIP:
 		*type = SOUND_SESSION_TYPE_VOIP;
-		break;
-	case MM_SESSION_TYPE_CALL:
-		*type = SOUND_SESSION_TYPE_CALL;
 		break;
 	default:
 		*type = cur_session;
@@ -864,57 +857,6 @@ int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode)
 	ret = __get_session_mode(&_mode);
 	if (ret == MM_ERROR_NONE)
 		*mode = (sound_session_voip_mode_e)_mode;
-
-	LOGI("returns : session=%p, mode=%d, ret=%p", session, *mode, ret);
-
-	return __convert_sound_manager_error_code(__func__, ret);
-}
-
-int sound_manager_set_call_session_mode (sound_session_call_mode_e mode)
-{
-	int ret = MM_ERROR_NONE;
-	int session = 0;
-	int session_options = 0;
-
-	LOGI(">> enter : mode=%d", mode);
-
-	ret = mm_session_get_current_information(&session, &session_options);
-	if( ret != MM_ERROR_NONE ) {
-		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (session != MM_SESSION_TYPE_CALL ) {
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
-	}
-	if(mode < SOUND_SESSION_CALL_MODE_RINGTONE || mode > SOUND_SESSION_CALL_MODE_VOICE_WITH_BLUETOOTH) {
-		ret = MM_ERROR_INVALID_ARGUMENT;
-		return __convert_sound_manager_error_code(__func__, ret);
-	}
-	ret = __set_session_mode ((_session_mode_e)mode);
-
-	LOGI("<< leave : session=%p, mode=%d, ret=%p", session, mode, ret);
-
-	return __convert_sound_manager_error_code(__func__, ret);
-}
-
-int sound_manager_get_call_session_mode (sound_session_call_mode_e *mode)
-{
-	int ret = MM_ERROR_NONE;
-	int session = 0;
-	int session_options = 0;
-	_session_mode_e _mode = 0;
-
-	if(mode == NULL) {
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-	}
-
-	ret = mm_session_get_current_information(&session, &session_options);
-	if( ret != MM_ERROR_NONE ) {
-		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (session != MM_SESSION_TYPE_CALL ) {
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
-	}
-	ret = __get_session_mode(&_mode);
-	if (ret == MM_ERROR_NONE)
-		*mode = (sound_session_call_mode_e)_mode;
 
 	LOGI("returns : session=%p, mode=%d, ret=%p", session, *mode, ret);
 
