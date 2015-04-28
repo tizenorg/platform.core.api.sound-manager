@@ -191,7 +191,6 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 	bool added_successfully = false;
 	char *device_type_str = NULL;
 	int device_id = 0;
-	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
 
@@ -205,11 +204,7 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
-		ret = mm_sound_get_device_type(device, &device_type);
-		if (ret) {
-			return __convert_sound_manager_error_code(__func__, ret);
-		}
-		ret = __convert_device_type(device_type, &device_type_str);
+		ret = mm_sound_get_device_type(device, &device_type_str);
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
@@ -278,7 +273,6 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 	bool removed_successfully = false;
 	char *device_type_str = NULL;
 	int device_id = 0;
-	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
 
@@ -292,11 +286,7 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
-		ret = mm_sound_get_device_type(device, &device_type);
-		if (ret) {
-			return __convert_sound_manager_error_code(__func__, ret);
-		}
-		ret = __convert_device_type(device_type, &device_type_str);
+		ret = mm_sound_get_device_type(device, &device_type_str);
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
@@ -941,7 +931,11 @@ int sound_manager_get_prev_device (sound_device_list_h device_list, sound_device
 int sound_manager_get_device_type (sound_device_h device, sound_device_type_e *type)
 {
 	int ret = MM_ERROR_NONE;
-	ret = mm_sound_get_device_type(device, (mm_sound_device_type_e*)type);
+	char *device_type = NULL;
+	ret = mm_sound_get_device_type(device, &device_type);
+	if (ret == MM_ERROR_NONE) {
+		ret = __convert_device_type_to_enum(device_type, type);
+	}
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }
@@ -949,7 +943,11 @@ int sound_manager_get_device_type (sound_device_h device, sound_device_type_e *t
 int sound_manager_get_device_io_direction (sound_device_h device, sound_device_io_direction_e *io_direction)
 {
 	int ret = MM_ERROR_NONE;
-	ret = mm_sound_get_device_io_direction(device, (mm_sound_device_io_direction_e*)io_direction);
+	mm_sound_device_io_direction_e mm_sound_io_direction;
+	ret = mm_sound_get_device_io_direction(device, &mm_sound_io_direction);
+	if (ret == MM_ERROR_NONE) {
+		ret = __convert_device_io_direction(mm_sound_io_direction, io_direction);
+	}
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }

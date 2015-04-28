@@ -192,6 +192,8 @@ int __convert_device_type (sound_device_type_e device_type_enum, char **device_t
 
 int __convert_device_type_to_enum (char *device_type, sound_device_type_e *device_type_enum);
 
+int __convert_device_io_direction (mm_sound_device_io_direction_e io_direction, sound_device_io_direction_e *sound_io_direction);
+
 const char* __convert_api_name (native_api_e api_name);
 
 int __get_stream_conf_info (const char *stream_type, stream_conf_info_s *info);
