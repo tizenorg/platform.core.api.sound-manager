@@ -67,10 +67,10 @@ typedef enum
 	SOUND_TYPE_SYSTEM,          /**< Sound type for system */
 	SOUND_TYPE_NOTIFICATION,    /**< Sound type for notifications */
 	SOUND_TYPE_ALARM,           /**< Sound type for alarm */
-	SOUND_TYPE_RINGTONE,        /**< @internal Sound type for ringtones */
+	SOUND_TYPE_RINGTONE,        /**< Sound type for ringtones */
 	SOUND_TYPE_MEDIA,           /**< Sound type for media */
-	SOUND_TYPE_CALL,            /**< @internal Sound type for call */
-	SOUND_TYPE_VOIP,            /**< @internal Sound type for voip */
+	SOUND_TYPE_CALL,            /**< Sound type for call */
+	SOUND_TYPE_VOIP,            /**< Sound type for voip */
 	SOUND_TYPE_VOICE,           /**< Sound type for voice */
 } sound_type_e;
 
@@ -189,7 +189,6 @@ typedef enum {
 	SOUND_SESSION_TYPE_NOTIFICATION,		/**< Notification type */
 	SOUND_SESSION_TYPE_EMERGENCY,			/**< Emergency type */
 	SOUND_SESSION_TYPE_VOIP,			/**< VOIP type */
-	SOUND_SESSION_TYPE_CALL,			/**< @internal Call type */
 } sound_session_type_e;
 
 /**
@@ -234,19 +233,6 @@ typedef enum {
 	SOUND_SESSION_VOIP_MODE_VOICE_WITH_AUDIO_JACK,       /**< voip mode for during call with audio jack */
 	SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH,        /**< voip mode for during call with bluetooth */
 } sound_session_voip_mode_e;
-
-/**
- * @internal
- * @brief Enumeration for call session mode.
- * @since_tizen 2.3.1
- */
-typedef enum {
-	SOUND_SESSION_CALL_MODE_RINGTONE = 0,                /**< call mode for ringtone */
-	SOUND_SESSION_CALL_MODE_VOICE_WITH_BUILTIN_RECEIVER, /**< call mode for during call with built-in receiver */
-	SOUND_SESSION_CALL_MODE_VOICE_WITH_BUILTIN_SPEAKER,  /**< call mode for during call with built-in speaker */
-	SOUND_SESSION_CALL_MODE_VOICE_WITH_AUDIO_JACK,       /**< call mode for during call with audio jack */
-	SOUND_SESSION_CALL_MODE_VOICE_WITH_BLUETOOTH,        /**< call mode for during call with bluetooth */
-} sound_session_call_mode_e;
 
 /**
  * @deprecated Deprecated since 2.4. Use sound_stream_focus_state_changed_cb instead.
@@ -895,44 +881,6 @@ int sound_manager_set_voip_session_mode (sound_session_voip_mode_e mode);
  * @see sound_manager_set_voip_session_mode()
 */
 int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode);
-
-/**
- * @internal
- * @brief Sets the mode of the call sound session.
- * @since_tizen 2.3.1
- * @param[in] mode The call session mode
- * @return @c 0 on success,
- *         otherwise a negative error value
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #SOUND_MANAGER_ERROR_NOT_SUPPORTED Not supported
- * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
- * @retval #SOUND_MANAGER_ERROR_POLICY Noncompliance with the sound system policy
- * @pre Call sound_manager_set_session_type(SOUND_SESSION_TYPE_CALL) before calling this function.
- * @see sound_manager_set_session_type()
- * @see sound_manager_get_session_type()
- * @see sound_manager_get_call_session_mode()
-*/
-int sound_manager_set_call_session_mode (sound_session_call_mode_e mode);
-
-/**
- * @internal
- * @brief Gets the mode of the call sound session.
- * @since_tizen 2.3.1
- * @param[out] mode The call session mode
- * @return @c 0 on success,
- *         otherwise a negative error value
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #SOUND_MANAGER_ERROR_NOT_SUPPORTED Not supported
- * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
- * @retval #SOUND_MANAGER_ERROR_POLICY Noncompliance with the sound system policy
- * @pre Call sound_manager_set_session_type(SOUND_SESSION_TYPE_call) before calling this function.
- * @see sound_manager_set_session_type()
- * @see sound_manager_get_session_type()
- * @see sound_manager_set_call_session_mode()
-*/
-int sound_manager_get_call_session_mode (sound_session_call_mode_e *mode);
 
 /**
  * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
