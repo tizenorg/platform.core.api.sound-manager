@@ -67,10 +67,10 @@ typedef enum
 	SOUND_TYPE_SYSTEM,          /**< Sound type for system */
 	SOUND_TYPE_NOTIFICATION,    /**< Sound type for notifications */
 	SOUND_TYPE_ALARM,           /**< Sound type for alarm */
-	SOUND_TYPE_RINGTONE,        /**< Sound type for ringtones */
+	SOUND_TYPE_RINGTONE,        /**< Sound type for ringtones (Since 2.4) */
 	SOUND_TYPE_MEDIA,           /**< Sound type for media */
-	SOUND_TYPE_CALL,            /**< Sound type for call */
-	SOUND_TYPE_VOIP,            /**< Sound type for voip */
+	SOUND_TYPE_CALL,            /**< Sound type for call (Since 2.4) */
+	SOUND_TYPE_VOIP,            /**< Sound type for voip (Since 2.4) */
 	SOUND_TYPE_VOICE,           /**< Sound type for voice */
 } sound_type_e;
 
