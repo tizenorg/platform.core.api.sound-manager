@@ -90,10 +90,8 @@ typedef struct _stream_conf_info_s {
 } stream_conf_info_s;
 
 typedef struct _manual_route_info_s {
-	char *route_in_devices[AVAIL_DEVICES_MAX];
-	char *route_out_devices[AVAIL_DEVICES_MAX];
-	int route_in_devices_idx[AVAIL_DEVICES_MAX];
-	int route_out_devices_idx[AVAIL_DEVICES_MAX];
+	unsigned int route_in_devices[AVAIL_DEVICES_MAX];
+	unsigned int route_out_devices[AVAIL_DEVICES_MAX];
 } manual_route_info_s;
 
 typedef struct _sound_stream_info_s {
