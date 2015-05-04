@@ -515,11 +515,11 @@ static void displaymenu()
 	}
 	else if (g_menu_state == CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING)
 	{
-		g_print("*** input device type to add (0:built-in spk, 1:built-in rcv, 2:audio-jack, 3:bt)\n");
+		g_print("*** input device type to add (0:built-in mic, 1:built-in spk, 2:built-in rcv, 3:audio-jack, 4:bt)\n");
 	}
 	else if (g_menu_state == CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING)
 	{
-		g_print("*** input device type to remove (0:built-in spk, 1:built-in rcv, 2:audio-jack, 3:bt)\n");
+		g_print("*** input device type to remove (0:built-in mic, 1:built-in spk, 2:built-in rcv, 3:audio-jack, 4:bt)\n");
 	}
 	else if (g_menu_state == CURRENT_STATUS_APPLY_STREAM_ROUTING)
 	{
@@ -1232,16 +1232,19 @@ static void interpret (char *cmd)
 			bool need_to_go = false;
 			device_type = atoi(cmd);
 			switch(device_type) {
-			case 0: /* built-in spk */
+			case 0: /* built-in mic */
+				selected_type = SOUND_DEVICE_BUILTIN_MIC;
+				break;
+			case 1: /* built-in spk */
 				selected_type = SOUND_DEVICE_BUILTIN_SPEAKER;
 				break;
-			case 1: /* built-in rcv */
+			case 2: /* built-in rcv */
 				selected_type = SOUND_DEVICE_BUILTIN_RECEIVER;
 				break;
-			case 2: /* audio-jack */
+			case 3: /* audio-jack */
 				selected_type = SOUND_DEVICE_AUDIO_JACK;
 				break;
-			case 3: /* bt */
+			case 4: /* bt */
 				selected_type = SOUND_DEVICE_BLUETOOTH;
 				break;
 			default:
@@ -1288,16 +1291,19 @@ static void interpret (char *cmd)
 			bool need_to_go = false;
 			device_type = atoi(cmd);
 			switch(device_type) {
-			case 0: /* built-in spk */
+			case 0: /* built-in mic */
+				selected_type = SOUND_DEVICE_BUILTIN_MIC;
+				break;
+			case 1: /* built-in spk */
 				selected_type = SOUND_DEVICE_BUILTIN_SPEAKER;
 				break;
-			case 1: /* built-in rcv */
+			case 2: /* built-in rcv */
 				selected_type = SOUND_DEVICE_BUILTIN_RECEIVER;
 				break;
-			case 2: /* audio-jack */
+			case 3: /* audio-jack */
 				selected_type = SOUND_DEVICE_AUDIO_JACK;
 				break;
-			case 3: /* bt */
+			case 4: /* bt */
 				selected_type = SOUND_DEVICE_BLUETOOTH;
 				break;
 			default:

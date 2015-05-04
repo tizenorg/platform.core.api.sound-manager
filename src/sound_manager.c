@@ -192,6 +192,7 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 	int j = 0;
 	bool added_successfully = false;
 	char *device_type_str = NULL;
+	int device_id = 0;
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
@@ -202,6 +203,10 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 	SM_NULL_ARG_CHECK(device);
 
 	if (stream_h->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
+		ret = mm_sound_get_device_id(device, &device_id);
+		if (ret) {
+			return __convert_sound_manager_error_code(__func__, ret);
+		}
 		ret = mm_sound_get_device_type(device, &device_type);
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
@@ -220,11 +225,11 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 					if(!strncmp(stream_h->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
 							if (!stream_h->manual_route_info.route_in_devices[j]) {
-								stream_h->manual_route_info.route_in_devices[j] = strdup(device_type_str);
+								stream_h->manual_route_info.route_in_devices[j] = (unsigned int)device_id;
 								added_successfully = true;
 								break;
 							}
-							if (!strncmp(stream_h->manual_route_info.route_in_devices[j], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+							if (stream_h->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
 								/* it was already set */
 								return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
 							}
@@ -241,11 +246,11 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 					if(!strncmp(stream_h->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
 							if (!stream_h->manual_route_info.route_out_devices[j]) {
-								stream_h->manual_route_info.route_out_devices[j] = strdup(device_type_str);
+								stream_h->manual_route_info.route_out_devices[j] = (unsigned int)device_id;
 								added_successfully = true;
 								break;
 							}
-							if (!strncmp(stream_h->manual_route_info.route_out_devices[j], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+							if (stream_h->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
 								/* it was already set */
 								return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
 							}
@@ -274,6 +279,7 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 	int j = 0;
 	bool removed_successfully = false;
 	char *device_type_str = NULL;
+	int device_id = 0;
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
@@ -284,6 +290,10 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 	SM_NULL_ARG_CHECK(device);
 
 	if (stream_h->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
+		ret = mm_sound_get_device_id(device, &device_id);
+		if (ret) {
+			return __convert_sound_manager_error_code(__func__, ret);
+		}
 		ret = mm_sound_get_device_type(device, &device_type);
 		if (ret) {
 			return __convert_sound_manager_error_code(__func__, ret);
@@ -301,10 +311,9 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 				if (stream_h->stream_conf_info.avail_in_devices[i]) {
 					if(!strncmp(stream_h->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
-							if (!strncmp(stream_h->manual_route_info.route_in_devices[j], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+							if (stream_h->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
 								removed_successfully = true;
-								free(stream_h->manual_route_info.route_in_devices[j]);
-								stream_h->manual_route_info.route_in_devices[j] = NULL;
+								stream_h->manual_route_info.route_in_devices[j] = 0;
 								break;
 							}
 						}
@@ -319,10 +328,9 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 				if (stream_h->stream_conf_info.avail_out_devices[i]) {
 					if(!strncmp(stream_h->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
-							if (!strncmp(stream_h->manual_route_info.route_out_devices[j], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+							if (stream_h->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
 								removed_successfully = true;
-								free(stream_h->manual_route_info.route_out_devices[j]);
-								stream_h->manual_route_info.route_out_devices[j] = NULL;
+								stream_h->manual_route_info.route_out_devices[j] = 0;
 								break;
 							}
 						}

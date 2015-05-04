@@ -578,20 +578,20 @@ int __set_manual_route_info (unsigned int index, manual_route_info_s *info)
 		return MM_ERROR_SOUND_INTERNAL;
 	}
 
-	builder_for_in_devices = g_variant_builder_new(G_VARIANT_TYPE("as"));
-	builder_for_out_devices = g_variant_builder_new(G_VARIANT_TYPE("as"));
+	builder_for_in_devices = g_variant_builder_new(G_VARIANT_TYPE("au"));
+	builder_for_out_devices = g_variant_builder_new(G_VARIANT_TYPE("au"));
 	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 		if (info->route_in_devices[i]) {
-			g_variant_builder_add(builder_for_in_devices, "s", info->route_in_devices[i]);
-			LOGI("[IN] %s", info->route_in_devices[i]);
+			g_variant_builder_add(builder_for_in_devices, "u", info->route_in_devices[i]);
+			LOGI("[IN] device_id:%u", info->route_in_devices[i]);
 		} else {
 			break;
 		}
 	}
 	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 		if (info->route_out_devices[i]) {
-			g_variant_builder_add(builder_for_out_devices, "s", info->route_out_devices[i]);
-			LOGI("[OUT] %s", info->route_out_devices[i]);
+			g_variant_builder_add(builder_for_out_devices, "u", info->route_out_devices[i]);
+			LOGI("[OUT] device_id:%u", info->route_out_devices[i]);
 		} else {
 			break;
 		}
@@ -602,7 +602,7 @@ int __set_manual_route_info (unsigned int index, manual_route_info_s *info)
 							PA_STREAM_MANAGER_OBJECT_PATH,
 							PA_STREAM_MANAGER_INTERFACE,
 							PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_DEVICES,
-							g_variant_new ("(uasas)", index, builder_for_in_devices, builder_for_out_devices),
+							g_variant_new ("(uauau)", index, builder_for_in_devices, builder_for_out_devices),
 							G_VARIANT_TYPE("(s)"),
 							G_DBUS_CALL_FLAGS_NONE,
 							2000,
@@ -1068,12 +1068,6 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 		}
 		if (stream_h->stream_conf_info.avail_out_devices[i]) {
 			free(stream_h->stream_conf_info.avail_out_devices[i]);
-		}
-		if (stream_h->manual_route_info.route_in_devices[i]) {
-			free (stream_h->manual_route_info.route_in_devices[i]);
-		}
-		if (stream_h->manual_route_info.route_out_devices[i]) {
-			free (stream_h->manual_route_info.route_out_devices[i]);
 		}
 	}
 	for (i = 0; i < AVAIL_FRAMEWORKS_MAX; i++) {
