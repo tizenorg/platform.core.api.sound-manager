@@ -95,6 +95,11 @@ int __convert_sound_manager_error_code (const char *func, int code) {
 int __convert_stream_type (sound_stream_type_e stream_type_enum, char *stream_type)
 {
 	int ret = MM_ERROR_NONE;
+
+	if (stream_type == NULL) {
+		return MM_ERROR_INVALID_ARGUMENT;
+	}
+
 	switch (stream_type_enum) {
 	case SOUND_STREAM_TYPE_MEDIA:
 		SOUND_STRNCPY(stream_type,"media",SOUND_STREAM_TYPE_LEN,ret);
@@ -123,13 +128,13 @@ int __convert_stream_type (sound_stream_type_e stream_type_enum, char *stream_ty
 	case SOUND_STREAM_TYPE_VOIP:
 		SOUND_STRNCPY(stream_type,"voip",SOUND_STREAM_TYPE_LEN,ret);
 		break;
-	}
-	if (!strncmp(stream_type,"",SOUND_STREAM_TYPE_LEN)) {
+	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		LOGI("stream_type[%s]", stream_type);
+		break;
 	}
+	LOGI("stream_type[%s]", stream_type);
+
 	return ret;
 }
 
@@ -137,7 +142,9 @@ int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type
 {
 	int ret = MM_ERROR_NONE;
 
-	SM_NULL_ARG_CHECK(stream_type);
+	if (stream_type == NULL) {
+		return MM_ERROR_INVALID_ARGUMENT;
+	}
 
 	switch (stream_type_enum) {
 	case SOUND_STREAM_TYPE_RINGTONE_CALL:
@@ -155,13 +162,13 @@ int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type
 	case SOUND_STREAM_TYPE_LOOPBACK:
 		SOUND_STRNCPY(stream_type,"loopback",SOUND_STREAM_TYPE_LEN,ret);
 		break;
-	}
-	if (!strncmp(stream_type,"",SOUND_STREAM_TYPE_LEN)) {
+	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		LOGI("stream_type_for_internal[%s]", stream_type);
+		break;
 	}
+	LOGI("stream_type_for_internal[%s]", stream_type);
+
 	return ret;
 }
 
