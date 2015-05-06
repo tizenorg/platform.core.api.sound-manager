@@ -36,29 +36,32 @@ int sound_manager_get_max_volume (sound_type_e type, int *max)
 	const char *volume_type = NULL;
 	unsigned int max_level = 0;
 	int ret = MM_ERROR_NONE;
-	if(max == NULL)
+
+	if (max == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
-	if(type >= SOUND_TYPE_NUM || type < 0)
+	if (type >= SOUND_TYPE_NUM || type < 0)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	ret = __convert_sound_type (type, &volume_type);
-	if (!ret)
+	if (ret == MM_ERROR_NONE) {
 		ret = __get_volume_max_level("out", volume_type, &max_level);
-
-	if(ret == 0)
-		*max = (int)max_level -1;	// actual volume step can be max step - 1
+		if (ret == MM_ERROR_NONE)
+			*max = (int)max_level -1;	// actual volume step can be max step - 1
+	}
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_set_volume (sound_type_e type, int volume)
 {
-	if(type >= SOUND_TYPE_NUM || type < 0)
+	int ret = MM_ERROR_NONE;
+
+	if (type >= SOUND_TYPE_NUM || type < 0)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-	if(volume < 0)
+	if (volume < 0)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
-	int ret = mm_sound_volume_set_value(type, volume);
+	ret = mm_sound_volume_set_value(type, volume);
 	LOGI("returns : type=%d, volume=%d, ret=%p", type, volume, ret);
 
 	return __convert_sound_manager_error_code(__func__, ret);
@@ -66,14 +69,16 @@ int sound_manager_set_volume (sound_type_e type, int volume)
 
 int sound_manager_get_volume (sound_type_e type, int *volume)
 {
+	int ret = MM_ERROR_NONE;
 	unsigned int uvolume;
-	if(type >= SOUND_TYPE_NUM || type < 0)
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-	if(volume == NULL)
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-	int ret = mm_sound_volume_get_value(type, &uvolume);
 
-	if(ret == 0)
+	if (type >= SOUND_TYPE_NUM || type < 0)
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+	if (volume == NULL)
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+
+	ret = mm_sound_volume_get_value(type, &uvolume);
+	if (ret == MM_ERROR_NONE)
 		*volume = uvolume;
 
 	LOGI("returns : type=%d, volume=%d, ret=%p", type, *volume, ret);
@@ -84,7 +89,8 @@ int sound_manager_get_volume (sound_type_e type, int *volume)
 int sound_manager_set_current_sound_type (sound_type_e type)
 {
 	int ret = MM_ERROR_NONE;
-	if(type >= SOUND_TYPE_NUM || type < 0)
+
+	if (type >= SOUND_TYPE_NUM || type < 0)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	ret = mm_sound_volume_primary_type_set(type);
@@ -95,7 +101,8 @@ int sound_manager_set_current_sound_type (sound_type_e type)
 int sound_manager_get_current_sound_type (sound_type_e *type)
 {
 	int ret = MM_ERROR_NONE;
-	if(type == NULL)
+
+	if (type == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	ret = mm_sound_volume_get_current_playing_type((volume_type_t *)type);
 
@@ -107,6 +114,7 @@ int sound_manager_get_current_sound_type (sound_type_e *type)
 int sound_manager_unset_current_sound_type (void)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_volume_primary_type_clear();
 
 	return __convert_sound_manager_error_code(__func__, ret);
@@ -159,10 +167,13 @@ int sound_manager_create_stream_information (sound_stream_type_e stream_type, so
 		ret = __convert_stream_type(stream_type, stream_h->stream_type);
 		if (ret == MM_ERROR_NONE) {
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
-			if (!ret) {
+			if (ret == MM_ERROR_NONE) {
 				*stream_info = (sound_stream_info_h)stream_h;
 				LOGI("<< leave : stream_h(%p), index(%u), user_cb(%p), ret(%p)", stream_h, stream_h->index, stream_h->user_cb, ret);
 			}
+		}
+		if (ret) {
+			free(stream_h);
 		}
 	}
 
@@ -222,7 +233,7 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_IN || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 				if (stream_h->stream_conf_info.avail_in_devices[i]) {
-					if(!strncmp(stream_h->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					if (!strncmp(stream_h->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
 							if (!stream_h->manual_route_info.route_in_devices[j]) {
 								stream_h->manual_route_info.route_in_devices[j] = (unsigned int)device_id;
@@ -243,7 +254,7 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_OUT || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 				if (stream_h->stream_conf_info.avail_out_devices[i]) {
-					if(!strncmp(stream_h->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					if (!strncmp(stream_h->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
 							if (!stream_h->manual_route_info.route_out_devices[j]) {
 								stream_h->manual_route_info.route_out_devices[j] = (unsigned int)device_id;
@@ -306,7 +317,7 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_IN || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 				if (stream_h->stream_conf_info.avail_in_devices[i]) {
-					if(!strncmp(stream_h->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					if (!strncmp(stream_h->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
 							if (stream_h->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
 								removed_successfully = true;
@@ -323,7 +334,7 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_OUT || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 				if (stream_h->stream_conf_info.avail_out_devices[i]) {
-					if(!strncmp(stream_h->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					if (!strncmp(stream_h->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
 						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
 							if (stream_h->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
 								removed_successfully = true;
@@ -497,10 +508,10 @@ int sound_manager_set_session_type (sound_session_type_e type)
 
 	LOGI(">> enter : type=%d", type);
 
-	if(type < SOUND_SESSION_TYPE_MEDIA || type >  SOUND_SESSION_TYPE_VOIP)
+	if (type < SOUND_SESSION_TYPE_MEDIA || type >  SOUND_SESSION_TYPE_VOIP)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
-	switch(type) {
+	switch (type) {
 	case SOUND_SESSION_TYPE_MEDIA:
 		new_session = MM_SESSION_TYPE_MEDIA;
 		break;
@@ -520,7 +531,7 @@ int sound_manager_set_session_type (sound_session_type_e type)
 
 	/* valid session check */
 	ret = mm_session_get_current_type(&cur_session);
-	if(ret == 0) {
+	if (ret == MM_ERROR_NONE) {
 		if (cur_session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (type > SOUND_SESSION_TYPE_MEDIA) {
 				LOGE("<< leave : Could not set this type(%d) during camera/recorder/audio-io(in)/radio", type);
@@ -533,7 +544,7 @@ int sound_manager_set_session_type (sound_session_type_e type)
 		}
 	}
 
-	if(g_session_interrupt_cb_table.is_registered) {
+	if (g_session_interrupt_cb_table.is_registered) {
 		if (new_session == cur_session ||
 			((new_session == SOUND_SESSION_TYPE_MEDIA) && (cur_session == MM_SESSION_TYPE_MEDIA_RECORD))) {
 			LOGI("<< leave : already set type=%d, ret=%p", type, ret);
@@ -548,7 +559,7 @@ int sound_manager_set_session_type (sound_session_type_e type)
 		}
 	}
 	ret = mm_session_init_ex(new_session , _session_interrupt_cb, NULL);
-	if(ret == 0){
+	if (ret == MM_ERROR_NONE) {
 		g_session_interrupt_cb_table.is_registered = 1;
 	}
 	if (new_session == MM_SESSION_TYPE_VOIP || new_session == MM_SESSION_TYPE_CALL) {
@@ -569,20 +580,20 @@ int sound_manager_get_session_type (sound_session_type_e *type)
 	int ret = MM_ERROR_NONE;
 	int cur_session;
 
-	if( type == NULL )
+	if (type == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	ret = mm_session_get_current_type(&cur_session);
 	if (ret != 0)
 		cur_session = SOUND_SESSION_TYPE_DEFAULT;
 	if ((cur_session > MM_SESSION_TYPE_EMERGENCY) &&
 			(cur_session != MM_SESSION_TYPE_VOIP)) {
-		if( g_cached_session != -1 )
+		if (g_cached_session != -1)
 			cur_session = g_cached_session;
 		else //will be never reach here. just prevent code
 			cur_session = SOUND_SESSION_TYPE_DEFAULT;
 	}
 
-	switch(cur_session) {
+	switch (cur_session) {
 	case MM_SESSION_TYPE_MEDIA:
 	case MM_SESSION_TYPE_MEDIA_RECORD:
 		*type = SOUND_SESSION_TYPE_MEDIA;
@@ -618,16 +629,16 @@ int sound_manager_set_media_session_option (sound_session_option_for_starting_e 
 
 	LOGI(">> enter : option for starting=%d, for during play=%d", s_option, d_option);
 
-	if(s_option < 0 || s_option >  SOUND_SESSION_OPTION_PAUSE_OTHERS_WHEN_START)
+	if (s_option < 0 || s_option >  SOUND_SESSION_OPTION_PAUSE_OTHERS_WHEN_START)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-	if(d_option < 0 || d_option >  SOUND_SESSION_OPTION_UNINTERRUPTIBLE_DURING_PLAY)
+	if (d_option < 0 || d_option >  SOUND_SESSION_OPTION_UNINTERRUPTIBLE_DURING_PLAY)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	ret = mm_session_get_current_information(&session, &session_option);
-	if ( ret != 0 || !g_session_interrupt_cb_table.is_registered) {
+	if (ret != 0 || !g_session_interrupt_cb_table.is_registered) {
 		LOGW("need to set session type first");
 		return __convert_sound_manager_error_code(__func__, ret);
-	} else if ( ret == 0 && session > MM_SESSION_TYPE_MEDIA ) {
+	} else if (ret == MM_ERROR_NONE && session > MM_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
 				LOGE("Already set by camera/recorder/audio-io(in)/radio API, but need to set session to Media first");
@@ -642,7 +653,7 @@ int sound_manager_set_media_session_option (sound_session_option_for_starting_e 
 	case SOUND_SESSION_OPTION_MIX_WITH_OTHERS_WHEN_START:
 		if (session_option & MM_SESSION_OPTION_PAUSE_OTHERS) {
 			ret = mm_session_update_option(MM_SESSION_UPDATE_TYPE_REMOVE, MM_SESSION_OPTION_PAUSE_OTHERS);
-			if(ret){
+			if (ret) {
 				return __convert_sound_manager_error_code(__func__, ret);
 			}
 			updated = 1;
@@ -651,7 +662,7 @@ int sound_manager_set_media_session_option (sound_session_option_for_starting_e 
 	case SOUND_SESSION_OPTION_PAUSE_OTHERS_WHEN_START:
 		if (!(session_option & MM_SESSION_OPTION_PAUSE_OTHERS)) {
 			ret = mm_session_update_option(MM_SESSION_UPDATE_TYPE_ADD, MM_SESSION_OPTION_PAUSE_OTHERS);
-			if(ret){
+			if (ret) {
 				return __convert_sound_manager_error_code(__func__, ret);
 			}
 			updated = 1;
@@ -663,7 +674,7 @@ int sound_manager_set_media_session_option (sound_session_option_for_starting_e 
 	case SOUND_SESSION_OPTION_INTERRUPTIBLE_DURING_PLAY:
 		if (session_option & MM_SESSION_OPTION_UNINTERRUPTIBLE) {
 			ret = mm_session_update_option(MM_SESSION_UPDATE_TYPE_REMOVE, MM_SESSION_OPTION_UNINTERRUPTIBLE);
-			if(ret){
+			if (ret) {
 				return __convert_sound_manager_error_code(__func__, ret);
 			}
 			updated = 1;
@@ -672,7 +683,7 @@ int sound_manager_set_media_session_option (sound_session_option_for_starting_e 
 	case SOUND_SESSION_OPTION_UNINTERRUPTIBLE_DURING_PLAY:
 		if (!(session_option & MM_SESSION_OPTION_UNINTERRUPTIBLE)) {
 			ret = mm_session_update_option(MM_SESSION_UPDATE_TYPE_ADD, MM_SESSION_OPTION_UNINTERRUPTIBLE);
-			if(ret){
+			if (ret) {
 				return __convert_sound_manager_error_code(__func__, ret);
 			}
 			updated = 1;
@@ -697,13 +708,13 @@ int sound_manager_get_media_session_option (sound_session_option_for_starting_e 
 
 	LOGI(">> enter");
 
-	if( s_option == NULL || d_option == NULL )
+	if (s_option == NULL || d_option == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	ret = mm_session_get_current_information(&session, &session_options);
-	if( ret != 0 ) {
+	if (ret != 0) {
 		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (session > SOUND_SESSION_TYPE_MEDIA ) {
+	} else if (session > SOUND_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
 				LOGE("Already set by camera/recorder/audio-io(in)/radio API, but need to set session to Media first");
@@ -739,14 +750,14 @@ int sound_manager_set_media_session_resumption_option (sound_session_option_for_
 
 	LOGI(">> enter : option for resumption=%d (0:by system, 1:by system or media paused)", option);
 
-	if(option < SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM || option > SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM_OR_MEDIA_PAUSED)
+	if (option < SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM || option > SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM_OR_MEDIA_PAUSED)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	ret = mm_session_get_current_information(&session, &session_option);
-	if ( ret != 0 || !g_session_interrupt_cb_table.is_registered) {
+	if (ret != 0 || !g_session_interrupt_cb_table.is_registered) {
 		LOGW("need to set session type first");
 		return __convert_sound_manager_error_code(__func__, ret);
-	} else if ( ret == 0 && session > MM_SESSION_TYPE_MEDIA ) {
+	} else if (ret == MM_ERROR_NONE && session > MM_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
 				LOGE("Already set by camera/recorder/audio-io(in)/radio API, but need to set session to Media first");
@@ -761,7 +772,7 @@ int sound_manager_set_media_session_resumption_option (sound_session_option_for_
 	case SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM:
 		if (session_option & MM_SESSION_OPTION_RESUME_BY_SYSTEM_OR_MEDIA_PAUSED) {
 			ret = mm_session_update_option(MM_SESSION_UPDATE_TYPE_REMOVE, MM_SESSION_OPTION_RESUME_BY_SYSTEM_OR_MEDIA_PAUSED);
-			if(ret){
+			if (ret) {
 				return __convert_sound_manager_error_code(__func__, ret);
 			}
 			updated = 1;
@@ -770,7 +781,7 @@ int sound_manager_set_media_session_resumption_option (sound_session_option_for_
 	case SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM_OR_MEDIA_PAUSED:
 		if (!(session_option & MM_SESSION_OPTION_RESUME_BY_SYSTEM_OR_MEDIA_PAUSED)) {
 			ret = mm_session_update_option(MM_SESSION_UPDATE_TYPE_ADD, MM_SESSION_OPTION_RESUME_BY_SYSTEM_OR_MEDIA_PAUSED);
-			if(ret){
+			if (ret) {
 				return __convert_sound_manager_error_code(__func__, ret);
 			}
 			updated = 1;
@@ -795,12 +806,12 @@ int sound_manager_get_media_session_resumption_option (sound_session_option_for_
 
 	LOGI(">> enter");
 
-	if( option == NULL )
+	if (option == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	ret = mm_session_get_current_information(&session, &session_options);
-	if( ret != 0 ) {
+	if (ret != 0) {
 		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (session > SOUND_SESSION_TYPE_MEDIA ) {
+	} else if (session > SOUND_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
 				LOGE("Already set by camera/recorder/audio-io(in)/radio API, but need to set session to Media first");
@@ -831,12 +842,12 @@ int sound_manager_set_voip_session_mode (sound_session_voip_mode_e mode)
 	LOGI(">> enter : mode=%d", mode);
 
 	ret = mm_session_get_current_information(&session, &session_options);
-	if( ret != MM_ERROR_NONE ) {
+	if (ret != MM_ERROR_NONE) {
 		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (session != MM_SESSION_TYPE_VOIP ) {
+	} else if (session != MM_SESSION_TYPE_VOIP) {
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 	}
-	if(mode < SOUND_SESSION_VOIP_MODE_RINGTONE || mode > SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH) {
+	if (mode < SOUND_SESSION_VOIP_MODE_RINGTONE || mode > SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH) {
 		ret = MM_ERROR_INVALID_ARGUMENT;
 		return __convert_sound_manager_error_code(__func__, ret);
 	}
@@ -859,14 +870,14 @@ int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode)
 	int session_options = 0;
 	_session_mode_e _mode = 0;
 
-	if(mode == NULL) {
+	if (mode == NULL) {
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	}
 
 	ret = mm_session_get_current_information(&session, &session_options);
-	if( ret != MM_ERROR_NONE ) {
+	if (ret != MM_ERROR_NONE) {
 		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (session != MM_SESSION_TYPE_VOIP ) {
+	} else if (session != MM_SESSION_TYPE_VOIP) {
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 	}
 	ret = __get_session_mode(&_mode);
@@ -886,12 +897,12 @@ int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode)
 int sound_manager_set_session_interrupted_cb (sound_session_interrupted_cb callback, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
-	if(callback == NULL)
+	if (callback == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
-	if(g_session_interrupt_cb_table.is_registered ==0){
+	if (g_session_interrupt_cb_table.is_registered == 0) {
 		ret = mm_session_init_ex(SOUND_SESSION_TYPE_DEFAULT /*default*/ , _session_interrupt_cb, NULL);
-		if(ret != 0)
+		if (ret != 0)
 			return __convert_sound_manager_error_code(__func__, ret);
 		g_session_interrupt_cb_table.is_registered = 1;
 	}
@@ -1042,7 +1053,7 @@ void __sound_manager_finalize (void)
 {
 	int ret = MM_ERROR_NONE;
 
-	if(g_session_interrupt_cb_table.is_registered){
+	if (g_session_interrupt_cb_table.is_registered) {
 		LOGI("<ENTER>");
 		ret = mm_session_finish();
 		if (ret != MM_ERROR_NONE) {
