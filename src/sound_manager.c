@@ -19,7 +19,7 @@
 
 _session_interrupt_info_s g_session_interrupt_cb_table = {0, NULL, NULL};
 _volume_changed_info_s g_volume_changed_cb_table = {NULL, NULL};
-_focus_watch_info_s g_focus_watch_cb_table = {NULL, NULL};
+_focus_watch_info_s g_focus_watch_cb_table = {-1, NULL, NULL};
 _device_connected_info_s g_device_connected_cb_table = {NULL, NULL};
 _device_changed_info_s g_device_info_changed_cb_table = {NULL, NULL};
 
@@ -457,14 +457,16 @@ int sound_manager_get_focus_state (sound_stream_info_h stream_info, sound_stream
 int sound_manager_set_focus_state_watch_cb (sound_stream_focus_mask_e focus_mask, sound_stream_focus_state_watch_cb callback, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
+	int id = -1;
 
 	LOGI(">> enter");
 
 	SM_NULL_ARG_CHECK(callback);
 
 	if (!g_focus_watch_cb_table.user_cb) {
-		ret = mm_sound_set_focus_watch_callback((mm_sound_focus_type_e)focus_mask, _focus_watch_callback, user_data);
+		ret = mm_sound_set_focus_watch_callback((mm_sound_focus_type_e)focus_mask, _focus_watch_callback, user_data, &id);
 		if (ret == MM_ERROR_NONE) {
+			g_focus_watch_cb_table.index = id;
 			g_focus_watch_cb_table.user_cb = callback;
 			g_focus_watch_cb_table.user_data = user_data;
 		}
@@ -484,8 +486,9 @@ int sound_manager_unset_focus_state_watch_cb (void)
 	LOGI(">> enter");
 
 	if (g_focus_watch_cb_table.user_cb) {
-		ret = mm_sound_unset_focus_watch_callback();
+		ret = mm_sound_unset_focus_watch_callback(g_focus_watch_cb_table.index);
 		if (ret == MM_ERROR_NONE) {
+			g_focus_watch_cb_table.index = -1;
 			g_focus_watch_cb_table.user_cb = NULL;
 			g_focus_watch_cb_table.user_data = NULL;
 		} else {
