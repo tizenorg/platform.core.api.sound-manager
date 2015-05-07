@@ -143,6 +143,7 @@ typedef struct {
 }_volume_changed_info_s;
 
 typedef struct {
+	int index;
 	void *user_data;
 	sound_stream_focus_state_watch_cb user_cb;
 }_focus_watch_info_s;
@@ -176,7 +177,7 @@ do { \
 
 void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
-void _focus_watch_callback (mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
+void _focus_watch_callback (int id, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
 int __convert_sound_manager_error_code (const char *func, int code);
 

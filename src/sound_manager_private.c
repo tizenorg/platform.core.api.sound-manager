@@ -414,7 +414,7 @@ void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, 
 	return;
 }
 
-void _focus_watch_callback (mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data)
+void _focus_watch_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_focus_change_reason_e change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
