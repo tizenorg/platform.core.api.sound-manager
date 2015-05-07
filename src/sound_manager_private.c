@@ -834,18 +834,14 @@ int __set_session_mode (_session_mode_e mode)
 			goto ERROR_CASE;
 		} else {
 			while ((w_ret = mm_sound_get_next_device(device_list, &device)) == MM_ERROR_NONE) {
-				char *type = NULL;
-				sound_device_type_e type_e;
+				mm_sound_device_type_e type;
 				ret = mm_sound_get_device_type(device, &type);
-				if (ret != MM_ERROR_NONE)
-					goto ERROR_CASE;
-				ret = __convert_device_type_to_enum(type, &type_e);
 				if (ret != MM_ERROR_NONE)
 					goto ERROR_CASE;
 
 				switch (mode) {
 					case _SESSION_MODE_VOICE_WITH_AUDIO_JACK:
-						if (type_e == SOUND_DEVICE_AUDIO_JACK) {
+						if (type == MM_SOUND_DEVICE_TYPE_AUDIOJACK) {
 							mm_sound_device_io_direction_e io_direction;
 							ret = mm_sound_get_device_io_direction(device, &io_direction);
 							if (ret != MM_ERROR_NONE)
@@ -856,7 +852,7 @@ int __set_session_mode (_session_mode_e mode)
 						}
 						break;
 					case _SESSION_MODE_VOICE_WITH_BLUETOOTH:
-						if (type_e == SOUND_DEVICE_BLUETOOTH) {
+						if (type == MM_SOUND_DEVICE_TYPE_BLUETOOTH) {
 							mm_sound_device_io_direction_e io_direction;
 							ret = mm_sound_get_device_io_direction(device, &io_direction);
 							if (ret != MM_ERROR_NONE)
@@ -918,28 +914,24 @@ int __get_session_mode (_session_mode_e *mode)
 			goto ERROR_CASE;
 		} else {
 			while ((w_ret = mm_sound_get_next_device(device_list, &device)) == MM_ERROR_NONE) {
-				char *type = NULL;
-				sound_device_type_e type_e;
+				mm_sound_device_type_e type;
 				ret = mm_sound_get_device_type(device, &type);
 				if (ret != MM_ERROR_NONE)
 					goto ERROR_CASE;
-				ret = __convert_device_type_to_enum(type, &type_e);
-				if (ret != MM_ERROR_NONE)
-					goto ERROR_CASE;
-				switch (type_e) {
-				case SOUND_DEVICE_BUILTIN_SPEAKER:
+				switch (type) {
+				case MM_SOUND_DEVICE_TYPE_BUILTIN_SPEAKER:
 					*mode = _SESSION_MODE_VOICE_WITH_BUILTIN_SPEAKER;
 					need_to_out = true;
 					break;
-				case SOUND_DEVICE_BUILTIN_RECEIVER:
+				case MM_SOUND_DEVICE_TYPE_BUILTIN_RECEIVER:
 					*mode = _SESSION_MODE_VOICE_WITH_BUILTIN_RECEIVER;
 					need_to_out = true;
 					break;
-				case SOUND_DEVICE_AUDIO_JACK:
+				case MM_SOUND_DEVICE_TYPE_AUDIOJACK:
 					*mode = _SESSION_MODE_VOICE_WITH_AUDIO_JACK;
 					need_to_out = true;
 					break;
-				case SOUND_DEVICE_BLUETOOTH:
+				case MM_SOUND_DEVICE_TYPE_BLUETOOTH:
 					*mode = _SESSION_MODE_VOICE_WITH_BLUETOOTH;
 					need_to_out = true;
 					break;
