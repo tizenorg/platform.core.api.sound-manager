@@ -60,6 +60,69 @@ extern "C"
         _CHECK_CONDITION(arg <= max,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER") \
         _CHECK_CONDITION(arg >= min,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER")
 
+#define SM_ENTER_CRITICAL_SECTION_WITH_RETURN(x_mutex,x_return) \
+switch ( pthread_mutex_lock( x_mutex ) ) \
+{ \
+case EINVAL: \
+	LOGW("try mutex init..\n"); \
+	if( 0 > pthread_mutex_init( x_mutex, NULL) ) { \
+		return x_return; \
+	} else { \
+		break; \
+	} \
+	return x_return; \
+case 0: \
+	break; \
+default: \
+	LOGE("mutex lock failed\n"); \
+	return x_return; \
+}
+
+#define SM_LEAVE_CRITICAL_SECTION(x_mutex) \
+if( pthread_mutex_unlock( x_mutex ) ) { \
+	LOGE("mutex unlock failed\n"); \
+}
+
+#define SM_REF_FOR_STREAM_INFO(x_count, x_return) \
+{ \
+	if (!x_count) { \
+		/* send signal to other framework to release internal focus */ \
+		x_return = mm_sound_send_signal(MM_SOUND_SIGNAL_RELEASE_INTERNAL_FOCUS, 1); \
+	} \
+	if (x_return) \
+		LOGW("failed to send signal for stream info creation"); \
+	else \
+		g_stream_info_count++; \
+} \
+
+#define SM_UNREF_FOR_STREAM_INFO(x_count, x_return) \
+{ \
+	x_count--; \
+	if (!x_count) { \
+		/* send signal to other framework to release internal focus */ \
+		x_return = mm_sound_send_signal(MM_SOUND_SIGNAL_RELEASE_INTERNAL_FOCUS, 0); \
+		if (x_return) \
+			LOGW("failed to send signal for stream info creation, ret(0x%x)", x_return); \
+	} \
+} \
+
+#define SM_STRNCPY(dst,src,size,err) \
+do { \
+	if(src != NULL && dst != NULL && size > 0) { \
+		strncpy(dst,src,size); \
+		dst[size-1] = '\0'; \
+	} else if(dst == NULL) { \
+		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
+		err = MM_ERROR_SOUND_INTERNAL; \
+	} else if(size <= 0) { \
+		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
+		err = MM_ERROR_SOUND_INTERNAL; \
+	} else { \
+		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
+		err = MM_ERROR_SOUND_INTERNAL; \
+	} \
+} while(0)
+
 #define SOUND_SESSION_TYPE_DEFAULT SOUND_SESSION_TYPE_MEDIA
 #define SOUND_STREAM_INFO_ARR_MAX 128
 #define SOUND_STREAM_TYPE_LEN 64
@@ -157,23 +220,6 @@ typedef struct {
 	void *user_data;
 	sound_device_information_changed_cb user_cb;
 }_device_changed_info_s;
-
-#define SOUND_STRNCPY(dst,src,size,err) \
-do { \
-	if(src != NULL && dst != NULL && size > 0) { \
-		strncpy(dst,src,size); \
-		dst[size-1] = '\0'; \
-	} else if(dst == NULL) { \
-		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
-		err = MM_ERROR_SOUND_INTERNAL; \
-	} else if(size <= 0) { \
-		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
-		err = MM_ERROR_SOUND_INTERNAL; \
-	} else { \
-		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
-		err = MM_ERROR_SOUND_INTERNAL; \
-	} \
-} while(0)
 
 void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 

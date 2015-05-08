@@ -26,6 +26,10 @@ _device_changed_info_s g_device_info_changed_cb_table = {NULL, NULL};
 sound_session_type_e g_cached_session = -1;
 _session_mode_e g_cached_session_mode = -1;
 
+/* These variables will be removed when session features are deprecated. */
+extern int g_stream_info_count;
+extern pthread_mutex_t g_stream_info_count_mutex;
+
 #ifdef TMP_CODE
 /*temporary variable for set/get voip session mode. When 2.4  feature for routing is fully implemented, it will be removed.*/
 sound_session_voip_mode_e tmp_mode = -1;
@@ -159,6 +163,9 @@ int sound_manager_create_stream_information (sound_stream_type_e stream_type, so
 	SM_NULL_ARG_CHECK(stream_info);
 	SM_NULL_ARG_CHECK(callback);
 
+	if (g_session_interrupt_cb_table.is_registered)
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_SOUND_INTERNAL);
+
 	sound_stream_info_s *stream_h = malloc(sizeof(sound_stream_info_s));
 	if (!stream_h) {
 		ret = MM_ERROR_OUT_OF_MEMORY;
@@ -169,7 +176,7 @@ int sound_manager_create_stream_information (sound_stream_type_e stream_type, so
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (ret == MM_ERROR_NONE) {
 				*stream_info = (sound_stream_info_h)stream_h;
-				LOGI("<< leave : stream_h(%p), index(%u), user_cb(%p), ret(%p)", stream_h, stream_h->index, stream_h->user_cb, ret);
+				LOGI("<< leave : stream_h(%p), index(%u), user_cb(%p), cnt(%d), ret(%p)", stream_h, stream_h->index, stream_h->user_cb, g_stream_info_count, ret);
 			}
 		}
 		if (ret) {
@@ -191,7 +198,7 @@ int sound_manager_destroy_stream_information (sound_stream_info_h stream_info)
 
 	ret = _destroy_pa_connection_and_unregister_focus(stream_h);
 
-	LOGI("<< leave : ret(%p)", ret);
+	LOGI("<< leave : cnt(%d), ret(%p)", g_stream_info_count, ret);
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }
@@ -462,8 +469,10 @@ int sound_manager_set_focus_state_watch_cb (sound_stream_focus_mask_e focus_mask
 	LOGI(">> enter");
 
 	SM_NULL_ARG_CHECK(callback);
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN( &g_stream_info_count_mutex, SOUND_MANAGER_ERROR_INTERNAL);
 
 	if (!g_focus_watch_cb_table.user_cb) {
+		SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
 		ret = mm_sound_set_focus_watch_callback((mm_sound_focus_type_e)focus_mask, _focus_watch_callback, user_data, &id);
 		if (ret == MM_ERROR_NONE) {
 			g_focus_watch_cb_table.index = id;
@@ -474,7 +483,9 @@ int sound_manager_set_focus_state_watch_cb (sound_stream_focus_mask_e focus_mask
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
 
-	LOGI("<< leave : ret(%p)", ret);
+	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
+
+	LOGI("<< leave : cnt(%d), ret(%p)", g_stream_info_count, ret);
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }
@@ -485,12 +496,15 @@ int sound_manager_unset_focus_state_watch_cb (void)
 
 	LOGI(">> enter");
 
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN( &g_stream_info_count_mutex, SOUND_MANAGER_ERROR_INTERNAL);
+
 	if (g_focus_watch_cb_table.user_cb) {
 		ret = mm_sound_unset_focus_watch_callback(g_focus_watch_cb_table.index);
 		if (ret == MM_ERROR_NONE) {
 			g_focus_watch_cb_table.index = -1;
 			g_focus_watch_cb_table.user_cb = NULL;
 			g_focus_watch_cb_table.user_data = NULL;
+			SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
 		} else {
 			ret = MM_ERROR_SOUND_INTERNAL;
 		}
@@ -498,7 +512,9 @@ int sound_manager_unset_focus_state_watch_cb (void)
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
 
-	LOGI("<< leave : ret(%p)", ret);
+	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
+
+	LOGI("<< leave : cnt(%d), ret(%p)", g_stream_info_count, ret);
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }
@@ -513,6 +529,10 @@ int sound_manager_set_session_type (sound_session_type_e type)
 
 	if (type < SOUND_SESSION_TYPE_MEDIA || type >  SOUND_SESSION_TYPE_VOIP)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+
+	/* it is not supported both session and stream feature at the same time */
+	if (g_stream_info_count)
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 
 	switch (type) {
 	case SOUND_SESSION_TYPE_MEDIA:
@@ -902,6 +922,10 @@ int sound_manager_set_session_interrupted_cb (sound_session_interrupted_cb callb
 	int ret = MM_ERROR_NONE;
 	if (callback == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+
+	/* it is not supported both session and stream feature at the same time */
+	if (g_stream_info_count)
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 
 	if (g_session_interrupt_cb_table.is_registered == 0) {
 		ret = mm_session_init_ex(SOUND_SESSION_TYPE_DEFAULT /*default*/ , _session_interrupt_cb, NULL);

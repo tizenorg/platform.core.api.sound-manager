@@ -30,6 +30,8 @@ extern _session_interrupt_info_s g_session_interrupt_cb_table;
 extern _session_mode_e g_cached_session_mode;
 extern _focus_watch_info_s g_focus_watch_cb_table;
 extern sound_stream_info_s* sound_stream_info_arr[SOUND_STREAM_INFO_ARR_MAX];
+int g_stream_info_count = 0;
+pthread_mutex_t g_stream_info_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int __convert_sound_manager_error_code (const char *func, int code) {
 	int ret = SOUND_MANAGER_ERROR_NONE;
@@ -102,31 +104,31 @@ int __convert_stream_type (sound_stream_type_e stream_type_enum, char *stream_ty
 
 	switch (stream_type_enum) {
 	case SOUND_STREAM_TYPE_MEDIA:
-		SOUND_STRNCPY(stream_type,"media",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"media",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_SYSTEM:
-		SOUND_STRNCPY(stream_type,"system",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"system",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_ALARM:
-		SOUND_STRNCPY(stream_type,"alarm",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"alarm",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_NOTIFICATION:
-		SOUND_STRNCPY(stream_type,"notification",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"notification",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_EMERGENCY:
-		SOUND_STRNCPY(stream_type,"emergency",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"emergency",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_VOICE_INFORMATION:
-		SOUND_STRNCPY(stream_type,"voice-information",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"voice-information",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_VOICE_RECOGNITION:
-		SOUND_STRNCPY(stream_type,"voice-recognition",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"voice-recognition",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_RINGTONE_VOIP:
-		SOUND_STRNCPY(stream_type,"ringtone-voip",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"ringtone-voip",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_VOIP:
-		SOUND_STRNCPY(stream_type,"voip",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"voip",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
@@ -148,19 +150,19 @@ int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type
 
 	switch (stream_type_enum) {
 	case SOUND_STREAM_TYPE_RINGTONE_CALL:
-		SOUND_STRNCPY(stream_type,"ringtone-call",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"ringtone-call",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_VOICE_CALL:
-		SOUND_STRNCPY(stream_type,"call-voice",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"call-voice",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_VIDEO_CALL:
-		SOUND_STRNCPY(stream_type,"call-video",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"call-video",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_RADIO:
-		SOUND_STRNCPY(stream_type,"radio",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"radio",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	case SOUND_STREAM_TYPE_LOOPBACK:
-		SOUND_STRNCPY(stream_type,"loopback",SOUND_STREAM_TYPE_LEN,ret);
+		SM_STRNCPY(stream_type,"loopback",SOUND_STREAM_TYPE_LEN,ret);
 		break;
 	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
@@ -966,6 +968,9 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 	int ret = MM_ERROR_NONE;
 	int pa_ret = PA_OK;
 	int i = 0;
+
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN( &g_stream_info_count_mutex, MM_ERROR_SOUND_INTERNAL);
+
 	if (!(stream_h->pa_mainloop = pa_threaded_mainloop_new()))
 		goto PA_ERROR;
 
@@ -1010,6 +1015,8 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 
 	pa_threaded_mainloop_unlock(stream_h->pa_mainloop);
 
+	SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
+
 	/* register focus */
 	ret = mm_sound_register_focus(stream_h->index, stream_h->stream_type, _focus_state_change_callback, user_data);
 	if (ret == MM_ERROR_NONE) {
@@ -1025,9 +1032,12 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 		if (i == SOUND_STREAM_INFO_ARR_MAX) {
 			LOGE("client sound stream info array is full");
 			ret = mm_sound_unregister_focus(stream_h->index);
+			SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
 			goto PA_ERROR;
 		}
 	} else {
+		LOGE("failed to register focus, ret(0x%x)", ret);
+		SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
 		/* disconnect */
 		goto PA_ERROR;
 	}
@@ -1068,7 +1078,10 @@ PA_ERROR:
 	free(stream_h);
 	ret = MM_ERROR_SOUND_INTERNAL;
 	LOGE("pa_ret(%d), ret(%p)", pa_ret, ret);
+
 SUCCESS:
+	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
+
 	return ret;
 }
 
@@ -1076,6 +1089,8 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 {
 	int i = 0;
 	int ret = MM_ERROR_NONE;
+
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN( &g_stream_info_count_mutex, MM_ERROR_SOUND_INTERNAL);
 
 	if (stream_h->pa_context) {
 		pa_context_disconnect(stream_h->pa_context);
@@ -1090,6 +1105,8 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 
 	/* unregister focus */
 	ret = mm_sound_unregister_focus(stream_h->index);
+	if (ret)
+		LOGE("failed to unregister focus, ret(0x%x)", ret);
 
 	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 		if (stream_h->stream_conf_info.avail_in_devices[i]) {
@@ -1116,6 +1133,10 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 		}
 	}
 	free(stream_h);
+
+	SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
+
+	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
 	return ret;
 }
