@@ -17,6 +17,8 @@
 #include "sound_manager.h"
 #include "sound_manager_private.h"
 
+#define TMP_CODE
+
 _session_interrupt_info_s g_session_interrupt_cb_table = {0, NULL, NULL};
 _volume_changed_info_s g_volume_changed_cb_table = {NULL, NULL};
 _focus_watch_info_s g_focus_watch_cb_table = {-1, NULL, NULL};
@@ -891,25 +893,30 @@ int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode)
 	int ret = MM_ERROR_NONE;
 	int session = 0;
 	int session_options = 0;
+#ifndef TMP_CODE
 	_session_mode_e _mode = 0;
+#endif
 
 	if (mode == NULL) {
+		LOGI("mode is null");
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	}
 
 	ret = mm_session_get_current_information(&session, &session_options);
 	if (ret != MM_ERROR_NONE) {
+		LOGI("session = %d, option = %d", session, session_options);
 		return __convert_sound_manager_error_code(__func__, ret);
 	} else if (session != MM_SESSION_TYPE_VOIP) {
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 	}
-	ret = __get_session_mode(&_mode);
-	if (ret == MM_ERROR_NONE)
-		*mode = (sound_session_voip_mode_e)_mode;
 
 #ifdef TMP_CODE
 	/* temporary code. When 2.4 feature for routing is fully implemented, it will be removed. */
 	*mode = tmp_mode;
+#else
+	ret = __get_session_mode(&_mode);
+	if (ret == MM_ERROR_NONE)
+		*mode = (sound_session_voip_mode_e)_mode;
 #endif
 
 	LOGI("returns : session=%p, mode=%d, ret=%p", session, *mode, ret);
