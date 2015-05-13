@@ -38,7 +38,6 @@ cp %{SOURCE1001} .
 %build
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %cmake . -DFULLVER=%{version} -DMAJORVER=${MAJORVER}
-export CFLAGS="$CFLAGS -DTMP_CODE"
 %__make %{?jobs:-j%jobs}
 
 %install
