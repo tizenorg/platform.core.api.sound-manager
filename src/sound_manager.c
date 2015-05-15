@@ -107,11 +107,25 @@ int sound_manager_set_current_sound_type (sound_type_e type)
 int sound_manager_get_current_sound_type (sound_type_e *type)
 {
 	int ret = MM_ERROR_NONE;
+	volume_type_t mm_sound_vol_type = VOLUME_TYPE_UNKNOWN;
+	char *volume_type = NULL;
 
 	if (type == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-	ret = mm_sound_volume_get_current_playing_type((volume_type_t *)type);
 
+	ret  = mm_sound_volume_primary_type_get(&mm_sound_vol_type);
+	if (ret == MM_ERROR_NONE) {
+		if (mm_sound_vol_type == VOLUME_TYPE_UNKNOWN) {
+			/* get the volume type of the current playing stream */
+			ret = __get_current_volume_type ("out", &volume_type);
+			if (ret == MM_ERROR_NONE) {
+				ret = __convert_sound_type_to_enum (volume_type, type);
+				free(volume_type);
+			}
+		} else {
+			*type = mm_sound_vol_type;
+		}
+	}
 	LOGI("returns : type=%d, ret=%p", *type, ret);
 
 	return __convert_sound_manager_error_code(__func__, ret);
@@ -121,7 +135,7 @@ int sound_manager_unset_current_sound_type (void)
 {
 	int ret = MM_ERROR_NONE;
 
-	ret = mm_sound_volume_primary_type_clear();
+	ret = mm_sound_volume_primary_type_set(VOLUME_TYPE_UNKNOWN);
 
 	return __convert_sound_manager_error_code(__func__, ret);
 }

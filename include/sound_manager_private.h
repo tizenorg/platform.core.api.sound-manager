@@ -231,8 +231,6 @@ int __convert_stream_type_to_change_reason (const char *stream_type, sound_strea
 
 int __convert_device_type (sound_device_type_e device_type_enum, char **device_type);
 
-int __convert_device_type_to_enum (char *device_type, sound_device_type_e *device_type_enum);
-
 int __convert_device_io_direction (mm_sound_device_io_direction_e io_direction, sound_device_io_direction_e *sound_io_direction);
 
 const char* __convert_api_name (native_api_e api_name);
@@ -245,7 +243,11 @@ int __set_route_options (unsigned int index, char **route_options);
 
 int __convert_sound_type (sound_type_e sound_type, const char **volume_type);
 
+int __convert_sound_type_to_enum (char *sound_type, sound_type_e *sound_type_enum);
+
 int __get_volume_max_level (const char *direction, const char *volume_type, unsigned int *max_level);
+
+int __get_current_volume_type (const char *direction, char **volume_type);
 
 void _pa_context_state_cb (pa_context *c, void *userdata);
 
