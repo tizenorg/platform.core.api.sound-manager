@@ -98,12 +98,6 @@ if( pthread_mutex_unlock( x_mutex ) ) { \
 #define SM_UNREF_FOR_STREAM_INFO(x_count, x_return) \
 { \
 	x_count--; \
-	if (!x_count) { \
-		/* send signal to other framework to release internal focus */ \
-		x_return = mm_sound_send_signal(MM_SOUND_SIGNAL_RELEASE_INTERNAL_FOCUS, 0); \
-		if (x_return) \
-			LOGW("failed to send signal for stream info creation, ret(0x%x)", x_return); \
-	} \
 } \
 
 #define SM_STRNCPY(dst,src,size,err) \

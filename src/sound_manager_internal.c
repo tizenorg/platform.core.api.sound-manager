@@ -365,6 +365,17 @@ int sound_manager_stop_virtual_stream (virtual_sound_stream_h virtual_stream)
 	for (i = 0; i < SOUND_STREAM_DIRECTION_MAX; i++) {
 		if (vstream_h->pa_stream[i]) {
 			pa_stream_disconnect(vstream_h->pa_stream[i]);
+
+			/* wait for terminated state of the stream */
+			for (;;) {
+				pa_stream_state_t state;
+				state = pa_stream_get_state(vstream_h->pa_stream[i]);
+				if (state == PA_STREAM_TERMINATED) {
+					break;
+				}
+				pa_threaded_mainloop_wait(vstream_h->pa_mainloop);
+			}
+
 			pa_stream_unref(vstream_h->pa_stream[i]);
 			vstream_h->pa_stream[i] = NULL;
 		}
