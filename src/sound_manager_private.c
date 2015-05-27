@@ -908,6 +908,8 @@ int __set_session_mode (_session_mode_e mode)
 								goto ERROR_CASE;
 							if (io_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH)
 								route = MM_SOUND_ROUTE_INOUT_HEADSET;
+							else if (io_direction == MM_SOUND_DEVICE_IO_DIRECTION_OUT)
+								route = MM_SOUND_ROUTE_IN_MIC_OUT_HEADPHONE;
 							do_subsession = true;
 						}
 						break;
@@ -917,8 +919,10 @@ int __set_session_mode (_session_mode_e mode)
 							ret = mm_sound_get_device_io_direction(device, &io_direction);
 							if (ret != MM_ERROR_NONE)
 								goto ERROR_CASE;
-							if (io_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH)
+							if (io_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
+								route = MM_SOUND_ROUTE_INOUT_BLUETOOTH;
 								do_subsession = true;
+							}
 						}
 						break;
 					default:
