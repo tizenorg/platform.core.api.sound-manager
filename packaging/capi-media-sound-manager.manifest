@@ -1,5 +1,8 @@
 <manifest>
- <request>
-    <domain name="_"/>
- </request>
+	<request>
+		<domain name="_" />
+	</request>
+	<assign>
+		<filesystem path="/usr/bin/sound_manager_test" label="_" exec_label="none" />
+	</assign>
 </manifest>

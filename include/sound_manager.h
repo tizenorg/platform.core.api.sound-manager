@@ -339,7 +339,7 @@ typedef enum {
 * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
 */
 typedef enum {
-	SOUND_DEVICE_CAHNGED_INFO_STATE,           /**< State of the device was changed */
+	SOUND_DEVICE_CHANGED_INFO_STATE,           /**< State of the device was changed */
 	SOUND_DEVICE_CHANGED_INFO_IO_DIRECTION,    /**< IO direction of the device was changed */
 } sound_device_changed_info_e;
 
