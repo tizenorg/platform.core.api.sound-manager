@@ -889,7 +889,7 @@ int __set_session_mode (_session_mode_e mode)
 		MMSoundDevice_t device;
 		do_subsession = false;
 
-		ret = mm_sound_get_current_device_list(MM_SOUND_DEVICE_STATE_DEACTIVATED_FLAG, &device_list);
+		ret = mm_sound_get_current_device_list(MM_SOUND_DEVICE_ALL_FLAG, &device_list);
 		if (ret != MM_ERROR_NONE) {
 			goto ERROR_CASE;
 		} else {
