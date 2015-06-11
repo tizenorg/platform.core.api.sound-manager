@@ -811,7 +811,7 @@ int __get_current_volume_type (const char *direction, char **volume_type)
 	return ret;
 }
 
-void _session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data){
+void __session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data){
 	if( g_session_interrupt_cb_table.user_cb ){
 		sound_session_interrupted_code_e e = SOUND_SESSION_INTERRUPTED_COMPLETED;
 		if( msg == MM_SESSION_MSG_RESUME )

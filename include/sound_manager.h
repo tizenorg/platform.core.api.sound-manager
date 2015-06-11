@@ -776,7 +776,6 @@ int sound_manager_get_session_type (sound_session_type_e *type);
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_POLICY Noncompliance with the sound system policy
- * @pre Call sound_manager_set_session_type(SOUND_SESSION_TYPE_MEDIA) before calling this function.
  * @see sound_manager_set_session_type()
  * @see sound_manager_get_session_type()
  * @see sound_manager_get_media_session_option()
@@ -816,7 +815,6 @@ int sound_manager_get_media_session_option (sound_session_option_for_starting_e 
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_POLICY Noncompliance with the sound system policy
- * @pre Call sound_manager_set_session_type(SOUND_SESSION_TYPE_MEDIA) before calling this function.
  * @see sound_manager_set_session_type()
  * @see sound_manager_get_session_type()
  * @see sound_manager_set_media_session_option()
