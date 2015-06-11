@@ -253,7 +253,7 @@ void _pa_context_state_cb (pa_context *c, void *userdata);
 
 void _pa_stream_state_cb (pa_stream *s, void * userdata);
 
-void _session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data);
+void __session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data);
 
 int __set_session_mode (_session_mode_e mode);
 
