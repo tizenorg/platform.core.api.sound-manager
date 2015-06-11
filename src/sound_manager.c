@@ -31,7 +31,7 @@ _device_connected_info_s g_device_connected_cb_table = {NULL, NULL};
 _device_changed_info_s g_device_info_changed_cb_table = {NULL, NULL};
 
 sound_session_type_e g_cached_session = -1;
-sound_session_voip_mode_e g_cached_voip_mode = -1;
+_session_mode_e g_cached_session_mode = -1;
 
 int sound_manager_get_max_volume(sound_type_e type, int *max)
 {
@@ -148,7 +148,7 @@ int sound_manager_set_session_type(sound_session_type_e type)
 
 	LOGI(">> enter : type=%d", type);
 
-	if(type < SOUND_SESSION_TYPE_MEDIA || type >  SOUND_SESSION_TYPE_VOIP)
+	if(type < SOUND_SESSION_TYPE_MEDIA || type >  SOUND_SESSION_TYPE_CALL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	switch(type) {
@@ -167,6 +167,9 @@ int sound_manager_set_session_type(sound_session_type_e type)
 	case SOUND_SESSION_TYPE_VOIP:
 		new_session = MM_SESSION_TYPE_VOIP;
 		break;
+	case SOUND_SESSION_TYPE_CALL:
+		new_session = MM_SESSION_TYPE_CALL;
+		break;
 	}
 
 	/* valid session check */
@@ -178,8 +181,7 @@ int sound_manager_set_session_type(sound_session_type_e type)
 				return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 			}
 		}
-		if (cur_session == MM_SESSION_TYPE_CALL ||
-			cur_session == MM_SESSION_TYPE_VIDEOCALL ||
+		if (cur_session == MM_SESSION_TYPE_VIDEOCALL ||
 			cur_session >= MM_SESSION_TYPE_VOICE_RECOGNITION) {
 			return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 		}
@@ -196,20 +198,20 @@ int sound_manager_set_session_type(sound_session_type_e type)
 				return __convert_sound_manager_error_code(__func__, ret);
 			}
 			g_session_interrupt_cb_table.is_registered = 0;
-			g_cached_voip_mode = -1;
+			g_cached_session_mode = -1;
 		}
 	}
 	ret = mm_session_init_ex(new_session , __session_interrupt_cb, NULL);
 	if(ret == 0){
 		g_session_interrupt_cb_table.is_registered = 1;
 	}
-	if (new_session == MM_SESSION_TYPE_VOIP) {
+	if (new_session == MM_SESSION_TYPE_VOIP || new_session == MM_SESSION_TYPE_CALL) {
 		/* set default sub-session for voip */
 		ret = mm_session_set_subsession (MM_SUBSESSION_TYPE_RINGTONE, MM_SUBSESSION_OPTION_NONE);
 		if (ret != MM_ERROR_NONE) {
 			return __convert_sound_manager_error_code(__func__, ret);
 		}
-		g_cached_voip_mode = SOUND_SESSION_VOIP_MODE_RINGTONE;
+		g_cached_session_mode = _SESSION_MODE_RINGTONE;
 	}
 	LOGI("<< leave : type=%d, ret=0x%x", type, ret);
 
@@ -226,7 +228,9 @@ int sound_manager_get_session_type(sound_session_type_e *type)
 	ret = mm_session_get_current_type(&cur_session);
 	if (ret != 0)
 		cur_session = SOUND_SESSION_TYPE_DEFAULT;
-	if ((cur_session > MM_SESSION_TYPE_EMERGENCY) && (cur_session != MM_SESSION_TYPE_VOIP)) {
+	if ((cur_session > MM_SESSION_TYPE_EMERGENCY) &&
+			(cur_session != MM_SESSION_TYPE_VOIP) &&
+			(cur_session != MM_SESSION_TYPE_CALL)) {
 		if( g_cached_session != -1 )
 			cur_session = g_cached_session;
 		else //will be never reach here. just prevent code
@@ -249,6 +253,9 @@ int sound_manager_get_session_type(sound_session_type_e *type)
 		break;
 	case MM_SESSION_TYPE_VOIP:
 		*type = SOUND_SESSION_TYPE_VOIP;
+		break;
+	case MM_SESSION_TYPE_CALL:
+		*type = SOUND_SESSION_TYPE_CALL;
 		break;
 	default:
 		*type = cur_session;
@@ -487,99 +494,11 @@ int sound_manager_set_voip_session_mode(sound_session_voip_mode_e mode)
 	} else if (session != MM_SESSION_TYPE_VOIP ) {
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 	}
-
 	if(mode < SOUND_SESSION_VOIP_MODE_RINGTONE || mode > SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH) {
 		ret = MM_ERROR_INVALID_ARGUMENT;
 		return __convert_sound_manager_error_code(__func__, ret);
 	}
-
-	if (mode == SOUND_SESSION_VOIP_MODE_RINGTONE) {
-		/* sub-session */
-		if (g_cached_voip_mode != mode) {
-			ret = mm_session_set_subsession (MM_SUBSESSION_TYPE_RINGTONE, MM_SUBSESSION_OPTION_NONE);
-			if (ret != MM_ERROR_NONE) {
-				return __convert_sound_manager_error_code(__func__, ret);
-			}
-		}
-		g_cached_voip_mode = mode;
-	} else {
-		mm_sound_route route;
-		bool need_to_check_device = false;
-		bool do_subsession = true;
-		switch (mode) {
-		case SOUND_SESSION_VOIP_MODE_RINGTONE:
-			do_subsession = false;
-			break;
-		case SOUND_SESSION_VOIP_MODE_VOICE_WITH_BUILTIN_RECEIVER:
-			route = MM_SOUND_ROUTE_IN_MIC_OUT_RECEIVER;
-			break;
-		case SOUND_SESSION_VOIP_MODE_VOICE_WITH_BUILTIN_SPEAKER:
-			route = MM_SOUND_ROUTE_IN_MIC_OUT_SPEAKER;
-			break;
-		case SOUND_SESSION_VOIP_MODE_VOICE_WITH_AUDIO_JACK:
-			route = MM_SOUND_ROUTE_IN_MIC_OUT_HEADPHONE;
-			need_to_check_device = true;
-			break;
-		case SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH:
-			route = MM_SOUND_ROUTE_INOUT_BLUETOOTH;
-			need_to_check_device = true;
-			break;
-		}
-
-		if (need_to_check_device) {
-			int w_ret = MM_ERROR_NONE;
-			MMSoundDeviceList_t device_list;
-			MMSoundDevice_t device;
-			do_subsession = false;
-
-			ret = mm_sound_get_current_device_list(MM_SOUND_DEVICE_STATE_DEACTIVATED_FLAG, &device_list);
-			if (ret != MM_ERROR_NONE) {
-				return __convert_sound_manager_error_code(__func__, ret);
-			} else {
-				while ((w_ret = mm_sound_get_next_device(device_list, &device)) == MM_ERROR_NONE) {
-					mm_sound_device_type_e type;
-					ret = mm_sound_get_device_type(device, &type);
-					if (ret != MM_ERROR_NONE)
-						return __convert_sound_manager_error_code(__func__, ret);
-
-					switch (mode) {
-					case SOUND_SESSION_VOIP_MODE_VOICE_WITH_AUDIO_JACK:
-						if (type == MM_SOUND_DEVICE_TYPE_AUDIOJACK)
-							do_subsession = true;
-						break;
-					case SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH:
-						if (type == MM_SOUND_DEVICE_TYPE_BLUETOOTH) {
-							mm_sound_device_io_direction_e io_direction;
-							ret = mm_sound_get_device_io_direction(device, &io_direction);
-							if (ret != MM_ERROR_NONE)
-								return __convert_sound_manager_error_code(__func__, ret);
-							if (io_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH)
-								do_subsession = true;
-						}
-						break;
-					default:
-						break;
-					}
-				}
-			}
-		}
-		/* sub-session */
-		if (do_subsession && (g_cached_voip_mode != mode)) {
-			ret = mm_session_set_subsession (MM_SUBSESSION_TYPE_VOICE, MM_SUBSESSION_OPTION_NONE);
-			if (ret != MM_ERROR_NONE) {
-				return __convert_sound_manager_error_code(__func__, ret);
-			}
-			/* route */
-			ret = mm_sound_set_active_route(route);
-			if (ret != MM_ERROR_NONE) {
-				return __convert_sound_manager_error_code(__func__, ret);
-			}
-			g_cached_voip_mode = mode;
-		} else {
-			if (!do_subsession)
-				ret = MM_ERROR_SOUND_INTERNAL;
-		}
-	}
+	ret = __set_session_mode ((_session_mode_e)mode);
 
 	LOGI("<< leave : session=%p, mode=%d, ret=0x%x", session, mode, ret);
 
@@ -591,7 +510,7 @@ int sound_manager_get_voip_session_mode(sound_session_voip_mode_e *mode)
 	int ret = MM_ERROR_NONE;
 	int session = 0;
 	int session_options = 0;
-	int subsession = 0;
+	_session_mode_e _mode = 0;
 
 	if(mode == NULL) {
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
@@ -603,59 +522,60 @@ int sound_manager_get_voip_session_mode(sound_session_voip_mode_e *mode)
 	} else if (session != MM_SESSION_TYPE_VOIP ) {
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 	}
+	ret = __get_session_mode(&_mode);
+	if (ret == MM_ERROR_NONE)
+		*mode = (sound_session_voip_mode_e)_mode;
 
-	ret = mm_session_get_subsession ((mm_subsession_t *)&subsession);
-	if(ret != MM_ERROR_NONE) {
+	LOGI("returns : session=%p, mode=%d, ret=0x%x", session, *mode, ret);
+
+	return __convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_set_call_session_mode(sound_session_call_mode_e mode)
+{
+	int ret = MM_ERROR_NONE;
+	int session = 0;
+	int session_options = 0;
+
+	LOGI(">> enter : mode=%d", mode);
+
+	ret = mm_session_get_current_information(&session, &session_options);
+	if( ret != MM_ERROR_NONE ) {
+		return __convert_sound_manager_error_code(__func__, ret);
+	} else if (session != MM_SESSION_TYPE_CALL ) {
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+	}
+	if(mode < SOUND_SESSION_CALL_MODE_RINGTONE || mode > SOUND_SESSION_CALL_MODE_VOICE_WITH_BLUETOOTH) {
+		ret = MM_ERROR_INVALID_ARGUMENT;
 		return __convert_sound_manager_error_code(__func__, ret);
 	}
-	switch (subsession) {
-	case MM_SUBSESSION_TYPE_VOICE:
-	{
-		int w_ret = MM_ERROR_NONE;
-		bool need_to_out = false;
-		MMSoundDeviceList_t device_list;
-		MMSoundDevice_t device;
-		ret = mm_sound_get_current_device_list(MM_SOUND_DEVICE_STATE_ACTIVATED_FLAG, &device_list);
-		if (ret != MM_ERROR_NONE) {
-			return __convert_sound_manager_error_code(__func__, ret);
-		} else {
-			while ((w_ret = mm_sound_get_next_device(device_list, &device)) == MM_ERROR_NONE) {
-				mm_sound_device_type_e type;
-				ret = mm_sound_get_device_type(device, &type);
-				if (ret != MM_ERROR_NONE)
-					return __convert_sound_manager_error_code(__func__, ret);
-				switch (type) {
-				case MM_SOUND_DEVICE_TYPE_BUILTIN_SPEAKER:
-					*mode = SOUND_SESSION_VOIP_MODE_VOICE_WITH_BUILTIN_SPEAKER;
-					need_to_out = true;
-					break;
-				case MM_SOUND_DEVICE_TYPE_BUILTIN_RECEIVER:
-					*mode = SOUND_SESSION_VOIP_MODE_VOICE_WITH_BUILTIN_RECEIVER;
-					need_to_out = true;
-					break;
-				case MM_SOUND_DEVICE_TYPE_AUDIOJACK:
-					*mode = SOUND_SESSION_VOIP_MODE_VOICE_WITH_AUDIO_JACK;
-					need_to_out = true;
-					break;
-				case MM_SOUND_DEVICE_TYPE_BLUETOOTH:
-					*mode = SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH;
-					need_to_out = true;
-					break;
-				default:
-					break;
-				}
-				if (need_to_out)
-					break;
-			}
-		}
+	ret = __set_session_mode ((_session_mode_e)mode);
+
+	LOGI("<< leave : session=%p, mode=%d, ret=0x%x", session, mode, ret);
+
+	return __convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_get_call_session_mode(sound_session_call_mode_e *mode)
+{
+	int ret = MM_ERROR_NONE;
+	int session = 0;
+	int session_options = 0;
+	_session_mode_e _mode = 0;
+
+	if(mode == NULL) {
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	}
-		break;
-	case MM_SUBSESSION_TYPE_RINGTONE:
-		*mode = SOUND_SESSION_VOIP_MODE_RINGTONE;
-		break;
-	default:
-		break;
+
+	ret = mm_session_get_current_information(&session, &session_options);
+	if( ret != MM_ERROR_NONE ) {
+		return __convert_sound_manager_error_code(__func__, ret);
+	} else if (session != MM_SESSION_TYPE_CALL ) {
+		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 	}
+	ret = __get_session_mode(&_mode);
+	if (ret == MM_ERROR_NONE)
+		*mode = (sound_session_call_mode_e)_mode;
 
 	LOGI("returns : session=%p, mode=%d, ret=0x%x", session, *mode, ret);
 
@@ -810,74 +730,6 @@ int sound_manager_unset_device_information_changed_cb (void)
 	}
 
 	return __convert_sound_manager_error_code(__func__, ret);
-}
-
-/* below APIs are already deprecated Tizen 2.3, leave it temporarily */
-int sound_manager_get_a2dp_status(bool *connected , char** bt_name)
-{
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-int sound_manager_set_session_notify_cb(sound_session_notify_cb callback , void *user_data)
-{
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-void sound_manager_unset_session_notify_cb(void)
-{
-	return;
-}
-
-int sound_manager_set_interrupted_cb(sound_interrupted_cb callback, void *user_data){
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-void sound_manager_unset_interrupted_cb(void){
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-int sound_manager_set_volume_key_type(volume_key_type_e type){
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-int sound_manager_foreach_available_route (sound_available_route_cb callback, void *user_data)
-{
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-int sound_manager_set_active_route (sound_route_e route)
-{
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-int sound_manager_get_active_device (sound_device_in_e *in, sound_device_out_e *out)
-{
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-bool sound_manager_is_route_available (sound_route_e route)
-{
-	return false;
-}
-
-int sound_manager_set_available_route_changed_cb (sound_available_route_changed_cb callback, void *user_data)
-{
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-void sound_manager_unset_available_route_changed_cb (void)
-{
-	return;
-}
-
-int sound_manager_set_active_device_changed_cb (sound_active_device_changed_cb callback, void *user_data)
-{
-	return SOUND_MANAGER_ERROR_NOT_SUPPORTED;
-}
-
-void sound_manager_unset_active_device_changed_cb (void)
-{
-	return;
 }
 
 __attribute__ ((destructor))

@@ -53,6 +53,7 @@ cp test/sound_manager_test %{buildroot}/opt/usr/devel
 
 %postun -p /sbin/ldconfig
 
+
 %files
 %manifest %{name}.manifest
 %{_libdir}/libcapi-media-sound-manager.so.*

@@ -36,6 +36,15 @@ extern "C"
 
 #define SOUND_SESSION_TYPE_DEFAULT SOUND_SESSION_TYPE_MEDIA
 
+typedef enum
+{
+	_SESSION_MODE_RINGTONE = 0,                /**< session mode(voip/call) for ringtone */
+	_SESSION_MODE_VOICE_WITH_BUILTIN_RECEIVER, /**< session mode(voip/call) for during call with built-in receiver */
+	_SESSION_MODE_VOICE_WITH_BUILTIN_SPEAKER,  /**< session mode(voip/call) for during call with built-in speaker */
+	_SESSION_MODE_VOICE_WITH_AUDIO_JACK,       /**< session mode(voip/call) for during call with audio jack */
+	_SESSION_MODE_VOICE_WITH_BLUETOOTH,        /**< session mode(voip/call) for during call with bluetooth */
+} _session_mode_e;
+
 typedef struct {
 	int is_registered;
 	void *user_data;
@@ -60,6 +69,10 @@ typedef struct {
 int __convert_sound_manager_error_code(const char *func, int code);
 
 void __session_interrupt_cb(session_msg_t msg, session_event_t event, void *user_data);
+
+int __set_session_mode(_session_mode_e mode);
+
+int __get_session_mode(_session_mode_e *mode);
 
 #ifdef __cplusplus
 }

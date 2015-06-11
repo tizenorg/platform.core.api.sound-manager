@@ -45,6 +45,8 @@ enum
 	CURRENT_STATUS_GET_MEDIA_SESSION_RESUMPTION_OPTION,
 	CURRENT_STATUS_SET_VOIP_SESSION_MODE,
 	CURRENT_STATUS_GET_VOIP_SESSION_MODE,
+	CURRENT_STATUS_SET_CALL_SESSION_MODE,
+	CURRENT_STATUS_GET_CALL_SESSION_MODE,
 	CURRENT_STATUS_SET_SESSION_INTERRUPTED_CB,
 	CURRENT_STATUS_UNSET_SESSION_INTERRUPTED_CB,
 	CURRENT_STATUS_SET_DEVICE_MASK,
@@ -136,6 +138,14 @@ void _interpret_main_menu(char *cmd)
 		{
 			g_menu_state = CURRENT_STATUS_GET_VOIP_SESSION_MODE;
 		}
+		else if (strncmp(cmd, "sl", 2) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_SET_CALL_SESSION_MODE;
+		}
+		else if (strncmp(cmd, "gc", 2) == 0 )
+		{
+			g_menu_state = CURRENT_STATUS_GET_CALL_SESSION_MODE;
+		}
 		else if (strncmp(cmd, "sc", 2) == 0 )
 		{
 			g_menu_state = CURRENT_STATUS_SET_SESSION_INTERRUPTED_CB;
@@ -219,6 +229,8 @@ void display_sub_basic()
 	g_print("gr. Get Media Session Resumption Option \n");
 	g_print("so. Set Voip Session Mode \t");
 	g_print("go. Get Voip Session Mode \n");
+	g_print("sl. Set Call Session Mode \t");
+	g_print("gc. Get Call Session Mode \n");
 	g_print("sc. Set Session Interruped CB \t");
 	g_print("us. Unset Session Interrupted CB \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
@@ -281,8 +293,8 @@ static void displaymenu()
 	}
 	else if (g_menu_state == CURRENT_STATUS_SET_SESSION_TYPE)
 	{
-		g_print("*** input session type(0:MEDIA, 1:ALARM, 2:NOTIFICATION, 3:EMERGENCY, 4:VOIP)\n");
-	}
+		g_print("*** input session type(0:MEDIA, 1:ALARM, 2:NOTIFICATION, 3:EMERGENCY, 4:VOIP, 5:CALL)\n");
+	}	
 	else if (g_menu_state == CURRENT_STATUS_GET_SESSION_TYPE)
 	{
 		g_print("*** press enter to get session type\n");
@@ -312,6 +324,14 @@ static void displaymenu()
 	else if (g_menu_state == CURRENT_STATUS_GET_VOIP_SESSION_MODE)
 	{
 		g_print("*** press enter to get voip session mode\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_SET_CALL_SESSION_MODE)
+	{
+		g_print("*** input call session mode (0:RINGTONE, 1:VOICE with RCV, 2:VOICE with SPK, 3:VOICE with AudioJack, 4:VOICE with BT)\n");
+	}
+	else if (g_menu_state == CURRENT_STATUS_GET_CALL_SESSION_MODE)
+	{
+		g_print("*** press enter to get call session mode\n");
 	}
 	else if (g_menu_state == CURRENT_STATUS_SET_SESSION_INTERRUPTED_CB)
 	{
@@ -414,8 +434,6 @@ int convert_sound_type(sound_type_e *type, char *cmd)
 				case 7:
 					*type = SOUND_TYPE_VOICE;
 					break;
-				default:
-					break;
 			}
 		}
 	return 1;
@@ -424,7 +442,7 @@ int convert_sound_type(sound_type_e *type, char *cmd)
 int convert_session_type(sound_session_type_e *type, char *cmd)
 {
 	int session_type_n = atoi(cmd);
-		if (SOUND_SESSION_TYPE_MEDIA > session_type_n || session_type_n > SOUND_SESSION_TYPE_VOIP)
+		if (SOUND_SESSION_TYPE_MEDIA > session_type_n || session_type_n > SOUND_SESSION_TYPE_CALL)
 		{
 			g_print("not supported session type(%d)\n", session_type_n);
 			return 0;
@@ -448,7 +466,8 @@ int convert_session_type(sound_session_type_e *type, char *cmd)
 				case 4:
 					*type = SOUND_SESSION_TYPE_VOIP;
 					break;
-				default:
+				case 5:
+					*type = SOUND_SESSION_TYPE_CALL;
 					break;
 			}
 		}
@@ -653,7 +672,7 @@ static void interpret (char *cmd)
 			if(sound_manager_get_session_type(&type) !=0)
 				g_print("fail to get session type\n");
 			else
-				g_print("current session type is : %d (0:MEDIA, 1:ALARM, 2:NOTIFICATION, 3:EMERGENCY, 4:VOIP)\n", type);
+				g_print("current session type is : %d (0:MEDIA, 1:ALARM, 2:NOTIFICATION, 3:EMERGENCY, 4:VOIP, 5:CALL)\n", type);
 
 			reset_menu_state();
 		}
@@ -778,6 +797,32 @@ static void interpret (char *cmd)
 				g_print("fail to get voip session mode, ret[0x%x]\n", ret);
 			else
 				g_print("success to get voip session mode, mode[%d]\n", mode);
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_SET_CALL_SESSION_MODE:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			sound_session_call_mode_e mode;
+			mode = (sound_session_call_mode_e)atoi(cmd);
+			ret = sound_manager_set_call_session_mode(mode);
+			if (ret) {
+				g_print("failed to set call session mode(%d), ret[0x%x]\n", mode, ret);
+			} else {
+				g_print("success to set call session mode\n");
+			}
+			reset_menu_state();
+		}
+		break;
+		case CURRENT_STATUS_GET_CALL_SESSION_MODE:
+		{
+			int ret = SOUND_MANAGER_ERROR_NONE;
+			sound_session_call_mode_e mode;
+			ret = sound_manager_get_call_session_mode(&mode);
+			if(ret)
+				g_print("fail to get call session mode, ret[0x%x]\n", ret);
+			else
+				g_print("success to get call session mode, mode[%d]\n", mode);
 			reset_menu_state();
 		}
 		break;
