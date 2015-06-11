@@ -927,6 +927,7 @@ int sound_manager_unset_session_interrupted_cb (void);
  * @param[out]	device_list	The list of connected devices
  *
  * @remarks	@a Use sound_manager_get_next_device() to get the first node of the list.
+ * @remarks	@a The value of device_list is unknown when error returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -949,6 +950,9 @@ int sound_manager_get_current_device_list (sound_device_mask_e device_mask, soun
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in]	device_list	The list of connected devices
  * @param[out]	device	The device item
+ *
+ * @remarks	@a The value of device is unknown when error returned.
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
@@ -969,6 +973,9 @@ int sound_manager_get_next_device (sound_device_list_h device_list, sound_device
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in]	device_list	The list of connected devices
  * @param[out]	device	The device item
+ *
+ * @remarks	@a The value of device is unknown when error returned.
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
