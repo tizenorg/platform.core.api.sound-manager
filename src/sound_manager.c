@@ -622,8 +622,14 @@ int sound_manager_get_session_type (sound_session_type_e *type)
 	if (type == NULL)
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	ret = mm_session_get_current_type(&cur_session);
-	if (ret != 0)
+	if (ret != 0) {
+		LOGW("session hasn't been set, setting default session");
 		cur_session = SOUND_SESSION_TYPE_DEFAULT;
+		ret = mm_session_init_ex(cur_session, __session_interrupt_cb, NULL);
+		if (ret == 0) {
+			g_session_interrupt_cb_table.is_registered = 1;
+		}
+	}
 	if ((cur_session > MM_SESSION_TYPE_EMERGENCY) &&
 			(cur_session != MM_SESSION_TYPE_VOIP)) {
 		if (g_cached_session != -1)
@@ -675,9 +681,12 @@ int sound_manager_set_media_session_option (sound_session_option_for_starting_e 
 
 	ret = mm_session_get_current_information(&session, &session_option);
 	if (ret != 0 || !g_session_interrupt_cb_table.is_registered) {
-		LOGW("need to set session type first");
-		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (ret == MM_ERROR_NONE && session > MM_SESSION_TYPE_MEDIA) {
+		LOGW("session hasn't been set, setting default session");
+		ret = mm_session_init_ex(MM_SESSION_TYPE_MEDIA, __session_interrupt_cb, NULL);
+		if (ret == 0) {
+			g_session_interrupt_cb_table.is_registered = 1;
+		}
+	} else if (ret == 0 && session > MM_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
 				LOGE("Already set by camera/recorder/audio-io(in)/radio API, but need to set session to Media first");
@@ -752,7 +761,10 @@ int sound_manager_get_media_session_option (sound_session_option_for_starting_e 
 
 	ret = mm_session_get_current_information(&session, &session_options);
 	if (ret != 0) {
-		return __convert_sound_manager_error_code(__func__, ret);
+		ret = mm_session_init_ex(MM_SESSION_TYPE_MEDIA, __session_interrupt_cb, NULL);
+		if (ret == 0) {
+			g_session_interrupt_cb_table.is_registered = 1;
+		}
 	} else if (session > SOUND_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
@@ -794,9 +806,12 @@ int sound_manager_set_media_session_resumption_option (sound_session_option_for_
 
 	ret = mm_session_get_current_information(&session, &session_option);
 	if (ret != 0 || !g_session_interrupt_cb_table.is_registered) {
-		LOGW("need to set session type first");
-		return __convert_sound_manager_error_code(__func__, ret);
-	} else if (ret == MM_ERROR_NONE && session > MM_SESSION_TYPE_MEDIA) {
+		LOGW("session hasn't been set, setting default session");
+		ret = mm_session_init_ex(MM_SESSION_TYPE_MEDIA, __session_interrupt_cb, NULL);
+		if (ret == 0) {
+			g_session_interrupt_cb_table.is_registered = 1;
+		}
+	} else if (ret == 0 && session > MM_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
 				LOGE("Already set by camera/recorder/audio-io(in)/radio API, but need to set session to Media first");
@@ -849,7 +864,11 @@ int sound_manager_get_media_session_resumption_option (sound_session_option_for_
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 	ret = mm_session_get_current_information(&session, &session_options);
 	if (ret != 0) {
-		return __convert_sound_manager_error_code(__func__, ret);
+		LOGW("session hasn't been set, setting default session");
+		ret = mm_session_init_ex(MM_SESSION_TYPE_MEDIA, __session_interrupt_cb, NULL);
+		if (ret == 0) {
+			g_session_interrupt_cb_table.is_registered = 1;
+		}
 	} else if (session > SOUND_SESSION_TYPE_MEDIA) {
 		if (session == MM_SESSION_TYPE_MEDIA_RECORD) {
 			if (!g_session_interrupt_cb_table.is_registered) {
