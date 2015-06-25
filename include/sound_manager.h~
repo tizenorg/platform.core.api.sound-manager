@@ -294,8 +294,8 @@ typedef enum {
 	SOUND_DEVICE_AUDIO_JACK,        /**< Audio jack that can be connected to wired accessory such as headphone, headset, and so on */
 	SOUND_DEVICE_BLUETOOTH,         /**< Bluetooth */
 	SOUND_DEVICE_HDMI,              /**< HDMI */
-	SOUND_DEVICE_MIRRORING,         /**< MIRRORING (Deprecated since 3.0) */
-	SOUND_DEVICE_FORWARDING = SOUND_DEVICE_MIRRORING,    /**< Device for forwarding (Since 3.0) */
+	SOUND_DEVICE_MIRRORING,         /**< MIRRORING (Deprecated since 2.4) */
+	SOUND_DEVICE_FORWARDING = SOUND_DEVICE_MIRRORING,    /**< Device for forwarding (Since 2.4) */
 	SOUND_DEVICE_USB_AUDIO,         /**< USB Audio */
 } sound_device_type_e;
 
