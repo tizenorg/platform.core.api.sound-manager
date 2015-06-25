@@ -50,7 +50,7 @@ typedef enum
 	SOUND_MANAGER_ERROR_INTERNAL          = TIZEN_ERROR_SOUND_MANAGER | 01,      /**< Internal error inside the sound system */
 	SOUND_MANAGER_ERROR_POLICY            = TIZEN_ERROR_SOUND_MANAGER | 02,      /**< Noncompliance with the sound system policy */
 	SOUND_MANAGER_ERROR_NO_PLAYING_SOUND  = TIZEN_ERROR_SOUND_MANAGER | 03,      /**< No playing sound */
-	SOUND_MANAGER_ERROR_INVALID_STATE     = TIZEN_ERROR_SOUND_MANAGER | 04,      /**< Invalid state (Since 2.4) */
+	SOUND_MANAGER_ERROR_INVALID_STATE     = TIZEN_ERROR_SOUND_MANAGER | 04,      /**< Invalid state (Since 3.0) */
 } sound_manager_error_e;
 
 /**
@@ -85,13 +85,13 @@ typedef enum
 
 /**
  * @brief Sound stream information handle.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef struct sound_stream_info_s* sound_stream_info_h;
 
 /**
  * @brief Enumeration for sound stream type.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef enum {
 	SOUND_STREAM_TYPE_MEDIA,              /**< Sound stream type for media */
@@ -107,7 +107,7 @@ typedef enum {
 
 /**
  * @brief Enumeration for change reason of sound stream focus state.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef enum {
 	SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA,             /**< Changed by the stream type for media */
@@ -124,7 +124,7 @@ typedef enum {
 
 /**
  * @brief Enumeration for sound stream focus mask.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef enum {
 	SOUND_STREAM_FOCUS_FOR_PLAYBACK    = 0x0001,   /**< Mask for playback focus */
@@ -133,7 +133,7 @@ typedef enum {
 
 /**
  * @brief Enumeration for sound stream focus state.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef enum {
 	SOUND_STREAM_FOCUS_STATE_RELEASED,   /**< Focus state for release */
@@ -142,7 +142,7 @@ typedef enum {
 
 /**
  * @brief Called when the state of focus that belongs to the stream_info is changed.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]   stream_info	The handle of stream information
  * @param[in]   reason_for_change	The reason for state change of the focus
  * @param[in]   additional_info	The additional information
@@ -157,7 +157,7 @@ typedef void (* sound_stream_focus_state_changed_cb) (sound_stream_info_h stream
 
 /**
  * @brief Called when the focus state for each sound stream type is changed regardless of the process.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]   changed_focus_mask	The changed focus mask
  * @param[in]   changed_focus_state	The changed focus state
  * @param[in]   reason_for_change	The reason for state change of the focus
@@ -179,7 +179,7 @@ typedef void (* sound_stream_focus_state_watch_cb) (sound_stream_focus_mask_e ch
  */
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() and sound_stream_type_e instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() and sound_stream_type_e instead.
  * @brief Enumeration for session type.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  */
@@ -192,7 +192,7 @@ typedef enum {
 } sound_session_type_e;
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_acquire_focus() or not instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_acquire_focus() or not instead.
  * @brief Enumeration for session option for starting.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  */
@@ -202,7 +202,7 @@ typedef enum {
 } sound_session_option_for_starting_e;
 
 /**
- * @deprecated Deprecated since 2.4. In sound_stream_focus_state_changed_cb, you can choose to stop playing or not.
+ * @deprecated Deprecated since 3.0. In sound_stream_focus_state_changed_cb, you can choose to stop playing or not.
  * @brief Enumeration for session option during play.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  */
@@ -212,7 +212,7 @@ typedef enum {
 } sound_session_option_for_during_play_e;
 
 /**
- * @deprecated Deprecated since 2.4. In sound_stream_focus_state_changed_cb, you can choose to resume playing or not.
+ * @deprecated Deprecated since 3.0. In sound_stream_focus_state_changed_cb, you can choose to resume playing or not.
  * @brief Enumeration for session option for resumption.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  */
@@ -222,7 +222,7 @@ typedef enum {
 } sound_session_option_for_resumption_e;
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_apply_stream_routing() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_apply_stream_routing() instead.
  * @brief Enumeration for voip session mode.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  */
@@ -235,7 +235,7 @@ typedef enum {
 } sound_session_voip_mode_e;
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_stream_focus_state_changed_cb instead.
+ * @deprecated Deprecated since 3.0. Use sound_stream_focus_state_changed_cb instead.
  * @brief Enumeration for sound session interrupted type.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  */
@@ -251,7 +251,7 @@ typedef enum {
 } sound_session_interrupted_code_e;
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_stream_focus_state_changed_cb instead.
+ * @deprecated Deprecated since 3.0. Use sound_stream_focus_state_changed_cb instead.
  * @brief Called when the playing sound session is interrupted.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in]   code	The interrupted code
@@ -513,7 +513,7 @@ int sound_manager_unset_volume_changed_cb (void);
 
 /**
  * @brief Creates a handle for stream information.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @details	To apply the stream policy according to this stream information, this handle should be passed to other APIs\n
  * 	related to playback or recording. (e.g., player, wav-player, audio-io, etc.)
  * @param[in]	stream_type	The type of stream
@@ -538,7 +538,7 @@ int sound_manager_create_stream_information (sound_stream_type_e stream_type, so
 
 /**
  * @brief Destroys the handle for stream information.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  *
  * @return @c 0 on success,
@@ -558,7 +558,7 @@ int sound_manager_destroy_stream_information (sound_stream_info_h stream_info);
 
 /**
  * @brief Adds the device to the stream information for the stream routing.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	device		The device item from sound_device_list_h
  *
@@ -582,7 +582,7 @@ int sound_manager_add_device_for_stream_routing (sound_stream_info_h stream_info
 
 /**
  * @brief Removes the device to the stream information for the stream routing.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	device		The device item from sound_device_list_h
  *
@@ -603,7 +603,7 @@ int sound_manager_remove_device_for_stream_routing (sound_stream_info_h stream_i
 
 /**
  * @brief Applies the stream routing.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  *
  * @remarks	@a If the stream has not been made yet, this setting will be applied when the stream starts to play.\n
@@ -624,7 +624,7 @@ int sound_manager_apply_stream_routing (sound_stream_info_h stream_info);
 
 /**
  * @brief Acquires the stream focus.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	focus_mask		The focus mask that user wants to acquire
  * @param[in]	additional_info	Additional information for this request (optional, this can be null)
@@ -646,7 +646,7 @@ int sound_manager_acquire_focus (sound_stream_info_h stream_info, sound_stream_f
 
 /**
  * @brief Releases the acquired focus.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	focus_mask		The focus mask that user wants to release
  * @param[in]	additional_info	Additional information for this request (optional, this can be null)
@@ -667,7 +667,7 @@ int sound_manager_release_focus (sound_stream_info_h stream_info, sound_stream_f
 
 /**
  * @brief Gets the state of focus.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[out]	state_for_playback	The state of playback focus
  * @param[out]	state_for_recording	The state of recording focus
@@ -686,7 +686,7 @@ int sound_manager_get_focus_state (sound_stream_info_h stream_info, sound_stream
 
 /**
  * @brief Registers the watch callback function to be invoked when the focus state for each sound stream type is changed regardless of the process.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	focus_mask		The focus mask that user wants to watch
  * @param[in]	callback	The focus state change watch callback function
  * @param[in]	user_data	The user data to be passed to the callback function
@@ -704,7 +704,7 @@ int sound_manager_set_focus_state_watch_cb (sound_stream_focus_mask_e focus_mask
 
 /**
  * @brief Unregisters the focus state watch callback.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -724,7 +724,7 @@ int sound_manager_unset_focus_state_watch_cb (void);
  */
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Sets the application's sound session type.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] type The session type to set
@@ -746,7 +746,7 @@ int sound_manager_unset_focus_state_watch_cb (void);
 int sound_manager_set_session_type (sound_session_type_e type);
 
 /**
- * @deprecated Deprecated since 2.4
+ * @deprecated Deprecated since 3.0.
  * @brief Gets the application's sound session type.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] type The session type
@@ -765,7 +765,7 @@ int sound_manager_set_session_type (sound_session_type_e type);
 int sound_manager_get_session_type (sound_session_type_e *type);
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Sets the media sound session option.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] s_option The session option for starting
@@ -785,7 +785,7 @@ int sound_manager_get_session_type (sound_session_type_e *type);
 int sound_manager_set_media_session_option (sound_session_option_for_starting_e s_option, sound_session_option_for_during_play_e d_option);
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Gets the media sound session option.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[out] s_option The session option for starting
@@ -805,7 +805,7 @@ int sound_manager_set_media_session_option (sound_session_option_for_starting_e 
 int sound_manager_get_media_session_option (sound_session_option_for_starting_e *s_option, sound_session_option_for_during_play_e *d_option);
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Sets the media sound session resumption option.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] option The session resumption option
@@ -824,7 +824,7 @@ int sound_manager_get_media_session_option (sound_session_option_for_starting_e 
 int sound_manager_set_media_session_resumption_option (sound_session_option_for_resumption_e option);
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Gets the media sound session resumption option.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[out] option The session resumption option
@@ -843,7 +843,7 @@ int sound_manager_set_media_session_resumption_option (sound_session_option_for_
 int sound_manager_get_media_session_resumption_option (sound_session_option_for_resumption_e *option);
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Sets the mode of the voip sound session.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] mode The voip session mode
@@ -862,7 +862,7 @@ int sound_manager_get_media_session_resumption_option (sound_session_option_for_
 int sound_manager_set_voip_session_mode (sound_session_voip_mode_e mode);
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Gets the mode of the voip sound session.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[out] mode The voip session mode
@@ -881,7 +881,7 @@ int sound_manager_set_voip_session_mode (sound_session_voip_mode_e mode);
 int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode);
 
 /**
- * @deprecated Deprecated since 2.4. Use sound_manager_create_stream_information() instead.
+ * @deprecated Deprecated since 3.0. Use sound_manager_create_stream_information() instead.
  * @brief Registers a callback function to be invoked when the sound session being played was interrupted.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in]	callback	The interrupted callback function
@@ -898,7 +898,7 @@ int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode);
 int sound_manager_set_session_interrupted_cb (sound_session_interrupted_cb callback, void *user_data);
 
 /**
- * @deprecated Deprecated since 2.4
+ * @deprecated Deprecated since 3.0.
  * @brief Unregisters the callback function which is called when the sound session being played is interrupted.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @return 0 on success,
