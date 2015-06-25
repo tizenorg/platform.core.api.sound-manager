@@ -37,14 +37,14 @@ extern "C"
 /**
  * @internal
  * @brief Virtual sound stream handle.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef struct virtual_sound_stream_s* virtual_sound_stream_h;
 
 /**
  * @internal
  * @brief Enumeration for Native API.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef enum {
 	NATIVE_API_SOUND_MANAGER,   /**< Sound-manager Native API */
@@ -58,7 +58,7 @@ typedef enum {
 /**
  * @internal
  * @brief Enumeration for sound stream type for internal.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  */
 typedef enum {
 	SOUND_STREAM_TYPE_RINGTONE_CALL = 100, /**< Sound stream type for ringtone for call */
@@ -71,7 +71,7 @@ typedef enum {
 /**
  * @internal
  * @brief Creates a handle for stream information.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @details	To apply the stream policy according to this stream information, this handle should be passed to other APIs\n
  * 	related to playback or recording. (e.g., player, wav-player, audio-io, etc.)
  * @param[in]	stream_type	The type of stream for internal usage
@@ -97,7 +97,7 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
 /**
  * @internal
  * @brief Adds the option to the stream information for the stream routing.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	option		The option for the stream routing
  *
@@ -119,7 +119,7 @@ int sound_manager_add_option_for_stream_routing (sound_stream_info_h stream_info
 /**
  * @internal
  * @brief Removes the option to the stream information for the stream routing.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	option		The option for the stream routing
  *
@@ -140,7 +140,7 @@ int sound_manager_remove_option_for_stream_routing (sound_stream_info_h stream_i
 /**
  * @internal
  * @brief Applies the stream routing options.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  *
  * @remarks	@a If the stream has not been made yet, this setting will be applied when the stream starts to play.\n
@@ -162,7 +162,7 @@ int sound_manager_apply_stream_routing_options (sound_stream_info_h stream_info)
 /**
  * @internal
  * @brief Queries if this stream information handle is available for the API.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	api_name	The native API name
  * @param[out]	is_available	If @c true the api_name is available, @c false the api_name is not available for this strema_info
@@ -179,7 +179,7 @@ int sound_manager_is_available_stream_information (sound_stream_info_h stream_in
 /**
  * @internal
  * @brief Gets stream type from the stream information handle.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[out]	type	The stream type
  *
@@ -195,7 +195,7 @@ int sound_manager_get_type_from_stream_information (sound_stream_info_h stream_i
 /**
  * @internal
  * @brief Gets the index of the stream information handle.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[out]	index	The unique index
  *
@@ -211,7 +211,7 @@ int sound_manager_get_index_from_stream_information (sound_stream_info_h stream_
 /**
  * @internal
  * @brief Creates a virtual stream handle.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[out]	virtual_stream	The handle of virtual stream
  *
@@ -232,7 +232,7 @@ int sound_manager_create_virtual_stream (sound_stream_info_h stream_info, virtua
 /**
  * @internal
  * @brief Destroys the virtual stream handle.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	virtual_stream	The handle of virtual stream
  *
  * @return @c 0 on success,
@@ -249,7 +249,7 @@ int sound_manager_destroy_virtual_stream (virtual_sound_stream_h virtual_stream)
 /**
  * @internal
  * @brief Starts the virtual stream.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	virtual_stream	The handle of virtual stream
  *
  * @return @c 0 on success,
@@ -267,7 +267,7 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream);
 /**
  * @internal
  * @brief Stops the virtual stream.
- * @since_tizen 2.4
+ * @since_tizen 3.0
  * @param[in]	virtual_stream	The handle of virtual stream
  *
  * @return @c 0 on success,

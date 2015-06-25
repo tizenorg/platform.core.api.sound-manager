@@ -19,8 +19,8 @@
 #include <mm_sound.h>
 
 #define PA_BUS_NAME                                             "org.pulseaudio.Server"
-#define PA_STREAM_MANAGER_OBJECT_PATH                           "/org/pulseaudio/Ext/StreamManager"
-#define PA_STREAM_MANAGER_INTERFACE                             "org.pulseaudio.Ext.StreamManager"
+#define PA_STREAM_MANAGER_OBJECT_PATH                           "/org/pulseaudio/StreamManager"
+#define PA_STREAM_MANAGER_INTERFACE                             "org.pulseaudio.StreamManager"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_STREAM_INFO           "GetStreamInfo"
 #define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_DEVICES  "SetStreamRouteDevices"
 #define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTIONS  "SetStreamRouteOptions"
