@@ -76,7 +76,6 @@ void __session_interrupt_cb(session_msg_t msg, session_event_t event, void *user
 		if( msg == MM_SESSION_MSG_RESUME )
 			e = SOUND_SESSION_INTERRUPTED_COMPLETED;
 		else{
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 			switch(event){
 				case MM_SESSION_EVENT_MEDIA :
 					e = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
@@ -103,7 +102,6 @@ void __session_interrupt_cb(session_msg_t msg, session_event_t event, void *user
 					e = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
 					break;
 			}
-#endif
 		}
 		g_session_interrupt_cb_table.user_cb(e, g_session_interrupt_cb_table.user_data);
 	}

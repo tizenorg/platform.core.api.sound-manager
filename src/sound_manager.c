@@ -113,21 +113,20 @@ int sound_manager_unset_current_sound_type(void)
 int sound_manager_set_volume_changed_cb(sound_manager_volume_changed_cb callback, void* user_data)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
+
 	ret = mm_sound_add_volume_changed_callback((mm_sound_volume_changed_cb)callback, user_data);
 	if (ret == MM_ERROR_NONE) {
 		g_volume_changed_cb_table.user_cb = (sound_manager_volume_changed_cb)callback;
 		g_volume_changed_cb_table.user_data = user_data;
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_unset_volume_changed_cb(void)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
+
 	if (g_volume_changed_cb_table.user_cb) {
 		ret = mm_sound_remove_volume_changed_callback();
 		if (ret == MM_ERROR_NONE) {
@@ -138,14 +137,12 @@ int sound_manager_unset_volume_changed_cb(void)
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_set_session_type(sound_session_type_e type)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int cur_session = -1;
 	int new_session = MM_SESSION_TYPE_MEDIA;
 
@@ -216,14 +213,12 @@ int sound_manager_set_session_type(sound_session_type_e type)
 	}
 	LOGI("<< leave : type=%d, ret=0x%x", type, ret);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_session_type(sound_session_type_e *type)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int cur_session;
 
 	if( type == NULL )
@@ -262,14 +257,12 @@ int sound_manager_get_session_type(sound_session_type_e *type)
 
 	LOGI("returns : type=%d, ret=0x%x", *type, ret);
 
-#endif
 	return 0;
 }
 
 int sound_manager_set_media_session_option(sound_session_option_for_starting_e s_option, sound_session_option_for_during_play_e d_option)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int session = 0;
 	int session_option = 0;
 	int updated = 0;
@@ -344,14 +337,12 @@ int sound_manager_set_media_session_option(sound_session_option_for_starting_e s
 		LOGI("<< leave : already set same option(%x), skip it", session_option);
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_media_session_option(sound_session_option_for_starting_e *s_option, sound_session_option_for_during_play_e *d_option)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int session = 0;
 	int session_options = 0;
 
@@ -387,14 +378,12 @@ int sound_manager_get_media_session_option(sound_session_option_for_starting_e *
 
 	LOGI("<< leave : option for starting=%d, for during play=%d", *s_option, *d_option);
 
-#endif
 	return SOUND_MANAGER_ERROR_NONE;
 }
 
 int sound_manager_set_media_session_resumption_option(sound_session_option_for_resumption_e option)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int session = 0;
 	int session_option = 0;
 	int updated = 0;
@@ -446,14 +435,12 @@ int sound_manager_set_media_session_resumption_option(sound_session_option_for_r
 		LOGI("<< leave : already set same option(%x), skip it", session_option);
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_media_session_resumption_option(sound_session_option_for_resumption_e *option)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int session = 0;
 	int session_options = 0;
 
@@ -483,14 +470,12 @@ int sound_manager_get_media_session_resumption_option(sound_session_option_for_r
 
 	LOGI("<< leave : option for resumption=%d (0:by system, 1:by system or media paused)", *option);
 
-#endif
 	return SOUND_MANAGER_ERROR_NONE;
 }
 
 int sound_manager_set_voip_session_mode(sound_session_voip_mode_e mode)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int session = 0;
 	int session_options = 0;
 
@@ -598,14 +583,12 @@ int sound_manager_set_voip_session_mode(sound_session_voip_mode_e mode)
 
 	LOGI("<< leave : session=%p, mode=%d, ret=0x%x", session, mode, ret);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_voip_session_mode(sound_session_voip_mode_e *mode)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	int session = 0;
 	int session_options = 0;
 	int subsession = 0;
@@ -676,7 +659,6 @@ int sound_manager_get_voip_session_mode(sound_session_voip_mode_e *mode)
 
 	LOGI("returns : session=%p, mode=%d, ret=0x%x", session, *mode, ret);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -713,101 +695,82 @@ int sound_manager_unset_session_interrupted_cb(void)
 int sound_manager_get_current_device_list(sound_device_mask_e device_mask, sound_device_list_h *device_list)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_current_device_list((mm_sound_device_flags_e)device_mask, device_list);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_next_device (sound_device_list_h device_list, sound_device_h *device)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_next_device(device_list, device);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_prev_device (sound_device_list_h device_list, sound_device_h *device)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_prev_device(device_list, device);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_device_type (sound_device_h device, sound_device_type_e *type)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_device_type(device, (mm_sound_device_type_e*)type);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_device_io_direction (sound_device_h device, sound_device_io_direction_e *io_direction)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_device_io_direction(device, (mm_sound_device_io_direction_e*)io_direction);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_device_id (sound_device_h device, int *id)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_device_id(device, id);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_device_name (sound_device_h device, char **name)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_device_name(device, name);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_device_state (sound_device_h device, sound_device_state_e *state)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_get_device_state(device, (mm_sound_device_state_e*)state);
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_set_device_connected_cb (sound_device_mask_e device_mask, sound_device_connected_cb callback, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_add_device_connected_callback((mm_sound_device_flags_e)device_mask, (mm_sound_device_connected_cb)callback, user_data);
 	if (ret == MM_ERROR_NONE) {
 		g_device_connected_cb_table.user_cb = (sound_device_connected_cb)callback;
 		g_device_connected_cb_table.user_data = user_data;
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_unset_device_connected_cb (void)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	if (g_device_connected_cb_table.user_cb) {
 		ret = mm_sound_remove_device_connected_callback();
 		if (ret == MM_ERROR_NONE) {
@@ -818,28 +781,24 @@ int sound_manager_unset_device_connected_cb (void)
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_set_device_information_changed_cb (sound_device_mask_e device_mask, sound_device_information_changed_cb callback, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	ret = mm_sound_add_device_information_changed_callback((mm_sound_device_flags_e)device_mask, (mm_sound_device_info_changed_cb)callback, user_data);
 	if (ret == MM_ERROR_NONE) {
 		g_device_info_changed_cb_table.user_cb = (sound_device_information_changed_cb)callback;
 		g_device_info_changed_cb_table.user_data = user_data;
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_unset_device_information_changed_cb (void)
 {
 	int ret = MM_ERROR_NONE;
-#ifndef TEMP_COMMENT_UNTIL_MM_SOUND_READY
 	if (g_device_info_changed_cb_table.user_cb) {
 		ret = mm_sound_remove_device_information_changed_callback();
 		if (ret == MM_ERROR_NONE) {
@@ -850,7 +809,6 @@ int sound_manager_unset_device_information_changed_cb (void)
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
 
-#endif
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
