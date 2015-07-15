@@ -96,52 +96,11 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
 
 /**
  * @internal
- * @brief Adds the option to the stream information for the stream routing.
+ * @brief Sets the stream routing option.
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
- * @param[in]	option		The option for the stream routing
- *
- * @return @c 0 on success,
- *         otherwise a negative error value
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
- * @pre Call sound_manager_create_stream_information() or sound_manager_create_stream_information_internal() before calling this function.
- * @post You can apply this setting by calling sound_manager_apply_stream_routing_options().
- * @see sound_manager_create_stream_information()
- * @see sound_manager_create_stream_information_internal()
- * @see sound_manager_destroy_stream_information()
- * @see sound_manager_remove_option_for_stream_routing()
- * @see sound_manager_apply_stream_routing_options()
- */
-int sound_manager_add_option_for_stream_routing (sound_stream_info_h stream_info, const char *option);
-
-/**
- * @internal
- * @brief Removes the option to the stream information for the stream routing.
- * @since_tizen 3.0
- * @param[in]	stream_info	The handle of stream information
- * @param[in]	option		The option for the stream routing
- *
- * @return @c 0 on success,
- *         otherwise a negative error value
- * @retval #SOUND_MANAGER_ERROR_NONE Success
- * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
- * @pre Call sound_manager_create_stream_information()/sound_manager_add_option_for_stream_routing() before calling this function.
- * @post You can apply this setting by calling sound_manager_apply_stream_routing_options().
- * @see sound_manager_create_stream_information()
- * @see sound_manager_create_stream_information_internal()
- * @see sound_manager_destroy_stream_information()
- * @see sound_manager_remove_option_for_stream_routing()
- * @see sound_manager_apply_stream_routing_options()
- */
-int sound_manager_remove_option_for_stream_routing (sound_stream_info_h stream_info, const char *option);
-
-/**
- * @internal
- * @brief Applies the stream routing options.
- * @since_tizen 3.0
- * @param[in]	stream_info	The handle of stream information
+ * @param[in]	name	The name of option
+ * @param[in]	value	The value of option
  *
  * @remarks	@a If the stream has not been made yet, this setting will be applied when the stream starts to play.\n
  *
@@ -149,15 +108,14 @@ int sound_manager_remove_option_for_stream_routing (sound_stream_info_h stream_i
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_STATE Invalid state
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
- * @pre Call sound_manager_create_stream_information()/sound_manager_add_option_for_stream_routing() before calling this function.
+ * @pre Call sound_manager_create_stream_information() before calling this function.
  * @see sound_manager_create_stream_information()
  * @see sound_manager_create_stream_information_internal()
  * @see sound_manager_destroy_stream_information()
- * @see sound_manager_add_option_for_stream_routing()
- * @see sound_manager_remove_option_for_stream_routing()
  */
-int sound_manager_apply_stream_routing_options (sound_stream_info_h stream_info);
+int sound_manager_set_stream_routing_option (sound_stream_info_h stream_info, const char *name, int value);
 
 /**
  * @internal

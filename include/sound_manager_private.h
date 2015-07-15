@@ -136,7 +136,6 @@ typedef enum stream_route_type {
 } stream_route_type;
 #define AVAIL_DEVICES_MAX 16
 #define AVAIL_FRAMEWORKS_MAX 16
-#define ROUTE_OPTIONS_MAX 16
 
 typedef struct _stream_conf_info_s {
 	int priority;
@@ -161,7 +160,6 @@ typedef struct _sound_stream_info_s {
 	sound_stream_focus_state_changed_cb user_cb;
 	void *user_data;
 	manual_route_info_s manual_route_info;
-	char *route_options[ROUTE_OPTIONS_MAX];
 } sound_stream_info_s;
 sound_stream_info_s *sound_stream_info_arr[SOUND_STREAM_INFO_ARR_MAX];
 
@@ -239,7 +237,7 @@ int __get_stream_conf_info (const char *stream_type, stream_conf_info_s *info);
 
 int __set_manual_route_info (unsigned int index, manual_route_info_s *info);
 
-int __set_route_options (unsigned int index, char **route_options);
+int __set_route_option (unsigned int index, const char *key, int value);
 
 int __convert_sound_type (sound_type_e sound_type, const char **volume_type);
 
