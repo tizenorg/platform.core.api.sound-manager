@@ -46,71 +46,7 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_add_option_for_stream_routing (sound_stream_info_h stream_info, const char *option)
-{
-	int ret = MM_ERROR_NONE;
-	int i = 0;
-	bool added_successfully = false;
-	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
-
-	LOGI(">> enter");
-
-	SM_INSTANCE_CHECK(stream_h);
-	SM_NULL_ARG_CHECK(option);
-
-	for (i = 0; i < ROUTE_OPTIONS_MAX; i++) {
-		if (stream_h->route_options[i]) {
-			if (!strncmp (stream_h->route_options[i], option, strlen(option))) {
-				return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-			}
-			continue;
-		} else {
-			stream_h->route_options[i] = strdup(option);
-			added_successfully = true;
-			break;
-		}
-	}
-
-	if (!added_successfully) {
-		ret = MM_ERROR_SOUND_INTERNAL;
-	}
-
-	LOGI("<< leave : ret(%p)", ret);
-
-	return __convert_sound_manager_error_code(__func__, ret);
-}
-
-int sound_manager_remove_option_for_stream_routing (sound_stream_info_h stream_info, const char *option)
-{
-	int ret = MM_ERROR_NONE;
-	int i = 0;
-	bool removed_successfully = false;
-	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
-
-	LOGI(">> enter");
-
-	SM_INSTANCE_CHECK(stream_h);
-	SM_NULL_ARG_CHECK(option);
-
-	for (i = 0; i < ROUTE_OPTIONS_MAX; i++) {
-		if (stream_h->route_options[i] && !strncmp (stream_h->route_options[i], option, strlen(option))) {
-			free(stream_h->route_options[i]);
-			stream_h->route_options[i] = NULL;
-			removed_successfully = true;
-			break;
-		}
-	}
-
-	if (!removed_successfully) {
-		ret = MM_ERROR_INVALID_ARGUMENT;
-	}
-
-	LOGI("<< leave : ret(%p)", ret);
-
-	return __convert_sound_manager_error_code(__func__, ret);
-}
-
-int sound_manager_apply_stream_routing_options (sound_stream_info_h stream_info)
+int sound_manager_set_stream_routing_option (sound_stream_info_h stream_info, const char *name, const int value)
 {
 	int ret = MM_ERROR_NONE;
 	int i = 0;
@@ -120,18 +56,9 @@ int sound_manager_apply_stream_routing_options (sound_stream_info_h stream_info)
 	LOGI(">> enter");
 
 	SM_INSTANCE_CHECK(stream_h);
+	SM_NULL_ARG_CHECK(name);
 
-	for (i = 0; i < ROUTE_OPTIONS_MAX; i++) {
-		if (stream_h->route_options[i]) {
-			need_to_apply = true;
-			break;
-		}
-	}
-	if (need_to_apply) {
-		ret = __set_route_options(stream_h->index, stream_h->route_options);
-	} else {
-		__convert_sound_manager_error_code(__func__, MM_ERROR_SOUND_INTERNAL);
-	}
+	ret = __set_route_option(stream_h->index, name, value);
 
 	LOGI("<< leave : ret(%p)", ret);
 

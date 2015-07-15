@@ -23,7 +23,7 @@
 #define PA_STREAM_MANAGER_INTERFACE                             "org.pulseaudio.StreamManager"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_STREAM_INFO           "GetStreamInfo"
 #define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_DEVICES  "SetStreamRouteDevices"
-#define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTIONS  "SetStreamRouteOptions"
+#define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTION  "SetStreamRouteOption"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_VOLUME_MAX_LEVEL      "GetVolumeMaxLevel"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_CURRENT_VOLUME_TYPE   "GetCurrentVolumeType"
 
@@ -657,17 +657,16 @@ int __set_manual_route_info (unsigned int index, manual_route_info_s *info)
 	return ret;
 }
 
-int __set_route_options (unsigned int index, char **route_options)
+int __set_route_option (unsigned int index, const char *name, const int value)
 {
 	int ret = MM_ERROR_NONE;
 	int i = 0;
-	GVariantBuilder *builder;
 
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
 
-	assert(route_options);
+	assert(name);
 
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
 	if (!conn && err) {
@@ -676,22 +675,15 @@ int __set_route_options (unsigned int index, char **route_options)
 		return MM_ERROR_SOUND_INTERNAL;
 	}
 
-	builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
-	for (i = 0; i < ROUTE_OPTIONS_MAX; i++) {
-		if (route_options[i]) {
-			g_variant_builder_add(builder, "s", route_options[i]);
-			LOGI("[OPTIONS] %s", route_options[i]);
-		} else {
-			break;
-		}
-	}
+	LOGI("[OPTION] %s(%d)", name, value);
+
 
 	result = g_dbus_connection_call_sync (conn,
 							PA_BUS_NAME,
 							PA_STREAM_MANAGER_OBJECT_PATH,
 							PA_STREAM_MANAGER_INTERFACE,
-							PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTIONS,
-							g_variant_new ("(uas)", index, builder),
+							PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTION,
+							g_variant_new ("(usi)", index, name, value),
 							G_VARIANT_TYPE("(s)"),
 							G_DBUS_CALL_FLAGS_NONE,
 							2000,
@@ -704,12 +696,13 @@ int __set_route_options (unsigned int index, char **route_options)
 		const gchar *dbus_ret = NULL;
 		g_variant_get(result, "(&s)", &dbus_ret);
 		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
-		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
+		if (!strncmp("STREAM_MANAGER_RETURN_ERROR_NO_STREAM", dbus_ret, strlen(dbus_ret))) {
+			ret = MM_ERROR_SOUND_INVALID_STATE;
+		} else if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
 			ret = MM_ERROR_SOUND_INTERNAL;
 		}
 		g_variant_unref(result);
 	}
-	g_variant_builder_unref(builder);
 	g_object_unref(conn);
 	return ret;
 }
@@ -1176,11 +1169,7 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 			free(stream_h->stream_conf_info.avail_frameworks[i]);
 		}
 	}
-	for (i = 0; i < ROUTE_OPTIONS_MAX; i++) {
-		if (stream_h->route_options[i]) {
-			free(stream_h->route_options[i]);
-		}
-	}
+
 	for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
 		if (sound_stream_info_arr[i] && sound_stream_info_arr[i]->index == stream_h->index) {
 			sound_stream_info_arr[i] = NULL;

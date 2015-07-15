@@ -63,9 +63,7 @@ enum
 	CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING,
 	CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING,
 	CURRENT_STATUS_APPLY_STREAM_ROUTING,
-	CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING,
-	CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING,
-	CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS,
+	CURRENT_STATUS_SET_STREAM_ROUTING_OPTION,
 	CURRENT_STATUS_ACQUIRE_FOCUS,
 	CURRENT_STATUS_RELEASE_FOCUS,
 	CURRENT_STATUS_GET_ACQUIRED_FOCUS,
@@ -252,17 +250,9 @@ void _interpret_main_menu(char *cmd)
 		{
 			g_menu_state = CURRENT_STATUS_APPLY_STREAM_ROUTING;
 		}
-		else if (strncmp(cmd, "aos", 3) == 0 )
+		else if (strncmp(cmd, "sso", 3) == 0 )
 		{
-			g_menu_state = CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING;
-		}
-		else if (strncmp(cmd, "ros", 3) == 0 )
-		{
-			g_menu_state = CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING;
-		}
-		else if (strncmp(cmd, "aso", 3) == 0 )
-		{
-			g_menu_state = CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS;
+			g_menu_state = CURRENT_STATUS_SET_STREAM_ROUTING_OPTION;
 		}
 		else if (strncmp(cmd, "afc", 3) == 0 )
 		{
@@ -370,9 +360,7 @@ void display_sub_basic()
 	g_print("gfs. Get Focus State\n");
 	g_print("sfw. Set Focus State Watch CB\t");
 	g_print("ufw. Unset Focus State Watch CB\n");
-	g_print("aos. *Add option for stream routing\t");
-	g_print("ros. *Remove option for stream routing\t");
-	g_print("aso. *Apply options for stream routing\n");
+	g_print("sso. *Set option for stream routing\n");
 	g_print("vcr. *Create VStream\t");
 	g_print("vsr. *Start VStream\t");
 	g_print("vst. *Stop VStream\t");
@@ -525,17 +513,9 @@ static void displaymenu()
 	{
 		g_print("*** press enter to apply devices for stream routing\n");
 	}
-	else if (g_menu_state == CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING)
+	else if (g_menu_state == CURRENT_STATUS_SET_STREAM_ROUTING_OPTION)
 	{
-		g_print("*** input option to add\n");
-	}
-	else if (g_menu_state == CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING)
-	{
-		g_print("*** input option to remove\n");
-	}
-	else if (g_menu_state == CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS)
-	{
-		g_print("*** press enter to apply options for stream routing \n");
+		g_print("*** input option(name/value) for routing (0:option_1/0, 1:option_1/1, 2:option_2/0, 3:option_2:1)\n");
 	}
 	else if (g_menu_state == CURRENT_STATUS_ACQUIRE_FOCUS)
 	{
@@ -1350,32 +1330,38 @@ static void interpret (char *cmd)
 			reset_menu_state();
 		}
 		break;
-		case CURRENT_STATUS_ADD_OPTION_FOR_STREAM_ROUTING:
+		case CURRENT_STATUS_SET_STREAM_ROUTING_OPTION:
 		{
 			int ret = SOUND_MANAGER_ERROR_NONE;
-			ret = sound_manager_add_option_for_stream_routing (g_stream_info_h, cmd);
-			if (ret) {
-				g_print("failed to sound_manager_add_option_for_stream_routing(), ret(0x%x)\n", ret);
+			int selection = 0;
+			char *name = NULL;
+			int value = -1;
+			selection = atoi(cmd);
+			switch(selection) {
+			case 0:
+				name = "option_1";
+				value = 0;
+				break;
+			case 1:
+				name = "option_1";
+				value = 1;
+				break;
+			case 2:
+				name = "option_2";
+				value = 0;
+				break;
+			case 3:
+				name = "option_2";
+				value = 1;
+				break;
+			default:
+				g_print("invalid argument, try again..\n");
+				reset_menu_state();
+				break;
 			}
-			reset_menu_state();
-		}
-		break;
-		case CURRENT_STATUS_REMOVE_OPTION_FOR_STREAM_ROUTING:
-		{
-			int ret = SOUND_MANAGER_ERROR_NONE;
-			ret = sound_manager_remove_option_for_stream_routing (g_stream_info_h, cmd);
+			ret = sound_manager_set_stream_routing_option (g_stream_info_h, name, value);
 			if (ret) {
-				g_print("failed to sound_manager_remove_option_for_stream_routing(), ret(0x%x)\n", ret);
-			}
-			reset_menu_state();
-		}
-		break;
-		case CURRENT_STATUS_APPLY_STREAM_ROUTING_OPTIONS:
-		{
-			int ret = SOUND_MANAGER_ERROR_NONE;
-			ret = sound_manager_apply_stream_routing_options (g_stream_info_h);
-			if (ret) {
-				g_print("failed to sound_manager_apply_stream_routing_options(), ret(0x%x)\n", ret);
+				g_print("failed to sound_manager_set_stream_routing_option(), ret(0x%x)\n", ret);
 			}
 			reset_menu_state();
 		}
