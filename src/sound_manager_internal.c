@@ -33,7 +33,7 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
 		ret = MM_ERROR_OUT_OF_MEMORY;
 	} else {
 		memset(stream_h, 0, sizeof(sound_stream_info_s));
-		ret = __convert_stream_type_for_internal(stream_type, stream_h->stream_type);
+		ret = __convert_stream_type_for_internal(stream_type, &stream_h->stream_type);
 		if (ret == MM_ERROR_NONE) {
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (!ret) {
@@ -134,7 +134,7 @@ int sound_manager_create_virtual_stream (sound_stream_info_h stream_info, virtua
 			ret = MM_ERROR_OUT_OF_MEMORY;
 		} else {
 			memset(vstream_h, 0, sizeof(virtual_sound_stream_info_s));
-			memcpy(vstream_h->stream_type, stream_h->stream_type, SOUND_STREAM_TYPE_LEN);
+			vstream_h->stream_type = stream_h->stream_type;
 			vstream_h->pa_mainloop = stream_h->pa_mainloop;
 			vstream_h->pa_context = stream_h->pa_context;
 			vstream_h->pa_proplist = pa_proplist_new();

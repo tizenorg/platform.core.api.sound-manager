@@ -95,7 +95,7 @@ int __convert_sound_manager_error_code (const char *func, int code) {
 	return ret;
 }
 
-int __convert_stream_type (sound_stream_type_e stream_type_enum, char *stream_type)
+int __convert_stream_type (sound_stream_type_e stream_type_enum, char **stream_type)
 {
 	int ret = MM_ERROR_NONE;
 
@@ -105,31 +105,31 @@ int __convert_stream_type (sound_stream_type_e stream_type_enum, char *stream_ty
 
 	switch (stream_type_enum) {
 	case SOUND_STREAM_TYPE_MEDIA:
-		SM_STRNCPY(stream_type,"media",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "media";
 		break;
 	case SOUND_STREAM_TYPE_SYSTEM:
-		SM_STRNCPY(stream_type,"system",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "system";
 		break;
 	case SOUND_STREAM_TYPE_ALARM:
-		SM_STRNCPY(stream_type,"alarm",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "alarm";
 		break;
 	case SOUND_STREAM_TYPE_NOTIFICATION:
-		SM_STRNCPY(stream_type,"notification",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "notification";
 		break;
 	case SOUND_STREAM_TYPE_EMERGENCY:
-		SM_STRNCPY(stream_type,"emergency",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "emergency";
 		break;
 	case SOUND_STREAM_TYPE_VOICE_INFORMATION:
-		SM_STRNCPY(stream_type,"voice-information",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "voice-information";
 		break;
 	case SOUND_STREAM_TYPE_VOICE_RECOGNITION:
-		SM_STRNCPY(stream_type,"voice-recognition",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "voice-recognition";
 		break;
 	case SOUND_STREAM_TYPE_RINGTONE_VOIP:
-		SM_STRNCPY(stream_type,"ringtone-voip",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "ringtone-voip";
 		break;
 	case SOUND_STREAM_TYPE_VOIP:
-		SM_STRNCPY(stream_type,"voip",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "voip";
 		break;
 	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
@@ -141,7 +141,7 @@ int __convert_stream_type (sound_stream_type_e stream_type_enum, char *stream_ty
 	return ret;
 }
 
-int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char *stream_type)
+int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char **stream_type)
 {
 	int ret = MM_ERROR_NONE;
 
@@ -151,19 +151,19 @@ int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type
 
 	switch (stream_type_enum) {
 	case SOUND_STREAM_TYPE_RINGTONE_CALL:
-		SM_STRNCPY(stream_type,"ringtone-call",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "ringtone-call";
 		break;
 	case SOUND_STREAM_TYPE_VOICE_CALL:
-		SM_STRNCPY(stream_type,"call-voice",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "call-voice";
 		break;
 	case SOUND_STREAM_TYPE_VIDEO_CALL:
-		SM_STRNCPY(stream_type,"call-video",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "call-video";
 		break;
 	case SOUND_STREAM_TYPE_RADIO:
-		SM_STRNCPY(stream_type,"radio",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "radio";
 		break;
 	case SOUND_STREAM_TYPE_LOOPBACK:
-		SM_STRNCPY(stream_type,"loopback",SOUND_STREAM_TYPE_LEN,ret);
+		*stream_type = "loopback";
 		break;
 	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
@@ -254,12 +254,8 @@ int __convert_sound_type (sound_type_e sound_type, const char **volume_type)
 		*volume_type = "voice";
 		break;
 	}
-	if (!strncmp(*volume_type,"",SOUND_DEVICE_TYPE_LEN)) {
-		LOGE("could not find the sound_type[%d] in this switch case statement", sound_type);
-		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		LOGI("volume_type[%s]", *volume_type);
-	}
+	LOGI("volume_type[%s]", *volume_type);
+
 	return ret;
 }
 
@@ -373,9 +369,6 @@ const char* __convert_api_name (native_api_e api_name)
 		break;
 	case NATIVE_API_AUDIO_IO:
 		name = "audio-io";
-		break;
-	case NATIVE_API_RECORDER:
-		name = "recorder";
 		break;
 	}
 	return name;

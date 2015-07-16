@@ -100,23 +100,6 @@ if( pthread_mutex_unlock( x_mutex ) ) { \
 	x_count--; \
 } \
 
-#define SM_STRNCPY(dst,src,size,err) \
-do { \
-	if(src != NULL && dst != NULL && size > 0) { \
-		strncpy(dst,src,size); \
-		dst[size-1] = '\0'; \
-	} else if(dst == NULL) { \
-		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
-		err = MM_ERROR_SOUND_INTERNAL; \
-	} else if(size <= 0) { \
-		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
-		err = MM_ERROR_SOUND_INTERNAL; \
-	} else { \
-		LOGE("STRNCPY ERROR: Destination String is NULL\n"); \
-		err = MM_ERROR_SOUND_INTERNAL; \
-	} \
-} while(0)
-
 #define SOUND_SESSION_TYPE_DEFAULT SOUND_SESSION_TYPE_MEDIA
 #define SOUND_STREAM_INFO_ARR_MAX 128
 #define SOUND_STREAM_TYPE_LEN 64
@@ -152,7 +135,7 @@ typedef struct _manual_route_info_s {
 
 typedef struct _sound_stream_info_s {
 	unsigned int index;
-	char stream_type[SOUND_STREAM_TYPE_LEN];
+	char *stream_type;
 	pa_threaded_mainloop *pa_mainloop;
 	pa_context *pa_context;
 	stream_conf_info_s stream_conf_info;
@@ -170,7 +153,7 @@ typedef enum {
 
 typedef struct _virtual_stream_info_s {
 	_vstream_state state;
-	char stream_type[SOUND_STREAM_TYPE_LEN];
+	char *stream_type;
 	pa_threaded_mainloop *pa_mainloop;
 	pa_context *pa_context;
 	pa_stream *pa_stream[SOUND_STREAM_DIRECTION_MAX];
@@ -221,9 +204,9 @@ int __convert_sound_manager_error_code (const char *func, int code);
 
 int __find_empty_slot (int *index);
 
-int __convert_stream_type (sound_stream_type_e enum_type, char *stream_type);
+int __convert_stream_type (sound_stream_type_e enum_type, char **stream_type);
 
-int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char *stream_type);
+int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char **stream_type);
 
 int __convert_stream_type_to_change_reason (const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
 

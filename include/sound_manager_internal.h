@@ -52,7 +52,6 @@ typedef enum {
 	NATIVE_API_WAV_PLAYER,      /**< Wav-player Native API */
 	NATIVE_API_TONE_PLAYER,     /**< Tone-player Native API */
 	NATIVE_API_AUDIO_IO,        /**< Audio-io Native API */
-	NATIVE_API_RECORDER,        /**< Recorder Native API */
 } native_api_e;
 
 /**
