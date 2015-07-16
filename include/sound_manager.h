@@ -525,6 +525,7 @@ int sound_manager_unset_volume_changed_cb (void);
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_NOT_SUPPORTED Not supported
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
  * @see sound_manager_destroy_stream_information()
  * @see sound_manager_add_device_for_stream_routing()

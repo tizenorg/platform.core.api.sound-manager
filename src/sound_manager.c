@@ -187,7 +187,7 @@ int sound_manager_create_stream_information (sound_stream_type_e stream_type, so
 		ret = MM_ERROR_OUT_OF_MEMORY;
 	} else {
 		memset(stream_h, 0, sizeof(sound_stream_info_s));
-		ret = __convert_stream_type(stream_type, stream_h->stream_type);
+		ret = __convert_stream_type(stream_type, &stream_h->stream_type);
 		if (ret == MM_ERROR_NONE) {
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (ret == MM_ERROR_NONE) {
