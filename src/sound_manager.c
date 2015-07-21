@@ -28,6 +28,9 @@ _device_changed_info_s g_device_info_changed_cb_table = {NULL, NULL};
 sound_session_type_e g_cached_session = -1;
 _session_mode_e g_cached_session_mode = -1;
 
+/* FIX ME : enable when libmm-sound is ready for multiple signal subscription */
+//unsigned int g_device_connected_cb_id = 0;
+
 /* These variables will be removed when session features are deprecated. */
 extern int g_stream_info_count;
 extern pthread_mutex_t g_stream_info_count_mutex;
@@ -968,8 +971,11 @@ int sound_manager_set_session_interrupted_cb (sound_session_interrupted_cb callb
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 
 	if (g_session_interrupt_cb_table.is_registered == 0) {
-		ret = mm_session_init_ex(SOUND_SESSION_TYPE_DEFAULT /*default*/ , __session_interrupt_cb, NULL);
-		if (ret != 0)
+		mm_sound_focus_set_session_interrupt_callback((mm_sound_focus_session_interrupt_cb)__focus_session_interrupt_cb);
+		/* FIX ME : enable when libmm-sound is ready for multiple signal subscription */
+		//ret = mm_sound_add_device_connected_callback2(SOUND_DEVICE_IO_DIRECTION_IN_MASK | SOUND_DEVICE_IO_DIRECTION_BOTH_MASK, (mm_sound_device_connected_cb)__earjack_unplugged_cb, NULL,  g_device_connected_cb_id);
+		ret = mm_sound_add_device_connected_callback(SOUND_DEVICE_IO_DIRECTION_IN_MASK | SOUND_DEVICE_IO_DIRECTION_BOTH_MASK, (mm_sound_device_connected_cb)__earjack_unplugged_cb, NULL);
+		if (ret)
 			return __convert_sound_manager_error_code(__func__, ret);
 		g_session_interrupt_cb_table.is_registered = 1;
 	}
@@ -985,6 +991,15 @@ int sound_manager_unset_session_interrupted_cb (void)
 	if (g_session_interrupt_cb_table.user_cb) {
 		g_session_interrupt_cb_table.user_cb = NULL;
 		g_session_interrupt_cb_table.user_data = NULL;
+
+		ret = mm_sound_focus_unset_session_interrupt_callback();
+		if (ret)
+			return __convert_sound_manager_error_code(__func__, ret);
+		/* FIX ME : enable when libmm-sound is ready for multiple signal subscription */
+		//ret = mm_sound_remove_device_connected_callback2(g_device_connected_cb_id);
+		ret = mm_sound_remove_device_connected_callback();
+		if (ret)
+			return __convert_sound_manager_error_code(__func__, ret);
 	} else {
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
