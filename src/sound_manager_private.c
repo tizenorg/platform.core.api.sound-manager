@@ -841,6 +841,92 @@ void __session_interrupt_cb (session_msg_t msg, session_event_t event, void *use
 	}
 }
 
+void __focus_session_interrupt_cb (mm_sound_focus_state_e state, const char *reason_for_change, void *user_data) {
+	int wcb = (int) user_data;
+	sound_session_interrupted_code_e e;
+	if( g_session_interrupt_cb_table.user_cb ){
+		if ( wcb ){
+			if( state == FOCUS_IS_RELEASED ){
+				e = SOUND_SESSION_INTERRUPTED_COMPLETED;
+			}else{
+					if (!strncmp(reason_for_change, "media", SOUND_STREAM_TYPE_LEN) ||
+						!strncmp(reason_for_change, "radio", SOUND_STREAM_TYPE_LEN) ||
+						!strncmp(reason_for_change, "loopback", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
+
+//					} else if (!strncmp(stream_type, "system", SOUND_STREAM_TYPE_LEN)) {
+//						e = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
+
+					} else if (!strncmp(reason_for_change, "alarm", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_ALARM;
+
+					} else if (!strncmp(reason_for_change, "notification", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_NOTIFICATION;
+
+					} else if (!strncmp(reason_for_change, "emergency", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_EMERGENCY;
+
+//					} else if (!strncmp(stream_type, "voice-information", SOUND_STREAM_TYPE_LEN)) {
+//						e = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_INFORMATION;
+
+//					} else if (!strncmp(stream_type, "voice-recognition", SOUND_STREAM_TYPE_LEN)) {
+//						e = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_RECOGNITION;
+
+					} else if (!strncmp(reason_for_change, "ringtone-voip", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "ringtone-call", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "voip", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "call-voice", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "call-video", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_CALL;
+
+					} else {
+						//ret = MM_ERROR_INVALID_ARGUMENT;
+						//LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
+					}
+			}
+		}else{
+			if( state == FOCUS_IS_ACQUIRED ){
+				e = SOUND_SESSION_INTERRUPTED_COMPLETED;
+			}else{
+					if (!strncmp(reason_for_change, "media", SOUND_STREAM_TYPE_LEN) ||
+						!strncmp(reason_for_change, "radio", SOUND_STREAM_TYPE_LEN) ||
+						!strncmp(reason_for_change, "loopback", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
+
+//					} else if (!strncmp(stream_type, "system", SOUND_STREAM_TYPE_LEN)) {
+//						e = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
+
+					} else if (!strncmp(reason_for_change, "alarm", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_ALARM;
+
+					} else if (!strncmp(reason_for_change, "notification", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_NOTIFICATION;
+
+					} else if (!strncmp(reason_for_change, "emergency", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_EMERGENCY;
+
+//					} else if (!strncmp(stream_type, "voice-information", SOUND_STREAM_TYPE_LEN)) {
+//						e = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_INFORMATION;
+
+//					} else if (!strncmp(stream_type, "voice-recognition", SOUND_STREAM_TYPE_LEN)) {
+//						e = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_RECOGNITION;
+
+					} else if (!strncmp(reason_for_change, "ringtone-voip", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "ringtone-call", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "voip", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "call-voice", SOUND_STREAM_TYPE_LEN) ||
+							!strncmp(reason_for_change, "call-video", SOUND_STREAM_TYPE_LEN)) {
+						e = SOUND_SESSION_INTERRUPTED_BY_CALL;
+
+					} else {
+						//ret = MM_ERROR_INVALID_ARGUMENT;
+						//LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
+					}
+			}
+		}
+		g_session_interrupt_cb_table.user_cb(e, g_session_interrupt_cb_table.user_data);
+	}
+}
 int __set_session_mode (_session_mode_e mode)
 {
 	int ret = MM_ERROR_NONE;

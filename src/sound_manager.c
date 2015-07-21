@@ -964,13 +964,20 @@ int sound_manager_set_session_interrupted_cb (sound_session_interrupted_cb callb
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	/* it is not supported both session and stream feature at the same time */
-	if (g_stream_info_count)
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+//	if (g_stream_info_count)
+//		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 
+#if 0
 	if (g_session_interrupt_cb_table.is_registered == 0) {
 		ret = mm_session_init_ex(SOUND_SESSION_TYPE_DEFAULT /*default*/ , __session_interrupt_cb, NULL);
 		if (ret != 0)
 			return __convert_sound_manager_error_code(__func__, ret);
+		g_session_interrupt_cb_table.is_registered = 1;
+	}
+#endif
+
+	if (g_session_interrupt_cb_table.is_registered == 0) {
+		mm_sound_focus_set_session_interrupt_callback(__focus_session_interrupt_cb);
 		g_session_interrupt_cb_table.is_registered = 1;
 	}
 
@@ -985,6 +992,8 @@ int sound_manager_unset_session_interrupted_cb (void)
 	if (g_session_interrupt_cb_table.user_cb) {
 		g_session_interrupt_cb_table.user_cb = NULL;
 		g_session_interrupt_cb_table.user_data = NULL;
+
+		ret = mm_sound_focus_unset_session_interrupt_callback();
 	} else {
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
