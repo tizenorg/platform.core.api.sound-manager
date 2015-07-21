@@ -197,6 +197,10 @@ typedef struct {
 	sound_device_information_changed_cb user_cb;
 }_device_changed_info_s;
 
+void __focus_session_interrupt_cb (mm_sound_focus_state_e state, const char *reason_for_change, void *user_data);
+
+void __earjack_unplugged_cb(sound_device_h device, bool is_connected, void *user_data);
+
 void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
 void _focus_watch_callback (int id, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
