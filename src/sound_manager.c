@@ -964,12 +964,22 @@ int sound_manager_set_session_interrupted_cb (sound_session_interrupted_cb callb
 		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
 
 	/* it is not supported both session and stream feature at the same time */
-	if (g_stream_info_count)
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+//	if (g_stream_info_count)
+//		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 
+#if 0
 	if (g_session_interrupt_cb_table.is_registered == 0) {
 		ret = mm_session_init_ex(SOUND_SESSION_TYPE_DEFAULT /*default*/ , __session_interrupt_cb, NULL);
 		if (ret != 0)
+			return __convert_sound_manager_error_code(__func__, ret);
+		g_session_interrupt_cb_table.is_registered = 1;
+	}
+#endif
+
+	if (g_session_interrupt_cb_table.is_registered == 0) {
+		mm_sound_focus_set_session_interrupt_callback(__focus_session_interrupt_cb);
+		ret = mm_sound_add_device_connected_callback(SOUND_DEVICE_IO_DIRECTION_IN_MASK | SOUND_DEVICE_IO_DIRECTION_BOTH_MASK, __sound_device_connected_cb, false, NULL);
+		if (ret)
 			return __convert_sound_manager_error_code(__func__, ret);
 		g_session_interrupt_cb_table.is_registered = 1;
 	}
@@ -985,6 +995,14 @@ int sound_manager_unset_session_interrupted_cb (void)
 	if (g_session_interrupt_cb_table.user_cb) {
 		g_session_interrupt_cb_table.user_cb = NULL;
 		g_session_interrupt_cb_table.user_data = NULL;
+
+		ret = mm_sound_focus_unset_session_interrupt_callback();
+		if (ret)
+			return __convert_sound_manager_error_code(__func__, ret);
+		ret = mm_sound_remove_device_connected_callback(false);
+		if (ret)
+			return __convert_sound_manager_error_code(__func__, ret);
+
 	} else {
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
@@ -1062,7 +1080,7 @@ int sound_manager_get_device_state (sound_device_h device, sound_device_state_e 
 int sound_manager_set_device_connected_cb (sound_device_mask_e device_mask, sound_device_connected_cb callback, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
-	ret = mm_sound_add_device_connected_callback((mm_sound_device_flags_e)device_mask, (mm_sound_device_connected_cb)callback, user_data);
+	ret = mm_sound_add_device_connected_callback((mm_sound_device_flags_e)device_mask, (mm_sound_device_connected_cb)callback, true, user_data);
 	if (ret == MM_ERROR_NONE) {
 		g_device_connected_cb_table.user_cb = (sound_device_connected_cb)callback;
 		g_device_connected_cb_table.user_data = user_data;
@@ -1075,7 +1093,7 @@ int sound_manager_unset_device_connected_cb (void)
 {
 	int ret = MM_ERROR_NONE;
 	if (g_device_connected_cb_table.user_cb) {
-		ret = mm_sound_remove_device_connected_callback();
+		ret = mm_sound_remove_device_connected_callback(true);
 		if (ret == MM_ERROR_NONE) {
 			g_device_connected_cb_table.user_cb = NULL;
 			g_device_connected_cb_table.user_data = NULL;

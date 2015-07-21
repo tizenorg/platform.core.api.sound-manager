@@ -222,6 +222,50 @@ int __convert_stream_type_to_change_reason (const char *stream_type, sound_strea
 	return ret;
 }
 
+int __convert_stream_type_to_interrupt_reason (const char *stream_type, sound_session_interrupted_code_e *change_reason)
+{
+	int ret = MM_ERROR_NONE;
+
+	SM_NULL_ARG_CHECK(stream_type);
+	SM_NULL_ARG_CHECK(change_reason);
+
+	if (!strncmp(stream_type, "media", SOUND_STREAM_TYPE_LEN) ||
+		!strncmp(stream_type, "radio", SOUND_STREAM_TYPE_LEN) ||
+		!strncmp(stream_type, "loopback", SOUND_STREAM_TYPE_LEN)) {
+		change_reason = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
+
+//	} else if (!strncmp(stream_type, "system", SOUND_STREAM_TYPE_LEN)) {
+//		change_reason = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
+
+	} else if (!strncmp(stream_type, "alarm", SOUND_STREAM_TYPE_LEN)) {
+		change_reason = SOUND_SESSION_INTERRUPTED_BY_ALARM;
+
+	} else if (!strncmp(stream_type, "notification", SOUND_STREAM_TYPE_LEN)) {
+		change_reason = SOUND_SESSION_INTERRUPTED_BY_NOTIFICATION;
+
+	} else if (!strncmp(stream_type, "emergency", SOUND_STREAM_TYPE_LEN)) {
+		change_reason = SOUND_SESSION_INTERRUPTED_BY_EMERGENCY;
+
+//	} else if (!strncmp(stream_type, "voice-information", SOUND_STREAM_TYPE_LEN)) {
+//		change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_INFORMATION;
+
+//	} else if (!strncmp(stream_type, "voice-recognition", SOUND_STREAM_TYPE_LEN)) {
+//		change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_RECOGNITION;
+
+	} else if (!strncmp(stream_type, "ringtone-voip", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "ringtone-call", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "voip", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "call-voice", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "call-video", SOUND_STREAM_TYPE_LEN)) {
+		change_reason = SOUND_SESSION_INTERRUPTED_BY_CALL;
+
+	} else {
+		ret = MM_ERROR_INVALID_ARGUMENT;
+		LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
+	}
+	return ret;
+}
+
 int __convert_sound_type (sound_type_e sound_type, const char **volume_type)
 {
 	int ret = MM_ERROR_NONE;
@@ -804,7 +848,7 @@ int __get_current_volume_type (const char *direction, char **volume_type)
 	return ret;
 }
 
-void __session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data){
+void __session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data) {
 	if( g_session_interrupt_cb_table.user_cb ){
 		sound_session_interrupted_code_e e = SOUND_SESSION_INTERRUPTED_COMPLETED;
 		if( msg == MM_SESSION_MSG_RESUME )
@@ -838,6 +882,41 @@ void __session_interrupt_cb (session_msg_t msg, session_event_t event, void *use
 			}
 		}
 		g_session_interrupt_cb_table.user_cb(e, g_session_interrupt_cb_table.user_data);
+	}
+}
+
+void __focus_session_interrupt_cb (mm_sound_focus_state_e state, const char *reason_for_change, void *user_data)
+{
+	int wcb = (int) user_data;
+	sound_session_interrupted_code_e e;
+	if (g_session_interrupt_cb_table.user_cb) {
+		if (wcb) {
+			if (state == FOCUS_IS_RELEASED) {
+				e = SOUND_SESSION_INTERRUPTED_COMPLETED;
+			} else {
+				__convert_stream_type_to_interrupt_reason(reason_for_change, &e);
+			}
+		} else {
+			if (state == FOCUS_IS_ACQUIRED) {
+				e = SOUND_SESSION_INTERRUPTED_COMPLETED;
+			} else {
+				__convert_stream_type_to_interrupt_reason(reason_for_change, &e);
+			}
+		}
+		g_session_interrupt_cb_table.user_cb(e, g_session_interrupt_cb_table.user_data);
+	}
+}
+
+void __sound_device_connected_cb(sound_device_h device, bool is_connected, void *user_data)
+{
+	sound_device_type_e type;
+	if (sound_manager_get_device_type (device, &type) != MM_ERROR_NONE) {
+		LOGE("getting device type failed");
+	} else {
+		if (type == SOUND_DEVICE_AUDIO_JACK && !is_connected) {
+			LOGE("audio jack unplugged");
+			g_session_interrupt_cb_table.user_cb(SOUND_SESSION_INTERRUPTED_BY_EARJACK_UNPLUG, g_session_interrupt_cb_table.user_data);
+		}
 	}
 }
 
