@@ -172,6 +172,7 @@ typedef enum {
 
 typedef struct {
 	int is_registered;
+	unsigned int subs_id; /* for internal device connected subscription */
 	void *user_data;
 	sound_session_interrupted_cb user_cb;
 }_session_interrupt_info_s;
@@ -199,6 +200,10 @@ typedef struct {
 	void *user_data;
 	sound_device_information_changed_cb user_cb;
 }_device_changed_info_s;
+
+void _focus_session_interrupt_cb (mm_sound_focus_state_e state, const char *reason_for_change, void *user_data);
+
+void _device_unplugged_cb(sound_device_h device, bool is_connected, void *user_data);
 
 void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
