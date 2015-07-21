@@ -19,7 +19,7 @@
 
 #define TMP_CODE
 
-_session_interrupt_info_s g_session_interrupt_cb_table = {0, NULL, NULL};
+_session_interrupt_info_s g_session_interrupt_cb_table = {0, 0, NULL, NULL};
 _volume_changed_info_s g_volume_changed_cb_table = {0, NULL, NULL};
 _focus_watch_info_s g_focus_watch_cb_table = {-1, NULL, NULL};
 _device_connected_info_s g_device_connected_cb_table = {0, NULL, NULL};
@@ -31,7 +31,7 @@ _session_mode_e g_cached_session_mode = -1;
 /* These variables will be removed when session features are deprecated. */
 extern int g_stream_info_count;
 extern pthread_mutex_t g_stream_info_count_mutex;
-pthread_mutex_t g_device_info_cb_mutex, g_device_conn_cb_mutex, g_volume_cb_mutex;
+pthread_mutex_t g_interrupt_cb_mutex, g_device_info_cb_mutex, g_device_conn_cb_mutex, g_volume_cb_mutex;
 
 #ifdef TMP_CODE
 /*temporary variable for set/get voip session mode. When 2.4  feature for routing is fully implemented, it will be removed.*/
@@ -974,34 +974,61 @@ int sound_manager_get_voip_session_mode (sound_session_voip_mode_e *mode)
 int sound_manager_set_session_interrupted_cb (sound_session_interrupted_cb callback, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
-	if (callback == NULL)
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+	unsigned int subs_id = 0;
+
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_interrupt_cb_mutex, SOUND_MANAGER_ERROR_INTERNAL);
+
+	if (callback == NULL) {
+		ret = MM_ERROR_INVALID_ARGUMENT;
+		goto finish;
+	}
 
 	/* it is not supported both session and stream feature at the same time */
-	if (g_stream_info_count)
-		return __convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+	if (g_stream_info_count) {
+		ret =  MM_ERROR_POLICY_INTERNAL;
+		goto finish;
+	}
 
 	if (g_session_interrupt_cb_table.is_registered == 0) {
-		ret = mm_session_init_ex(SOUND_SESSION_TYPE_DEFAULT /*default*/ , __session_interrupt_cb, NULL);
-		if (ret != 0)
-			return __convert_sound_manager_error_code(__func__, ret);
+		mm_sound_focus_set_session_interrupt_callback((mm_sound_focus_session_interrupt_cb)__focus_session_interrupt_cb);
+		ret = mm_sound_add_device_connected_callback(SOUND_DEVICE_IO_DIRECTION_IN_MASK | SOUND_DEVICE_IO_DIRECTION_BOTH_MASK, (mm_sound_device_connected_cb)__earjack_unplugged_cb, NULL, &subs_id);
+		if (ret)
+			goto finish;
 		g_session_interrupt_cb_table.is_registered = 1;
+		g_session_interrupt_cb_table.subs_id = subs_id;
 	}
 
 	g_session_interrupt_cb_table.user_cb = (sound_session_interrupted_cb)callback;
 	g_session_interrupt_cb_table.user_data = user_data;
-	return SOUND_MANAGER_ERROR_NONE;
+
+finish:
+	SM_LEAVE_CRITICAL_SECTION(&g_interrupt_cb_mutex);
+	return __convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_unset_session_interrupted_cb (void)
 {
 	int ret = MM_ERROR_NONE;
+
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_interrupt_cb_mutex, SOUND_MANAGER_ERROR_INTERNAL);
+
 	if (g_session_interrupt_cb_table.user_cb) {
+		ret = mm_sound_focus_unset_session_interrupt_callback();
+		if (ret)
+			goto finish;
+		ret = mm_sound_remove_device_connected_callback(g_session_interrupt_cb_table.subs_id);
+		if (ret)
+			goto finish;
+		g_session_interrupt_cb_table.subs_id = 0;
 		g_session_interrupt_cb_table.user_cb = NULL;
 		g_session_interrupt_cb_table.user_data = NULL;
+		g_session_interrupt_cb_table.is_registered = 0;
 	} else {
 		ret = MM_ERROR_SOUND_INTERNAL;
 	}
+
+finish:
+	SM_LEAVE_CRITICAL_SECTION(&g_interrupt_cb_mutex);
 	return __convert_sound_manager_error_code(__func__, ret);
 }
 
