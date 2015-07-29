@@ -641,6 +641,8 @@ int __set_manual_route_info (unsigned int index, manual_route_info_s *info)
 		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
 		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
 			ret = MM_ERROR_SOUND_INVALID_STATE;
+		} else {
+			info->is_set = true;
 		}
 		g_variant_unref(result);
 	}
@@ -653,7 +655,6 @@ int __set_manual_route_info (unsigned int index, manual_route_info_s *info)
 int __set_route_option (unsigned int index, const char *name, int value)
 {
 	int ret = MM_ERROR_NONE;
-	int i = 0;
 
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;

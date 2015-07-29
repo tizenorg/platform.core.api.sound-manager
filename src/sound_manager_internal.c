@@ -49,8 +49,6 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
 int sound_manager_set_stream_routing_option (sound_stream_info_h stream_info, const char *name, int value)
 {
 	int ret = MM_ERROR_NONE;
-	int i = 0;
-	bool need_to_apply = false;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
 
 	LOGI(">> enter");
@@ -141,7 +139,7 @@ int sound_manager_create_virtual_stream (sound_stream_info_h stream_info, virtua
 			pa_proplist_sets(vstream_h->pa_proplist, PA_PROP_MEDIA_ROLE, vstream_h->stream_type);
 			pa_proplist_setf(vstream_h->pa_proplist, PA_PROP_MEDIA_PARENT_ID, "%u", stream_h->index);
 			vstream_h->state = _VSTREAM_STATE_READY;
-			vstream_h->stream_conf_info = &(stream_h->stream_conf_info);
+			vstream_h->stream_info = stream_h;
 			*virtual_stream = (virtual_sound_stream_h)vstream_h;
 		}
 	} else {
@@ -191,10 +189,12 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
 	SM_INSTANCE_CHECK(vstream_h);
 	SM_STATE_CHECK(vstream_h, _VSTREAM_STATE_READY);
 
-	/* check route-type(auto/manual) and error handling as per the type */
-	if (vstream_h->stream_conf_info->route_type == STREAM_ROUTE_TYPE_MANUAL) {
-		/* TODO : check if the device info. is set when it comes to the manual route type */
-		/* if no, return error */
+	if (vstream_h->stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
+		/* check if the manual route info. is set when it comes to the manual route type */
+		if (vstream_h->stream_info->manual_route_info.is_set == false) {
+			ret = MM_ERROR_SOUND_INVALID_STATE;
+			goto LEAVE;
+		}
 	}
 
 	/* fill up with default value */
@@ -204,9 +204,9 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
 	pa_channel_map_init_auto(&maps, ss.channels, PA_CHANNEL_MAP_ALSA);
 
 	/* check direction of this stream */
-	if (vstream_h->stream_conf_info->avail_in_devices[0] != NULL)
+	if (vstream_h->stream_info->stream_conf_info.avail_in_devices[0] != NULL)
 		io_direction |= SOUND_STREAM_DIRECTION_INPUT;
-	if (vstream_h->stream_conf_info->avail_out_devices[0] != NULL)
+	if (vstream_h->stream_info->stream_conf_info.avail_out_devices[0] != NULL)
 		io_direction |= SOUND_STREAM_DIRECTION_OUTPUT;
 
 	/* LOCK the pa_threaded_mainloop */
@@ -218,6 +218,7 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
 			if(vstream_h->pa_stream[i] == NULL) {
 				LOGE("failed to pa_stream_new_with_proplist()");
 				pa_ret = pa_context_errno(vstream_h->pa_context);
+				ret = MM_ERROR_SOUND_INTERNAL;
 				goto ERROR_WITH_UNLOCK;
 			}
 			pa_stream_set_state_callback(vstream_h->pa_stream[i], _pa_stream_state_cb, vstream_h);
@@ -227,6 +228,7 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
 				if (pa_ret < 0) {
 					LOGE("failed to pa_stream_connect_playback()");
 					pa_ret = pa_context_errno(vstream_h->pa_context);
+					ret = MM_ERROR_SOUND_INTERNAL;
 					goto ERROR_WITH_UNLOCK;
 				}
 			} else if ((i + 1) == SOUND_STREAM_DIRECTION_INPUT) {
@@ -234,6 +236,7 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
 				if (pa_ret < 0) {
 					LOGE("failed to pa_stream_connect_record()");
 					pa_ret = pa_context_errno(vstream_h->pa_context);
+					ret = MM_ERROR_SOUND_INTERNAL;
 					goto ERROR_WITH_UNLOCK;
 				}
 			}
@@ -256,7 +259,7 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
 
 	/* UNLOCK the pa_threaded_mainloop */
 	pa_threaded_mainloop_unlock(vstream_h->pa_mainloop);
-	goto SUCCESS;
+	goto LEAVE;
 ERROR_WITH_UNLOCK:
 	/* UNLOCK the pa_threaded_mainloop */
 	pa_threaded_mainloop_unlock(vstream_h->pa_mainloop);
@@ -268,8 +271,7 @@ ERROR_WITH_UNLOCK:
 		}
 	}
 	LOGE("pa_ret(%d)", pa_ret);
-	ret = MM_ERROR_SOUND_INTERNAL;
-SUCCESS:
+LEAVE:
 	LOGI("<< leave : ret(%p)", ret);
 
 	return __convert_sound_manager_error_code(__func__, ret);
