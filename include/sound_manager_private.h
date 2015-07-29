@@ -131,6 +131,7 @@ typedef struct _stream_conf_info_s {
 typedef struct _manual_route_info_s {
 	unsigned int route_in_devices[AVAIL_DEVICES_MAX];
 	unsigned int route_out_devices[AVAIL_DEVICES_MAX];
+	bool is_set;
 } manual_route_info_s;
 
 typedef struct _sound_stream_info_s {
@@ -158,7 +159,7 @@ typedef struct _virtual_stream_info_s {
 	pa_context *pa_context;
 	pa_stream *pa_stream[SOUND_STREAM_DIRECTION_MAX];
 	pa_proplist *pa_proplist;
-	stream_conf_info_s *stream_conf_info;
+	sound_stream_info_s *stream_info;
 } virtual_sound_stream_info_s;
 
 typedef enum {

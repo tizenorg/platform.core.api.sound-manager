@@ -132,9 +132,8 @@
  * The Sound Manager has predefined sound sessions (media, alarm, notification, emergency, voip)
  *
  * @section CAPI_MEDIA_SOUND_MANAGER_MODULE_FEATURE Related Features
- * APIs for voip sound session are related with the following features:\n
+ * APIs for voip sound session and voip stream type are related with the following features:\n
  *  - http://tizen.org/feature/microphone\n
- *  - http://tizen.org/feature/sip.voip\n
  *
  * It is recommended to design feature related codes in your application for reliability.\n
  *
