@@ -231,6 +231,8 @@ int __get_volume_max_level (const char *direction, const char *volume_type, unsi
 
 int __get_current_volume_type (const char *direction, char **volume_type);
 
+int __update_focus_status (unsigned int index, unsigned int acquired_focus_state);
+
 void _pa_context_state_cb (pa_context *c, void *userdata);
 
 void _pa_stream_state_cb (pa_stream *s, void * userdata);

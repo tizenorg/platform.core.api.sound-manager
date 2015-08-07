@@ -430,6 +430,7 @@ int sound_manager_acquire_focus (sound_stream_info_h stream_info, sound_stream_f
 	ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
 	if (ret == MM_ERROR_NONE) {
 		stream_h->acquired_focus |= focus_mask;
+		__update_focus_status (stream_h->index, (unsigned int)stream_h->acquired_focus);
 	}
 
 	LOGI("<< leave : ret(%p)", ret);
@@ -449,6 +450,7 @@ int sound_manager_release_focus (sound_stream_info_h stream_info, sound_stream_f
 	ret = mm_sound_release_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
 	if (ret == MM_ERROR_NONE) {
 		stream_h->acquired_focus &= ~focus_mask;
+		__update_focus_status (stream_h->index, (unsigned int)stream_h->acquired_focus);
 	}
 
 	LOGI("<< leave : ret(%p)", ret);
