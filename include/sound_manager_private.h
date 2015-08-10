@@ -177,6 +177,7 @@ typedef struct {
 }_session_interrupt_info_s;
 
 typedef struct {
+	unsigned int subs_id;
 	void *user_data;
 	sound_manager_volume_changed_cb user_cb;
 }_volume_changed_info_s;
@@ -188,11 +189,13 @@ typedef struct {
 }_focus_watch_info_s;
 
 typedef struct {
+	unsigned int subs_id;
 	void *user_data;
 	sound_device_connected_cb user_cb;
 }_device_connected_info_s;
 
 typedef struct {
+	unsigned int subs_id;
 	void *user_data;
 	sound_device_information_changed_cb user_cb;
 }_device_changed_info_s;
