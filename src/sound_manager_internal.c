@@ -78,7 +78,6 @@ int sound_manager_is_available_stream_information (sound_stream_info_h stream_in
 	for (i = 0; i < AVAIL_FRAMEWORKS_MAX; i++) {
 		if (stream_h->stream_conf_info.avail_frameworks[i] && !strncmp(stream_h->stream_conf_info.avail_frameworks[i], name, strlen(name))) {
 			*is_available = true;
-		} else {
 			break;
 		}
 	}
