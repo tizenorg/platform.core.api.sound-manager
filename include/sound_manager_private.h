@@ -145,7 +145,6 @@ typedef struct _sound_stream_info_s {
 	void *user_data;
 	manual_route_info_s manual_route_info;
 } sound_stream_info_s;
-sound_stream_info_s *sound_stream_info_arr[SOUND_STREAM_INFO_ARR_MAX];
 
 typedef enum {
 	_VSTREAM_STATE_READY,
@@ -203,57 +202,67 @@ typedef struct {
 
 void _focus_session_interrupt_cb (mm_sound_focus_state_e state, const char *reason_for_change, bool is_wcb, void *user_data);
 
+void _voip_focus_state_change_callback (sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
+
 void _device_connected_cb(sound_device_h device, bool is_connected, void *user_data);
 
 void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
 void _focus_watch_callback (int id, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
-int __convert_sound_manager_error_code (const char *func, int code);
+int _convert_sound_manager_error_code (const char *func, int code);
 
-int __find_empty_slot (int *index);
+int _convert_stream_type (sound_stream_type_e enum_type, char **stream_type);
 
-int __convert_stream_type (sound_stream_type_e enum_type, char **stream_type);
+int _convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char **stream_type);
 
-int __convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char **stream_type);
+int _convert_stream_type_to_change_reason (const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
 
-int __convert_stream_type_to_change_reason (const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
+int _convert_device_type (sound_device_type_e device_type_enum, char **device_type);
 
-int __convert_device_type (sound_device_type_e device_type_enum, char **device_type);
+int _convert_device_io_direction (mm_sound_device_io_direction_e io_direction, sound_device_io_direction_e *sound_io_direction);
 
-int __convert_device_io_direction (mm_sound_device_io_direction_e io_direction, sound_device_io_direction_e *sound_io_direction);
+const char* _convert_api_name (native_api_e api_name);
 
-const char* __convert_api_name (native_api_e api_name);
+int _get_stream_conf_info (const char *stream_type, stream_conf_info_s *info);
 
-int __get_stream_conf_info (const char *stream_type, stream_conf_info_s *info);
+int _set_manual_route_info (unsigned int index, manual_route_info_s *info);
 
-int __set_manual_route_info (unsigned int index, manual_route_info_s *info);
+int _set_route_option (unsigned int index, const char *key, int value);
 
-int __set_route_option (unsigned int index, const char *key, int value);
+int _convert_sound_type (sound_type_e sound_type, const char **volume_type);
 
-int __convert_sound_type (sound_type_e sound_type, const char **volume_type);
+int _convert_sound_type_to_enum (char *sound_type, sound_type_e *sound_type_enum);
 
-int __convert_sound_type_to_enum (char *sound_type, sound_type_e *sound_type_enum);
+int _get_volume_max_level (const char *direction, const char *volume_type, unsigned int *max_level);
 
-int __get_volume_max_level (const char *direction, const char *volume_type, unsigned int *max_level);
+int _get_current_volume_type (const char *direction, char **volume_type);
 
-int __get_current_volume_type (const char *direction, char **volume_type);
-
-void __update_focus_status (unsigned int index, unsigned int acquired_focus_status);
+void _update_focus_status (unsigned int index, unsigned int acquired_focus_status);
 
 void _pa_context_state_cb (pa_context *c, void *userdata);
 
 void _pa_stream_state_cb (pa_stream *s, void * userdata);
 
-void __session_interrupt_cb (session_msg_t msg, session_event_t event, void *user_data);
-
-int __set_session_mode (_session_mode_e mode);
-
-int __get_session_mode (_session_mode_e *mode);
+int _set_session_mode (_session_mode_e mode);
 
 int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_stream_focus_state_changed_cb callback, void *user_data);
 
 int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h);
+
+int _add_device_for_stream_routing (sound_stream_info_s *stream_info, sound_device_h device);
+
+int _remove_device_for_stream_routing (sound_stream_info_s *stream_info, sound_device_h device);
+
+int _apply_stream_routing (sound_stream_info_s *stream_info);
+
+int _create_virtual_stream (sound_stream_info_s *stream_info, virtual_sound_stream_info_s **virtual_stream);
+
+int _destroy_virtual_stream (virtual_sound_stream_info_s *virtual_stream);
+
+int _start_virtual_stream (virtual_sound_stream_info_s *virtual_stream);
+
+int _stop_virtual_stream (virtual_sound_stream_info_s *virtual_stream);
 
 #ifdef __cplusplus
 }
