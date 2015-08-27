@@ -499,7 +499,7 @@ static void displaymenu()
 	}
 	else if (g_menu_state == CURRENT_STATUS_CREATE_STREAM_INFO)
 	{
-		g_print("*** input stream type to create stream information (0:media, 1:alarm, 2:notification, 3:ringtone-call, 4:voice-call)\n");
+		g_print("*** input stream type to create stream information (0:media, 1:alarm, 2:notification, 3:ringtone-call, 4:voice-call, 5:voip)\n");
 	}
 	else if (g_menu_state == CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING)
 	{
@@ -1186,6 +1186,9 @@ static void interpret (char *cmd)
 				break;
 			case 4: /* voice call */
 				type = SOUND_STREAM_TYPE_VOICE_CALL;
+				break;
+			case 5: /* voip */
+				type = SOUND_STREAM_TYPE_VOIP;
 				break;
 			default:
 				type = SOUND_STREAM_TYPE_MEDIA;
