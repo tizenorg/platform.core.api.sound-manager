@@ -183,8 +183,8 @@ int _convert_stream_type_to_change_reason (const char *stream_type, sound_stream
 {
 	int ret = MM_ERROR_NONE;
 
-	SM_NULL_ARG_CHECK(stream_type);
-	SM_NULL_ARG_CHECK(change_reason);
+	SM_NULL_ARG_CHECK_FOR_PRIV(stream_type);
+	SM_NULL_ARG_CHECK_FOR_PRIV(change_reason);
 
 	if (!strncmp(stream_type, "media", SOUND_STREAM_TYPE_LEN) ||
 		!strncmp(stream_type, "radio", SOUND_STREAM_TYPE_LEN) ||
@@ -230,8 +230,8 @@ static int _convert_stream_type_to_interrupt_reason (const char *stream_type, so
 {
 	int ret = MM_ERROR_NONE;
 
-	SM_NULL_ARG_CHECK(stream_type);
-	SM_NULL_ARG_CHECK(change_reason);
+	SM_NULL_ARG_CHECK_FOR_PRIV(stream_type);
+	SM_NULL_ARG_CHECK_FOR_PRIV(change_reason);
 
 	if (!strncmp(stream_type, "media", SOUND_STREAM_TYPE_LEN) ||
 		!strncmp(stream_type, "radio", SOUND_STREAM_TYPE_LEN) ||
@@ -268,7 +268,7 @@ int _convert_sound_type (sound_type_e sound_type, const char **volume_type)
 {
 	int ret = MM_ERROR_NONE;
 
-	SM_NULL_ARG_CHECK(volume_type);
+	SM_NULL_ARG_CHECK_FOR_PRIV(volume_type);
 
 	switch (sound_type) {
 	case SOUND_TYPE_SYSTEM:
@@ -305,8 +305,8 @@ int _convert_sound_type_to_enum (char *sound_type, sound_type_e *sound_type_enum
 {
 	int ret = MM_ERROR_NONE;
 
-	SM_NULL_ARG_CHECK(sound_type);
-	SM_NULL_ARG_CHECK(sound_type_enum);
+	SM_NULL_ARG_CHECK_FOR_PRIV(sound_type);
+	SM_NULL_ARG_CHECK_FOR_PRIV(sound_type_enum);
 
 	if (!strncmp(sound_type, "system", strlen(sound_type))) {
 		*sound_type_enum = SOUND_TYPE_SYSTEM;
@@ -336,7 +336,7 @@ int _convert_device_type (sound_device_type_e device_type_enum, char **device_ty
 {
 	int ret = MM_ERROR_NONE;
 
-	SM_NULL_ARG_CHECK(device_type);
+	SM_NULL_ARG_CHECK_FOR_PRIV(device_type);
 
 	switch (device_type_enum) {
 	case SOUND_DEVICE_BUILTIN_SPEAKER:
@@ -1354,8 +1354,8 @@ int _add_device_for_stream_routing (sound_stream_info_s *stream_info, sound_devi
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 
-	SM_INSTANCE_CHECK(stream_info);
-	SM_NULL_ARG_CHECK(device);
+	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
+	SM_NULL_ARG_CHECK_FOR_PRIV(device);
 
 	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
 		ret = mm_sound_get_device_id(device, &device_id);
@@ -1436,8 +1436,8 @@ int _remove_device_for_stream_routing (sound_stream_info_s *stream_info, sound_d
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 
-	SM_INSTANCE_CHECK(stream_info);
-	SM_NULL_ARG_CHECK(device);
+	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
+	SM_NULL_ARG_CHECK_FOR_PRIV(device);
 
 	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
 		ret = mm_sound_get_device_id(device, &device_id);
@@ -1502,7 +1502,7 @@ int _apply_stream_routing (sound_stream_info_s *stream_info)
 	int i = 0;
 	bool need_to_apply = false;
 
-	SM_INSTANCE_CHECK(stream_info);
+	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
 
 	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
 		for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
@@ -1534,8 +1534,8 @@ int _create_virtual_stream (sound_stream_info_s *stream_info, virtual_sound_stre
 	const char *name = NULL;
 	int i = 0;
 
-	SM_INSTANCE_CHECK(virtual_stream);
-	SM_INSTANCE_CHECK(stream_info);
+	SM_INSTANCE_CHECK_FOR_PRIV(virtual_stream);
+	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
 
 	/* check if this stream_info is available for virtual stream */
 	name = _convert_api_name(NATIVE_API_SOUND_MANAGER);
@@ -1571,8 +1571,8 @@ int _destroy_virtual_stream (virtual_sound_stream_info_s *virtual_stream)
 {
 	int ret = MM_ERROR_NONE;
 
-	SM_INSTANCE_CHECK(virtual_stream);
-	SM_STATE_CHECK(virtual_stream, _VSTREAM_STATE_READY);
+	SM_INSTANCE_CHECK_FOR_PRIV(virtual_stream);
+	SM_STATE_CHECK_FOR_PRIV(virtual_stream, _VSTREAM_STATE_READY);
 
 	virtual_stream->pa_mainloop = NULL;
 	virtual_stream->pa_context = NULL;
@@ -1594,8 +1594,8 @@ int _start_virtual_stream (virtual_sound_stream_info_s *virtual_stream)
 	pa_sample_spec ss;
 	pa_channel_map maps;
 
-	SM_INSTANCE_CHECK(virtual_stream);
-	SM_STATE_CHECK(virtual_stream, _VSTREAM_STATE_READY);
+	SM_INSTANCE_CHECK_FOR_PRIV(virtual_stream);
+	SM_STATE_CHECK_FOR_PRIV(virtual_stream, _VSTREAM_STATE_READY);
 
 	if (virtual_stream->stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
 		/* check if the manual route info. is set when it comes to the manual route type */
@@ -1691,8 +1691,8 @@ int _stop_virtual_stream (virtual_sound_stream_info_s *virtual_stream)
 	int ret = MM_ERROR_NONE;
 	int i = 0;
 
-	SM_INSTANCE_CHECK(virtual_stream);
-	SM_STATE_CHECK(virtual_stream, _VSTREAM_STATE_RUNNING);
+	SM_INSTANCE_CHECK_FOR_PRIV(virtual_stream);
+	SM_STATE_CHECK_FOR_PRIV(virtual_stream, _VSTREAM_STATE_RUNNING);
 
 	/* LOCK the pa_threaded_mainloop */
 	pa_threaded_mainloop_lock(virtual_stream->pa_mainloop);
