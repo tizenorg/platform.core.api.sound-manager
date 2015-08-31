@@ -1354,8 +1354,8 @@ int _add_device_for_stream_routing (sound_stream_info_s *stream_info, sound_devi
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 
-	SM_INSTANCE_CHECK(stream_info);
-	SM_NULL_ARG_CHECK(device);
+	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
+	SM_NULL_ARG_CHECK_FOR_PRIV(device);
 
 	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
 		ret = mm_sound_get_device_id(device, &device_id);
@@ -1436,8 +1436,8 @@ int _remove_device_for_stream_routing (sound_stream_info_s *stream_info, sound_d
 	mm_sound_device_type_e device_type;
 	mm_sound_device_io_direction_e device_direction;
 
-	SM_INSTANCE_CHECK(stream_info);
-	SM_NULL_ARG_CHECK(device);
+	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
+	SM_NULL_ARG_CHECK_FOR_PRIV(device);
 
 	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
 		ret = mm_sound_get_device_id(device, &device_id);
@@ -1502,7 +1502,7 @@ int _apply_stream_routing (sound_stream_info_s *stream_info)
 	int i = 0;
 	bool need_to_apply = false;
 
-	SM_INSTANCE_CHECK(stream_info);
+	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
 
 	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
 		for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
