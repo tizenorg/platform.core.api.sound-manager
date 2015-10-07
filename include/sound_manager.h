@@ -103,6 +103,7 @@ typedef enum {
 	SOUND_STREAM_TYPE_VOICE_RECOGNITION,  /**< Sound stream type for voice recognition */
 	SOUND_STREAM_TYPE_RINGTONE_VOIP,      /**< Sound stream type for ringtone for VoIP */
 	SOUND_STREAM_TYPE_VOIP,               /**< Sound stream type for VoIP */
+	SOUND_STREAM_TYPE_MEDIA_EXTERNAL_ONLY,/**< Sound stream type for media only for external devices */
 } sound_stream_type_e;
 
 /**
@@ -110,16 +111,17 @@ typedef enum {
  * @since_tizen 3.0
  */
 typedef enum {
-	SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA,             /**< Changed by the stream type for media */
-	SOUND_STREAM_FOCUS_CHANGED_BY_SYSTEM,            /**< Changed by the stream type for system */
-	SOUND_STREAM_FOCUS_CHANGED_BY_ALARM,             /**< Changed by the stream type for alarm */
-	SOUND_STREAM_FOCUS_CHANGED_BY_NOTIFICATION,      /**< Changed by the stream type for notification */
-	SOUND_STREAM_FOCUS_CHANGED_BY_EMERGENCY,         /**< Changed by the stream type for emergency */
-	SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_INFORMATION, /**< Changed by the stream type for voice information */
-	SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_RECOGNITION, /**< Changed by the stream type for voice recognition */
-	SOUND_STREAM_FOCUS_CHANGED_BY_RINGTONE,          /**< Changed by the stream type for ringtone */
-	SOUND_STREAM_FOCUS_CHANGED_BY_VOIP,              /**< Changed by the stream type for VoIP */
-	SOUND_STREAM_FOCUS_CHANGED_BY_CALL,              /**< Changed by the stream type for voice-call or video-call */
+	SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA,              /**< Changed by the stream type for media */
+	SOUND_STREAM_FOCUS_CHANGED_BY_SYSTEM,             /**< Changed by the stream type for system */
+	SOUND_STREAM_FOCUS_CHANGED_BY_ALARM,              /**< Changed by the stream type for alarm */
+	SOUND_STREAM_FOCUS_CHANGED_BY_NOTIFICATION,       /**< Changed by the stream type for notification */
+	SOUND_STREAM_FOCUS_CHANGED_BY_EMERGENCY,          /**< Changed by the stream type for emergency */
+	SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_INFORMATION,  /**< Changed by the stream type for voice information */
+	SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_RECOGNITION,  /**< Changed by the stream type for voice recognition */
+	SOUND_STREAM_FOCUS_CHANGED_BY_RINGTONE,           /**< Changed by the stream type for ringtone */
+	SOUND_STREAM_FOCUS_CHANGED_BY_VOIP,               /**< Changed by the stream type for VoIP */
+	SOUND_STREAM_FOCUS_CHANGED_BY_CALL,               /**< Changed by the stream type for voice-call or video-call */
+	SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA_EXTERNAL_ONLY,/**< Changed by the stream type for media only for external devices */
 } sound_stream_focus_change_reason_e;
 
 /**
