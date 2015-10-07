@@ -135,6 +135,9 @@ int _convert_stream_type (sound_stream_type_e stream_type_enum, char **stream_ty
 	case SOUND_STREAM_TYPE_VOIP:
 		*stream_type = "voip";
 		break;
+	case SOUND_STREAM_TYPE_MEDIA_EXTERNAL_ONLY:
+		*stream_type = "ext-media";
+		break;
 	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
 		ret = MM_ERROR_SOUND_INTERNAL;
@@ -219,6 +222,10 @@ int _convert_stream_type_to_change_reason (const char *stream_type, sound_stream
 	} else if (!strncmp(stream_type, "call-voice", SOUND_STREAM_TYPE_LEN) ||
 			!strncmp(stream_type, "call-video", SOUND_STREAM_TYPE_LEN)) {
 		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_CALL;
+
+	} else if (!strncmp(stream_type, "ext-media", SOUND_STREAM_TYPE_LEN)) {
+		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA_EXTERNAL_ONLY;
+
 	} else {
 		ret = MM_ERROR_INVALID_ARGUMENT;
 		LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
@@ -238,7 +245,8 @@ static int _convert_stream_type_to_interrupt_reason (const char *stream_type, so
 		!strncmp(stream_type, "system", SOUND_STREAM_TYPE_LEN) ||
 		!strncmp(stream_type, "voice-information", SOUND_STREAM_TYPE_LEN) ||
 		!strncmp(stream_type, "voice-recognition", SOUND_STREAM_TYPE_LEN) ||
-		!strncmp(stream_type, "loopback", SOUND_STREAM_TYPE_LEN)) {
+		!strncmp(stream_type, "loopback", SOUND_STREAM_TYPE_LEN) ||
+		!strncmp(stream_type, "ext-media", SOUND_STREAM_TYPE_LEN)) {
 		*change_reason = SOUND_SESSION_INTERRUPTED_BY_MEDIA;
 
 	} else if (!strncmp(stream_type, "alarm", SOUND_STREAM_TYPE_LEN)) {
@@ -1349,6 +1357,10 @@ int _add_device_for_stream_routing (sound_stream_info_s *stream_info, sound_devi
 	int i = 0;
 	int j = 0;
 	bool added_successfully = false;
+#if 0
+	/* not ready yet. after preparing in libmm-sound, it'll be enabled */
+	bool use_internal_codec = false;
+#endif
 	char *device_type_str = NULL;
 	int device_id = 0;
 	mm_sound_device_type_e device_type;
@@ -1357,7 +1369,19 @@ int _add_device_for_stream_routing (sound_stream_info_s *stream_info, sound_devi
 	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
 	SM_NULL_ARG_CHECK_FOR_PRIV(device);
 
-	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
+	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL ||
+			stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL_EXT) {
+#if 0
+		/* not ready yet. after preparing in libmm-sound, it'll be enabled */
+		if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL_EXT) {
+			ret = mm_sound_get_device_use_internal_codec(device, &use_internal_codec);
+			if (ret) {
+				return _convert_sound_manager_error_code(__func__, ret);
+			}
+			if (use_internal_codec)
+				return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+		}
+#endif
 		ret = mm_sound_get_device_id(device, &device_id);
 		if (ret) {
 			return _convert_sound_manager_error_code(__func__, ret);
@@ -1439,7 +1463,8 @@ int _remove_device_for_stream_routing (sound_stream_info_s *stream_info, sound_d
 	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
 	SM_NULL_ARG_CHECK_FOR_PRIV(device);
 
-	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
+	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL ||
+			stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL_EXT) {
 		ret = mm_sound_get_device_id(device, &device_id);
 		if (ret) {
 			return _convert_sound_manager_error_code(__func__, ret);
@@ -1504,7 +1529,8 @@ int _apply_stream_routing (sound_stream_info_s *stream_info)
 
 	SM_INSTANCE_CHECK_FOR_PRIV(stream_info);
 
-	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
+	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL ||
+			stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL_EXT) {
 		for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 			if (stream_info->manual_route_info.route_in_devices[i]) {
 				need_to_apply = true;
@@ -1597,7 +1623,8 @@ int _start_virtual_stream (virtual_sound_stream_info_s *virtual_stream)
 	SM_INSTANCE_CHECK_FOR_PRIV(virtual_stream);
 	SM_STATE_CHECK_FOR_PRIV(virtual_stream, _VSTREAM_STATE_READY);
 
-	if (virtual_stream->stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL) {
+	if (virtual_stream->stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL ||
+			virtual_stream->stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL_EXT) {
 		/* check if the manual route info. is set when it comes to the manual route type */
 		if (virtual_stream->stream_info->manual_route_info.is_set == false) {
 			ret = MM_ERROR_SOUND_INVALID_STATE;
