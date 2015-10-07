@@ -103,6 +103,7 @@ typedef enum {
 	SOUND_STREAM_TYPE_VOICE_RECOGNITION,  /**< Sound stream type for voice recognition */
 	SOUND_STREAM_TYPE_RINGTONE_VOIP,      /**< Sound stream type for ringtone for VoIP */
 	SOUND_STREAM_TYPE_VOIP,               /**< Sound stream type for VoIP */
+	SOUND_STREAM_TYPE_MEDIA_EXTERNAL_ONLY,/**< Sound stream type for media only for external devices */
 } sound_stream_type_e;
 
 /**
@@ -120,6 +121,7 @@ typedef enum {
 	SOUND_STREAM_FOCUS_CHANGED_BY_RINGTONE,          /**< Changed by the stream type for ringtone */
 	SOUND_STREAM_FOCUS_CHANGED_BY_VOIP,              /**< Changed by the stream type for VoIP */
 	SOUND_STREAM_FOCUS_CHANGED_BY_CALL,              /**< Changed by the stream type for voice-call or video-call */
+	SOUND_STREAM_FOCUS_CHANGED_BY_EXTERNAL_MEDIA,    /**< Changed by the stream type for media only for external devices */
 } sound_stream_focus_change_reason_e;
 
 /**
