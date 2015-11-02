@@ -19,7 +19,7 @@
 #include <sound_manager_internal.h>
 #include <mm_sound.h>
 
-int sound_manager_create_stream_information_internal (sound_stream_type_internal_e stream_type, sound_stream_focus_state_changed_cb callback, void *user_data, sound_stream_info_h *stream_info)
+int sound_manager_create_stream_information_internal(sound_stream_type_internal_e stream_type, sound_stream_focus_state_changed_cb callback, void *user_data, sound_stream_info_h *stream_info)
 {
 	int ret = MM_ERROR_NONE;
 
@@ -46,7 +46,7 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_set_stream_routing_option (sound_stream_info_h stream_info, const char *name, int value)
+int sound_manager_set_stream_routing_option(sound_stream_info_h stream_info, const char *name, int value)
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
@@ -63,7 +63,7 @@ int sound_manager_set_stream_routing_option (sound_stream_info_h stream_info, co
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_is_available_stream_information (sound_stream_info_h stream_info, native_api_e api_name, bool *is_available)
+int sound_manager_is_available_stream_information(sound_stream_info_h stream_info, native_api_e api_name, bool *is_available)
 {
 	int ret = MM_ERROR_NONE;
 	int i = 0;
@@ -85,7 +85,7 @@ int sound_manager_is_available_stream_information (sound_stream_info_h stream_in
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_get_type_from_stream_information (sound_stream_info_h stream_info, char **type)
+int sound_manager_get_type_from_stream_information(sound_stream_info_h stream_info, char **type)
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_info_s* stream_h = (sound_stream_info_s*)stream_info;
@@ -98,7 +98,7 @@ int sound_manager_get_type_from_stream_information (sound_stream_info_h stream_i
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
-int sound_manager_get_index_from_stream_information (sound_stream_info_h stream_info, int *index)
+int sound_manager_get_index_from_stream_information(sound_stream_info_h stream_info, int *index)
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_info_s* stream_h = (sound_stream_info_s*)stream_info;
@@ -111,7 +111,7 @@ int sound_manager_get_index_from_stream_information (sound_stream_info_h stream_
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_create_virtual_stream (sound_stream_info_h stream_info, virtual_sound_stream_h *virtual_stream)
+int sound_manager_create_virtual_stream(sound_stream_info_h stream_info, virtual_sound_stream_h *virtual_stream)
 {
 	int ret = MM_ERROR_NONE;
 	virtual_sound_stream_info_s *vstream_h = NULL;
@@ -128,7 +128,7 @@ int sound_manager_create_virtual_stream (sound_stream_info_h stream_info, virtua
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_destroy_virtual_stream (virtual_sound_stream_h virtual_stream)
+int sound_manager_destroy_virtual_stream(virtual_sound_stream_h virtual_stream)
 {
 	int ret = MM_ERROR_NONE;
 	virtual_sound_stream_info_s *vstream_h = (virtual_sound_stream_info_s*)virtual_stream;
@@ -142,7 +142,7 @@ int sound_manager_destroy_virtual_stream (virtual_sound_stream_h virtual_stream)
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
+int sound_manager_start_virtual_stream(virtual_sound_stream_h virtual_stream)
 {
 	int ret = MM_ERROR_NONE;
 	virtual_sound_stream_info_s *vstream_h = (virtual_sound_stream_info_s*)virtual_stream;
@@ -156,7 +156,7 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream)
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_stop_virtual_stream (virtual_sound_stream_h virtual_stream)
+int sound_manager_stop_virtual_stream(virtual_sound_stream_h virtual_stream)
 {
 	int ret = MM_ERROR_NONE;
 	virtual_sound_stream_info_s *vstream_h = (virtual_sound_stream_info_s*)virtual_stream;

@@ -43,38 +43,40 @@ extern "C"
 #include <mm_sound_private.h>
 #include "sound_manager_internal.h"
 
-#define _CHECK_CONDITION(condition,error,msg)     \
-    if(condition) {} else \
-    { LOGE("[%s] %s(0x%08x)",__FUNCTION__, msg,error); return error;}; \
+#define _CHECK_CONDITION(condition, error, msg)     \
+if (condition) { \
+} else { \
+	LOGE("[%s] %s(0x%08x)", __FUNCTION__, msg, error); \
+	return error; \
+}; \
 
-#define SM_INSTANCE_CHECK(handle)   \
-        _CHECK_CONDITION(handle != NULL,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER")
+#define SM_INSTANCE_CHECK(handle) \
+_CHECK_CONDITION(handle != NULL, SOUND_MANAGER_ERROR_INVALID_PARAMETER, "SOUND_MANAGER_ERROR_INVALID_PARAMETER")
 
-#define SM_NULL_ARG_CHECK(arg)      \
-        _CHECK_CONDITION(arg != NULL,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER")
+#define SM_NULL_ARG_CHECK(arg) \
+_CHECK_CONDITION(arg != NULL, SOUND_MANAGER_ERROR_INVALID_PARAMETER, "SOUND_MANAGER_ERROR_INVALID_PARAMETER")
 
-#define SM_STATE_CHECK(handle,expected_state)       \
-        _CHECK_CONDITION(handle->state == expected_state,SOUND_MANAGER_ERROR_INVALID_STATE,"SOUND_MANAGER_ERROR_INVALID_STATE")
+#define SM_STATE_CHECK(handle, expected_state) \
+_CHECK_CONDITION(handle->state == expected_state, SOUND_MANAGER_ERROR_INVALID_STATE, "SOUND_MANAGER_ERROR_INVALID_STATE")
 
-#define SM_RANGE_ARG_CHECK(arg, min, max)      \
-        _CHECK_CONDITION(arg <= max,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER") \
-        _CHECK_CONDITION(arg >= min,SOUND_MANAGER_ERROR_INVALID_PARAMETER,"SOUND_MANAGER_ERROR_INVALID_PARAMETER")
+#define SM_RANGE_ARG_CHECK(arg, min, max) \
+_CHECK_CONDITION(arg <= max, SOUND_MANAGER_ERROR_INVALID_PARAMETER, "SOUND_MANAGER_ERROR_INVALID_PARAMETER") \
+_CHECK_CONDITION(arg >= min, SOUND_MANAGER_ERROR_INVALID_PARAMETER, "SOUND_MANAGER_ERROR_INVALID_PARAMETER")
 
-#define SM_INSTANCE_CHECK_FOR_PRIV(handle)   \
-        _CHECK_CONDITION(handle != NULL,MM_ERROR_INVALID_ARGUMENT,"MM_ERROR_INVALID_ARGUMENT")
+#define SM_INSTANCE_CHECK_FOR_PRIV(handle) \
+_CHECK_CONDITION(handle != NULL, MM_ERROR_INVALID_ARGUMENT, "MM_ERROR_INVALID_ARGUMENT")
 
-#define SM_NULL_ARG_CHECK_FOR_PRIV(arg)      \
-        _CHECK_CONDITION(arg != NULL,MM_ERROR_INVALID_ARGUMENT,"MM_ERROR_INVALID_ARGUMENT")
+#define SM_NULL_ARG_CHECK_FOR_PRIV(arg) \
+_CHECK_CONDITION(arg != NULL, MM_ERROR_INVALID_ARGUMENT, "MM_ERROR_INVALID_ARGUMENT")
 
-#define SM_STATE_CHECK_FOR_PRIV(handle,expected_state)       \
-        _CHECK_CONDITION(handle->state == expected_state,MM_ERROR_SOUND_INVALID_STATE,"MM_ERROR_SOUND_INVALID_STATE")
+#define SM_STATE_CHECK_FOR_PRIV(handle, expected_state) \
+_CHECK_CONDITION(handle->state == expected_state, MM_ERROR_SOUND_INVALID_STATE, "MM_ERROR_SOUND_INVALID_STATE")
 
-#define SM_ENTER_CRITICAL_SECTION_WITH_RETURN(x_mutex,x_return) \
-switch ( pthread_mutex_lock( x_mutex ) ) \
-{ \
+#define SM_ENTER_CRITICAL_SECTION_WITH_RETURN(x_mutex, x_return) \
+switch (pthread_mutex_lock(x_mutex)) { \
 case EINVAL: \
 	LOGW("try mutex init..\n"); \
-	if( 0 > pthread_mutex_init( x_mutex, NULL) ) { \
+	if (0 > pthread_mutex_init(x_mutex, NULL)) { \
 		return x_return; \
 	} else { \
 		break; \
@@ -88,7 +90,7 @@ default: \
 }
 
 #define SM_LEAVE_CRITICAL_SECTION(x_mutex) \
-if( pthread_mutex_unlock( x_mutex ) ) { \
+if (pthread_mutex_unlock(x_mutex)) { \
 	LOGE("mutex unlock failed\n"); \
 }
 
@@ -184,95 +186,95 @@ typedef struct {
 	unsigned int subs_id; /* for internal device connected subscription */
 	void *user_data;
 	sound_session_interrupted_cb user_cb;
-}_session_interrupt_info_s;
+} _session_interrupt_info_s;
 
 typedef struct {
 	unsigned int subs_id;
 	void *user_data;
 	sound_manager_volume_changed_cb user_cb;
-}_volume_changed_info_s;
+} _volume_changed_info_s;
 
 typedef struct {
 	int index;
 	void *user_data;
 	sound_stream_focus_state_watch_cb user_cb;
-}_focus_watch_info_s;
+} _focus_watch_info_s;
 
 typedef struct {
 	unsigned int subs_id;
 	void *user_data;
 	sound_device_connected_cb user_cb;
-}_device_connected_info_s;
+} _device_connected_info_s;
 
 typedef struct {
 	unsigned int subs_id;
 	void *user_data;
 	sound_device_information_changed_cb user_cb;
-}_device_changed_info_s;
+} _device_changed_info_s;
 
-void _focus_session_interrupt_cb (mm_sound_focus_state_e state, const char *reason_for_change, bool is_wcb, void *user_data);
+void _focus_session_interrupt_cb(mm_sound_focus_state_e state, const char *reason_for_change, bool is_wcb, void *user_data);
 
-void _voip_focus_state_change_callback (sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
+void _voip_focus_state_change_callback(sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
 
 void _device_connected_cb(sound_device_h device, bool is_connected, void *user_data);
 
-void _focus_state_change_callback (int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
+void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
-void _focus_watch_callback (int id, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
+void _focus_watch_callback(int id, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data);
 
-int _convert_sound_manager_error_code (const char *func, int code);
+int _convert_sound_manager_error_code(const char *func, int code);
 
-int _convert_stream_type (sound_stream_type_e enum_type, char **stream_type);
+int _convert_stream_type(sound_stream_type_e enum_type, char **stream_type);
 
-int _convert_stream_type_for_internal (sound_stream_type_internal_e stream_type_enum, char **stream_type);
+int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_enum, char **stream_type);
 
-int _convert_stream_type_to_change_reason (const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
+int _convert_stream_type_to_change_reason(const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
 
-int _convert_device_type (sound_device_type_e device_type_enum, char **device_type);
+int _convert_device_type(sound_device_type_e device_type_enum, char **device_type);
 
-int _convert_device_io_direction (mm_sound_device_io_direction_e io_direction, sound_device_io_direction_e *sound_io_direction);
+int _convert_device_io_direction(mm_sound_device_io_direction_e io_direction, sound_device_io_direction_e *sound_io_direction);
 
-const char* _convert_api_name (native_api_e api_name);
+const char* _convert_api_name(native_api_e api_name);
 
-int _get_stream_conf_info (const char *stream_type, stream_conf_info_s *info);
+int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info);
 
-int _set_manual_route_info (unsigned int index, manual_route_info_s *info);
+int _set_manual_route_info(unsigned int index, manual_route_info_s *info);
 
-int _set_route_option (unsigned int index, const char *key, int value);
+int _set_route_option(unsigned int index, const char *key, int value);
 
-int _convert_sound_type (sound_type_e sound_type, const char **volume_type);
+int _convert_sound_type(sound_type_e sound_type, const char **volume_type);
 
-int _convert_sound_type_to_enum (char *sound_type, sound_type_e *sound_type_enum);
+int _convert_sound_type_to_enum(char *sound_type, sound_type_e *sound_type_enum);
 
-int _get_volume_max_level (const char *direction, const char *volume_type, unsigned int *max_level);
+int _get_volume_max_level(const char *direction, const char *volume_type, unsigned int *max_level);
 
-int _get_current_volume_type (const char *direction, char **volume_type);
+int _get_current_volume_type(const char *direction, char **volume_type);
 
-void _update_focus_status (unsigned int index, unsigned int acquired_focus_status);
+void _update_focus_status(unsigned int index, unsigned int acquired_focus_status);
 
-void _pa_context_state_cb (pa_context *c, void *userdata);
+void _pa_context_state_cb(pa_context *c, void *userdata);
 
-void _pa_stream_state_cb (pa_stream *s, void * userdata);
+void _pa_stream_state_cb(pa_stream *s, void * userdata);
 
-int _set_session_mode (_session_mode_e mode);
+int _set_session_mode(_session_mode_e mode);
 
 int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_stream_focus_state_changed_cb callback, void *user_data);
 
 int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h);
 
-int _add_device_for_stream_routing (sound_stream_info_s *stream_info, sound_device_h device);
+int _add_device_for_stream_routing(sound_stream_info_s *stream_info, sound_device_h device);
 
-int _remove_device_for_stream_routing (sound_stream_info_s *stream_info, sound_device_h device);
+int _remove_device_for_stream_routing(sound_stream_info_s *stream_info, sound_device_h device);
 
-int _apply_stream_routing (sound_stream_info_s *stream_info);
+int _apply_stream_routing(sound_stream_info_s *stream_info);
 
-int _create_virtual_stream (sound_stream_info_s *stream_info, virtual_sound_stream_info_s **virtual_stream);
+int _create_virtual_stream(sound_stream_info_s *stream_info, virtual_sound_stream_info_s **virtual_stream);
 
-int _destroy_virtual_stream (virtual_sound_stream_info_s *virtual_stream);
+int _destroy_virtual_stream(virtual_sound_stream_info_s *virtual_stream);
 
-int _start_virtual_stream (virtual_sound_stream_info_s *virtual_stream);
+int _start_virtual_stream(virtual_sound_stream_info_s *virtual_stream);
 
-int _stop_virtual_stream (virtual_sound_stream_info_s *virtual_stream);
+int _stop_virtual_stream(virtual_sound_stream_info_s *virtual_stream);
 
 #ifdef __cplusplus
 }
