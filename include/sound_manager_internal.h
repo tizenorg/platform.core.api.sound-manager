@@ -72,7 +72,7 @@ typedef enum {
  * @brief Creates a handle for stream information.
  * @since_tizen 3.0
  * @details	To apply the stream policy according to this stream information, this handle should be passed to other APIs\n
- * 	related to playback or recording. (e.g., player, wav-player, audio-io, etc.)
+ *	related to playback or recording. (e.g., player, wav-player, audio-io, etc.)
  * @param[in]	stream_type	The type of stream for internal usage
  * @param[in]	callback	The focus state change callback function (mandatory)
  * @param[in]	user_data	The user data to be passed to the callback function
@@ -91,7 +91,7 @@ typedef enum {
  * @see sound_manager_destroy_focus()
  * @see sound_manager_get_focus_state()
  */
-int sound_manager_create_stream_information_internal (sound_stream_type_internal_e stream_type, sound_stream_focus_state_changed_cb callback, void *user_data, sound_stream_info_h *stream_info);
+int sound_manager_create_stream_information_internal(sound_stream_type_internal_e stream_type, sound_stream_focus_state_changed_cb callback, void *user_data, sound_stream_info_h *stream_info);
 
 /**
  * @internal
@@ -114,7 +114,7 @@ int sound_manager_create_stream_information_internal (sound_stream_type_internal
  * @see sound_manager_create_stream_information_internal()
  * @see sound_manager_destroy_stream_information()
  */
-int sound_manager_set_stream_routing_option (sound_stream_info_h stream_info, const char *name, int value);
+int sound_manager_set_stream_routing_option(sound_stream_info_h stream_info, const char *name, int value);
 
 /**
  * @internal
@@ -131,7 +131,7 @@ int sound_manager_set_stream_routing_option (sound_stream_info_h stream_info, co
  * @see sound_manager_create_stream_information()
  * @see sound_manager_destroy_stream_information()
  */
-int sound_manager_is_available_stream_information (sound_stream_info_h stream_info, native_api_e api_name, bool *is_available);
+int sound_manager_is_available_stream_information(sound_stream_info_h stream_info, native_api_e api_name, bool *is_available);
 
 /**
  * @internal
@@ -147,7 +147,7 @@ int sound_manager_is_available_stream_information (sound_stream_info_h stream_in
  * @see sound_manager_create_stream_information()
  * @see sound_manager_destroy_stream_information()
  */
-int sound_manager_get_type_from_stream_information (sound_stream_info_h stream_info, char **type);
+int sound_manager_get_type_from_stream_information(sound_stream_info_h stream_info, char **type);
 
 /**
  * @internal
@@ -163,7 +163,7 @@ int sound_manager_get_type_from_stream_information (sound_stream_info_h stream_i
  * @see sound_manager_create_stream_information()
  * @see sound_manager_destroy_stream_information()
  */
-int sound_manager_get_index_from_stream_information (sound_stream_info_h stream_info, int *index);
+int sound_manager_get_index_from_stream_information(sound_stream_info_h stream_info, int *index);
 
 /**
  * @internal
@@ -184,7 +184,7 @@ int sound_manager_get_index_from_stream_information (sound_stream_info_h stream_
  * @see sound_manager_start_virtual_stream()
  * @see sound_manager_stop_virtual_stream()
  */
-int sound_manager_create_virtual_stream (sound_stream_info_h stream_info, virtual_sound_stream_h *virtual_stream);
+int sound_manager_create_virtual_stream(sound_stream_info_h stream_info, virtual_sound_stream_h *virtual_stream);
 
 /**
  * @internal
@@ -201,7 +201,7 @@ int sound_manager_create_virtual_stream (sound_stream_info_h stream_info, virtua
  * @see sound_manager_start_virtual_stream()
  * @see sound_manager_stop_virtual_stream()
  */
-int sound_manager_destroy_virtual_stream (virtual_sound_stream_h virtual_stream);
+int sound_manager_destroy_virtual_stream(virtual_sound_stream_h virtual_stream);
 
 /**
  * @internal
@@ -219,7 +219,7 @@ int sound_manager_destroy_virtual_stream (virtual_sound_stream_h virtual_stream)
  * @see sound_manager_destroy_virtual_stream()
  * @see sound_manager_stop_virtual_stream()
  */
-int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream);
+int sound_manager_start_virtual_stream(virtual_sound_stream_h virtual_stream);
 
 /**
  * @internal
@@ -236,7 +236,7 @@ int sound_manager_start_virtual_stream (virtual_sound_stream_h virtual_stream);
  * @see sound_manager_destroy_virtual_stream()
  * @see sound_manager_start_virtual_stream()
  */
-int sound_manager_stop_virtual_stream (virtual_sound_stream_h virtual_stream);
+int sound_manager_stop_virtual_stream(virtual_sound_stream_h virtual_stream);
 
 /**
  * @}
