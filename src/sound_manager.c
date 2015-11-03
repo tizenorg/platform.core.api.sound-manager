@@ -926,6 +926,14 @@ int sound_manager_get_current_device_list(sound_device_mask_e device_mask, sound
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
+int sound_manager_free_device_list(sound_device_list_h device_list)
+{
+	int ret = MM_ERROR_NONE;
+	ret = mm_sound_free_device_list(device_list);
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
 int sound_manager_get_next_device(sound_device_list_h device_list, sound_device_h *device)
 {
 	int ret = MM_ERROR_NONE;
