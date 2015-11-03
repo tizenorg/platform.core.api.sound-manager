@@ -1012,6 +1012,8 @@ int sound_manager_unset_session_interrupted_cb(void);
  * @param[in]	device_mask	The mask value
  * @param[out]	device_list	The list of connected devices
  *
+ * @remarks	@a device_list should be freed using sound_manager_free_device_list() since 3.0.
+ * @remarks	Use sound_manager_free_device_list() to deallocate this list.
  * @remarks	Use sound_manager_get_next_device() to get the first node of the list.
  *
  * @return @c 0 on success,
@@ -1027,8 +1029,33 @@ int sound_manager_unset_session_interrupted_cb(void);
  * @see sound_manager_get_device_id()
  * @see sound_manager_get_device_name()
  * @see sound_manager_get_device_state()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_current_device_list(sound_device_mask_e device_mask, sound_device_list_h *device_list);
+
+/**
+ * @brief Frees device list and each item of list.
+ * @since_tizen 3.0
+ * @param[in]	device_list	The device list got with sound_manager_get_current_device_list.
+ *
+ * @remarks	@a This API will deallocate not only device list itself but also each item.
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ *
+ *
+ * @see sound_manager_get_current_device_list()
+ * @see sound_manager_get_next_device()
+ * @see sound_manager_get_prev_device()
+ * @see sound_manager_get_device_type()
+ * @see sound_manager_get_device_io_direction()
+ * @see sound_manager_get_device_id()
+ * @see sound_manager_get_device_name()
+ * @see sound_manager_get_device_state()
+ */
+int sound_manager_free_device_list(sound_device_list_h device_list);
 
 /**
  * @brief Gets the next item of the device list.
@@ -1047,6 +1074,7 @@ int sound_manager_get_current_device_list(sound_device_mask_e device_mask, sound
  * @see sound_manager_get_device_id()
  * @see sound_manager_get_device_name()
  * @see sound_manager_get_device_state()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_next_device(sound_device_list_h device_list, sound_device_h *device);
 
@@ -1067,6 +1095,7 @@ int sound_manager_get_next_device(sound_device_list_h device_list, sound_device_
  * @see sound_manager_get_device_id()
  * @see sound_manager_get_device_name()
  * @see sound_manager_get_device_state()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_prev_device(sound_device_list_h device_list, sound_device_h *device);
 
@@ -1086,6 +1115,7 @@ int sound_manager_get_prev_device(sound_device_list_h device_list, sound_device_
  * @see sound_manager_get_device_id()
  * @see sound_manager_get_device_name()
  * @see sound_manager_get_device_state()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_device_type(sound_device_h device, sound_device_type_e *type);
 
@@ -1105,6 +1135,7 @@ int sound_manager_get_device_type(sound_device_h device, sound_device_type_e *ty
  * @see sound_manager_get_device_id()
  * @see sound_manager_get_device_name()
  * @see sound_manager_get_device_state()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_device_io_direction(sound_device_h device, sound_device_io_direction_e *io_direction);
 
@@ -1124,6 +1155,7 @@ int sound_manager_get_device_io_direction(sound_device_h device, sound_device_io
  * @see sound_manager_get_device_io_direction()
  * @see sound_manager_get_device_name()
  * @see sound_manager_get_device_state()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_device_id(sound_device_h device, int *id);
 
@@ -1144,6 +1176,7 @@ int sound_manager_get_device_id(sound_device_h device, int *id);
  * @see sound_manager_get_device_io_direction()
  * @see sound_manager_get_device_id()
  * @see sound_manager_get_device_state()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_device_name(sound_device_h device, char **name);
 
@@ -1163,6 +1196,7 @@ int sound_manager_get_device_name(sound_device_h device, char **name);
  * @see sound_manager_get_device_io_direction()
  * @see sound_manager_get_device_id()
  * @see sound_manager_get_device_name()
+ * @see sound_manager_free_device_list()
  */
 int sound_manager_get_device_state(sound_device_h device, sound_device_state_e *state);
 
