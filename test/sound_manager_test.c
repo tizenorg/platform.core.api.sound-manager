@@ -50,6 +50,7 @@ enum {
 	CURRENT_STATUS_SET_DEVICE_MASK,
 	CURRENT_STATUS_GET_DEVICE_MASK,
 	CURRENT_STATUS_GET_DEVICE_LIST,
+	CURRENT_STATUS_FREE_DEVICE_LIST,
 	CURRENT_STATUS_GET_DEVICE_NEXT,
 	CURRENT_STATUS_GET_DEVICE_PREV,
 	CURRENT_STATUS_SET_DEVICE_CONNECTED_CB,
@@ -174,6 +175,8 @@ void _interpret_main_menu(char *cmd)
 		g_menu_state = CURRENT_STATUS_GET_DEVICE_MASK;
 	else if (strncmp(cmd, "gl", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_DEVICE_LIST;
+	else if (strncmp(cmd, "fl", 3) == 0)
+		g_menu_state = CURRENT_STATUS_FREE_DEVICE_LIST;
 	else if (strncmp(cmd, "gn", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_DEVICE_NEXT;
 	else if (strncmp(cmd, "gp", 3) == 0)
@@ -268,7 +271,8 @@ void display_sub_basic()
 	g_print("-----------------------------------------------------------------------------------------\n");
 	g_print("sk. Set Devices Mask(default ALL)\t");
 	g_print("gk. Get Devices Mask\n");
-	g_print("gl. Get Devices List\n");
+	g_print("gl. Get Devices List\t");
+	g_print("fl. Free Devices List\n");
 	g_print("gn. Get Next Device\t\t");
 	g_print("gp. Get Prev Device\n");
 	g_print("sd. Set Device Connenected CB\t\t");
@@ -354,6 +358,8 @@ static void displaymenu()
 		g_print("*** press enter to get device mask\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_DEVICE_LIST)
 		g_print("*** press enter to get device list\n");
+	else if (g_menu_state == CURRENT_STATUS_FREE_DEVICE_LIST)
+		g_print("*** press enter to free device list\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_DEVICE_NEXT)
 		g_print("*** press enter to get next device from the list\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_DEVICE_PREV)
@@ -854,6 +860,13 @@ static void interpret(char *cmd)
 			g_print("success to get current device list\n");
 		else
 			g_print("fail to get current device list, ret[0x%x]\n", ret);
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_FREE_DEVICE_LIST: {
+		sound_manager_free_device_list(g_device_list);
+		g_device_list = NULL;
+		g_print("device list freed\n");
 		reset_menu_state();
 		break;
 	}
