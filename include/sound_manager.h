@@ -686,6 +686,25 @@ int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_fo
 int sound_manager_get_focus_state(sound_stream_info_h stream_info, sound_stream_focus_state_e *state_for_playback, sound_stream_focus_state_e *state_for_recording);
 
 /**
+ * @brief Gets the sound type of the stream information.
+ * @since_tizen 3.0
+ * @param[in]	stream_info	The handle of stream information
+ * @param[out]	sound_type	The sound type
+  *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Call sound_manager_create_stream_information() before calling this function.
+ * @see sound_manager_create_stream_information()
+ * @see sound_manager_destroy_stream_information()
+ * @see sound_manager_set_volume()
+ * @see sound_manager_get_max_volume()
+ * @see sound_manager_get_volume()
+ */
+int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *sound_type);
+
+/**
  * @brief Registers the watch callback function to be invoked when the focus state for each sound stream type is changed regardless of the process.
  * @since_tizen 3.0
  * @param[in]	focus_mask		The focus mask that user wants to watch

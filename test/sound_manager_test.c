@@ -64,6 +64,7 @@ enum {
 	CURRENT_STATUS_ACQUIRE_FOCUS,
 	CURRENT_STATUS_RELEASE_FOCUS,
 	CURRENT_STATUS_GET_ACQUIRED_FOCUS,
+	CURRENT_STATUS_GET_SOUND_TYPE,
 	CURRENT_STATUS_DESTROY_STREAM_INFO,
 	CURRENT_STATUS_SET_FOCUS_WATCH_CB,
 	CURRENT_STATUS_UNSET_FOCUS_WATCH_CB,
@@ -194,6 +195,8 @@ void _interpret_main_menu(char *cmd)
 		g_menu_state = CURRENT_STATUS_RELEASE_FOCUS;
 	else if (strncmp(cmd, "gfs", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_ACQUIRED_FOCUS;
+	else if (strncmp(cmd, "gst", 3) == 0)
+		g_menu_state = CURRENT_STATUS_GET_SOUND_TYPE;
 	else if (strncmp(cmd, "sfw", 3) == 0)
 		g_menu_state = CURRENT_STATUS_SET_FOCUS_WATCH_CB;
 	else if (strncmp(cmd, "ufw", 3) == 0)
@@ -261,6 +264,7 @@ void display_sub_basic()
 	g_print("-----------------------------------------------------------------------------------------\n");
 	g_print("csi. Create Stream Info\t");
 	g_print("dsi. Destroy Stream Info\n");
+	g_print("gst. Get Sound Type\n");
 	g_print("ads. Add device for stream routing\t");
 	g_print("rds. Remove device for stream routing\t");
 	g_print("aps. Apply devices for stream routing\n");
@@ -362,6 +366,8 @@ static void displaymenu()
 		g_print("*** input focus type to release (0:playback, 1:recording, 2:both)\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_ACQUIRED_FOCUS)
 		g_print("*** press enter to get focus state\n");
+	else if (g_menu_state == CURRENT_STATUS_GET_SOUND_TYPE)
+		g_print("*** press enter to get sound type\n");
 	else if (g_menu_state == CURRENT_STATUS_DESTROY_STREAM_INFO)
 		g_print("*** press enter to destroy stream information\n");
 	else if (g_menu_state == CURRENT_STATUS_SET_FOCUS_WATCH_CB)
@@ -1188,6 +1194,22 @@ static void interpret(char *cmd)
 				g_print("fail to sound_manager_get_focus_state(), ret(0x%x)\n", ret);
 			else
 				g_print("focus_state(playback:%d, capture:%d)\n", for_playback, for_recording);
+
+		} else
+			g_print("please create stream info. first\n");
+
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_GET_SOUND_TYPE: {
+		int ret = SOUND_MANAGER_ERROR_NONE;
+		sound_type_e sound_type;
+		if (g_stream_info_h) {
+			ret = sound_manager_get_sound_type(g_stream_info_h, &sound_type);
+			if (ret)
+				g_print("fail to sound_manager_get_sound_type(), ret(0x%x)\n", ret);
+			else
+				g_print("sound_type(%d)\n", sound_type);
 
 		} else
 			g_print("please create stream info. first\n");

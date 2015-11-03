@@ -135,6 +135,7 @@ typedef enum stream_route_type {
 typedef struct _stream_conf_info_s {
 	int priority;
 	int route_type;
+	const gchar *volume_type;
 	gchar *avail_in_devices[AVAIL_DEVICES_MAX];
 	gchar *avail_out_devices[AVAIL_DEVICES_MAX];
 	gchar *avail_frameworks[AVAIL_FRAMEWORKS_MAX];
@@ -244,7 +245,7 @@ int _set_route_option(unsigned int index, const char *key, int value);
 
 int _convert_sound_type(sound_type_e sound_type, const char **volume_type);
 
-int _convert_sound_type_to_enum(char *sound_type, sound_type_e *sound_type_enum);
+int _convert_sound_type_to_enum(const char *sound_type, sound_type_e *sound_type_enum);
 
 int _get_volume_max_level(const char *direction, const char *volume_type, unsigned int *max_level);
 

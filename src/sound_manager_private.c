@@ -308,7 +308,7 @@ int _convert_sound_type(sound_type_e sound_type, const char **volume_type)
 	return ret;
 }
 
-int _convert_sound_type_to_enum(char *sound_type, sound_type_e *sound_type_enum)
+int _convert_sound_type_to_enum(const char *sound_type, sound_type_e *sound_type_enum)
 {
 	int ret = MM_ERROR_NONE;
 
@@ -535,7 +535,7 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 							PA_STREAM_MANAGER_INTERFACE,
 							PA_STREAM_MANAGER_METHOD_NAME_GET_STREAM_INFO,
 							g_variant_new("(s)", stream_type),
-							G_VARIANT_TYPE("(vvvvv)"),
+							G_VARIANT_TYPE("(vvvvvv)"),
 							G_DBUS_CALL_FLAGS_NONE,
 							2000,
 							NULL,
@@ -567,8 +567,28 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 		g_variant_unref(child);
 		LOGI("route_type(%d)", info->route_type);
 
-		/* get availabe in-devices */
+		/* get volume types */
 		child = g_variant_get_child_value(result, 2);
+		item = g_variant_get_variant(child);
+		g_variant_iter_init(&iter, item);
+		while (g_variant_iter_loop(&iter, "&s", &name)) {
+			if (!strncmp(name, "none", strlen("none"))) {
+				/* skip it */
+			} else {
+				/* we use volume type only for out direction */
+				if (name) {
+					LOGI(" volume-type : %s", name);
+					info->volume_type = strdup(name);
+					break;
+				}
+			}
+		}
+		g_variant_iter_free(&iter);
+		g_variant_unref(item);
+		g_variant_unref(child);
+
+		/* get availabe in-devices */
+		child = g_variant_get_child_value(result, 3);
 		item = g_variant_get_variant(child);
 		size = g_variant_n_children(item);
 		LOGI("num of avail-in-devices are %d", size);
@@ -588,7 +608,7 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 		g_variant_unref(child);
 
 		/* get available out-devices */
-		child = g_variant_get_child_value(result, 3);
+		child = g_variant_get_child_value(result, 4);
 		item = g_variant_get_variant(child);
 		size = g_variant_n_children(item);
 		LOGI("num of avail-out-devices are %d", size);
@@ -608,7 +628,7 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 		g_variant_unref(child);
 
 		/* get available frameworks */
-		child = g_variant_get_child_value(result, 4);
+		child = g_variant_get_child_value(result, 5);
 		item = g_variant_get_variant(child);
 		size = g_variant_n_children(item);
 		LOGI("num of avail-frameworks are %d", size);

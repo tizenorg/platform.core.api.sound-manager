@@ -116,10 +116,8 @@ int sound_manager_get_current_sound_type(sound_type_e *type)
 		if (mm_sound_vol_type == VOLUME_TYPE_UNKNOWN) {
 			/* get the volume type of the current playing stream */
 			ret = _get_current_volume_type("out", &volume_type);
-			if (ret == MM_ERROR_NONE) {
-				ret = _convert_sound_type_to_enum(volume_type, type);
-				free(volume_type);
-			}
+			if (ret == MM_ERROR_NONE)
+				ret = _convert_sound_type_to_enum((const char*)volume_type, type);
 		} else {
 			*type = mm_sound_vol_type;
 		}
@@ -334,6 +332,23 @@ int sound_manager_get_focus_state(sound_stream_info_h stream_info, sound_stream_
 		*state_for_recording = ((stream_h->acquired_focus & SOUND_STREAM_FOCUS_FOR_RECORDING) ? (SOUND_STREAM_FOCUS_STATE_ACQUIRED) : (SOUND_STREAM_FOCUS_STATE_RELEASED));
 
 	LOGI("<< leave : acquired_focus(%p)", stream_h->acquired_focus);
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *sound_type)
+{
+	int ret = MM_ERROR_NONE;
+	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
+
+	LOGI(">> enter");
+
+	SM_INSTANCE_CHECK(stream_h);
+	SM_NULL_ARG_CHECK(sound_type);
+
+	ret = _convert_sound_type_to_enum(stream_h->stream_conf_info.volume_type, sound_type);
+
+	LOGI("<< leave : sound type(%d)", *sound_type);
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
