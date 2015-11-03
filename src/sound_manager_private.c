@@ -1277,6 +1277,7 @@ int _set_session_mode(_session_mode_e mode)
 			} else
 				goto ERROR_CASE;
 		}
+		mm_sound_free_device_list(device_list);
 		break;
 	}
 	g_cached_session_mode = mode;
