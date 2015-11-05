@@ -68,6 +68,8 @@ enum {
 	CURRENT_STATUS_DESTROY_STREAM_INFO,
 	CURRENT_STATUS_SET_FOCUS_WATCH_CB,
 	CURRENT_STATUS_UNSET_FOCUS_WATCH_CB,
+	CURRENT_STATUS_SET_FOCUS_REACQUISITION,
+	CURRENT_STATUS_GET_FOCUS_REACQUISITION,
 	CURRENT_STATUS_CREATE_VIRTUAL_STREAM,
 	CURRENT_STATUS_START_VIRTUAL_STREAM,
 	CURRENT_STATUS_STOP_VIRTUAL_STREAM,
@@ -208,6 +210,10 @@ void _interpret_main_menu(char *cmd)
 		g_menu_state = CURRENT_STATUS_SET_FOCUS_WATCH_CB;
 	else if (strncmp(cmd, "ufw", 3) == 0)
 		g_menu_state = CURRENT_STATUS_UNSET_FOCUS_WATCH_CB;
+	else if (strncmp(cmd, "sfr", 3) == 0)
+		g_menu_state = CURRENT_STATUS_SET_FOCUS_REACQUISITION;
+	else if (strncmp(cmd, "gfr", 3) == 0)
+		g_menu_state = CURRENT_STATUS_GET_FOCUS_REACQUISITION;
 	else if (strncmp(cmd, "dsi", 3) == 0)
 		g_menu_state = CURRENT_STATUS_DESTROY_STREAM_INFO;
 	else if (strncmp(cmd, "vcr", 3) == 0)
@@ -289,6 +295,8 @@ void display_sub_basic()
 	g_print("gfs. Get Focus State\n");
 	g_print("sfw. Set Focus State Watch CB\t");
 	g_print("ufw. Unset Focus State Watch CB\n");
+	g_print("sfr. Set Focus Reacquisition\t");
+	g_print("gfr. Get Focus Reacquisition\n");
 	g_print("sso. *Set option for stream routing\n");
 	g_print("vcr. *Create VStream\t");
 	g_print("vsr. *Start VStream\t");
@@ -390,6 +398,10 @@ static void displaymenu()
 		g_print("*** input focus type to watch for (0:playback, 1:recording, 2:both)\n");
 	else if (g_menu_state == CURRENT_STATUS_UNSET_FOCUS_WATCH_CB)
 		g_print("*** press enter to unset focus state watch cb\n");
+	else if (g_menu_state == CURRENT_STATUS_SET_FOCUS_REACQUISITION)
+		g_print("*** input focus reacquisition property (1:enable, 2:disable)\n");
+	else if (g_menu_state == CURRENT_STATUS_GET_FOCUS_REACQUISITION)
+		g_print("*** press enter to get focus reacquisition property (1:enabled, 2:disabled)\n");
 	else if (g_menu_state == CURRENT_STATUS_CREATE_VIRTUAL_STREAM)
 		g_print("*** press enter to create virtual stream\n");
 	else if (g_menu_state == CURRENT_STATUS_START_VIRTUAL_STREAM)
@@ -1282,6 +1294,41 @@ static void interpret(char *cmd)
 		ret = sound_manager_unset_focus_state_watch_cb();
 		if (ret)
 			g_print("fail to sound_manager_unset_focus_state_watch_cb(), ret(0x%x)\n", ret);
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_SET_FOCUS_REACQUISITION: {
+		int ret = SOUND_MANAGER_ERROR_NONE;
+		bool enable;
+
+		switch (atoi(cmd)) {
+		case 1: /* enable */
+			enable = true;
+			break;
+		case 2: /* disable */
+			enable = false;
+			break;
+		default:
+			enable = true;
+			break;
+		}
+		ret = sound_manager_set_focus_reacquisition(g_stream_info_h, enable);
+		if (ret)
+			g_print("fail to sound_manager_set_focus_reacquisition, ret(0x%x)\n", ret);
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_GET_FOCUS_REACQUISITION: {
+		int ret = SOUND_MANAGER_ERROR_NONE;
+		bool enabled;
+
+		ret = sound_manager_get_focus_reacquisition(g_stream_info_h, &enabled);
+		if (ret)
+			g_print("fail to sound_manager_get_focus_reacquisition, ret(0x%x)\n", ret);
+		if (enabled)
+			g_print("auto focus reacquisition is enabled\n");
+		else
+			g_print("auto focus reacquisition is disabled\n");
 		reset_menu_state();
 		break;
 	}
