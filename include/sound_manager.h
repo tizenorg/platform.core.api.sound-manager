@@ -624,6 +624,22 @@ int sound_manager_remove_device_for_stream_routing(sound_stream_info_h stream_in
 int sound_manager_apply_stream_routing(sound_stream_info_h stream_info);
 
 /**
+ * @brief Disables auto focus reacquirement.
+ * @since_tizen 3.0
+ * @param[in]	stream_info			The handle of stream information
+ * @param[in]	disable_reacquirement	The auto focus reacquirement value to set : (@c true = diable, @c false = inable)
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Call sound_manager_create_stream_information() before calling this function.
+ * @see sound_manager_create_stream_information()
+ */
+int sound_manager_disable_focus_reacquirement(sound_stream_info_h stream_info, bool disable_reacquirement);
+
+
+/**
  * @brief Acquires the stream focus.
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
