@@ -97,9 +97,13 @@ void focus_callback(sound_stream_info_h stream_info, sound_stream_focus_change_r
 
 	if (playback_focus_state == SOUND_STREAM_FOCUS_STATE_ACQUIRED)
 		g_print(" -- PLAYBACK_FOCUS acquired\n");
+	else
+		g_print(" -- PLAYBACK_FOCUS released\n");
 
 	if (recording_focus_state == SOUND_STREAM_FOCUS_STATE_ACQUIRED)
 		g_print(" -- FOCUS_RECORDING acquired\n");
+	else
+		g_print(" -- FOCUS_RECORDING released\n");
 
 	g_print("*** FOCUS callback is ended, stream_info(%p) ****\n", stream_info);
 

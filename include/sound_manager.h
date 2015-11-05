@@ -521,10 +521,14 @@ int sound_manager_unset_volume_changed_cb(void);
  * @param[in]	user_data	The user data to be passed to the callback function
  * @param[out]	stream_info	The handle of stream information
  *
+ * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_NOT_SUPPORTED Not supported
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
  * @see sound_manager_destroy_stream_information()
@@ -542,10 +546,14 @@ int sound_manager_create_stream_information(sound_stream_type_e stream_type, sou
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  *
+ * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
  * @see sound_manager_create_stream_information()
  * @see sound_manager_add_device_for_stream_routing()
@@ -563,7 +571,7 @@ int sound_manager_destroy_stream_information(sound_stream_info_h stream_info);
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	device		The device item from sound_device_list_h
  *
- * @remarks	@a Use sound_manager_get_current_device_list() and sound_manager_get_next_device() to get the device.\n
+ * @remarks	Use sound_manager_get_current_device_list() and sound_manager_get_next_device() to get the device.\n
  *	SOUND_MANAGER_ERROR_POLICY could be returned according to the stream type of the stream_info.\n
  *	The available type of the stream_info for this API is SOUND_STREAM_TYPE_VOIP.
  *
@@ -587,7 +595,7 @@ int sound_manager_add_device_for_stream_routing(sound_stream_info_h stream_info,
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	device		The device item from sound_device_list_h
  *
- * @remarks	@a Use sound_manager_get_current_device_list() and sound_manager_get_next_device() to get the device.\n
+ * @remarks	Use sound_manager_get_current_device_list() and sound_manager_get_next_device() to get the device.\n
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -607,7 +615,7 @@ int sound_manager_remove_device_for_stream_routing(sound_stream_info_h stream_in
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  *
- * @remarks	@a If the stream has not been made yet, this setting will be applied when the stream starts to play.\n
+ * @remarks	If the stream has not been made yet, this setting will be applied when the stream starts to play.\n
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -630,10 +638,14 @@ int sound_manager_apply_stream_routing(sound_stream_info_h stream_info);
  * @param[in]	focus_mask		The focus mask that user wants to acquire
  * @param[in]	additional_info	Additional information for this request (optional, this can be null)
  *
+ * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_INVALID_STATE Invalid state
  * @retval #SOUND_MANAGER_ERROR_POLICY Noncompliance with the sound system policy
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
@@ -652,10 +664,14 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
  * @param[in]	focus_mask		The focus mask that user wants to release
  * @param[in]	additional_info	Additional information for this request (optional, this can be null)
  *
+ * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_INVALID_STATE Invalid state
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
  * @pre Call sound_manager_create_stream_information()/sound_manager_acquire_focus() before calling this function.
@@ -711,12 +727,15 @@ int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *
  * @param[in]	callback	The focus state change watch callback function
  * @param[in]	user_data	The user data to be passed to the callback function
  *
- * @remarks	@a You can set this callback only once per process.
+ * @remarks	You can set this callback only once per process.
+ *	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
  * @see sound_manager_unset_focus_state_watch_cb()
  */
@@ -726,9 +745,13 @@ int sound_manager_set_focus_state_watch_cb(sound_stream_focus_mask_e focus_mask,
  * @brief Unregisters the focus state watch callback.
  * @since_tizen 3.0
  *
+ * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
  * @see sound_manager_set_focus_state_watch_cb()
  */
@@ -944,7 +967,7 @@ int sound_manager_unset_session_interrupted_cb(void);
  * @param[in]	device_mask	The mask value
  * @param[out]	device_list	The list of connected devices
  *
- * @remarks	@a Use sound_manager_get_next_device() to get the first node of the list.
+ * @remarks	Use sound_manager_get_next_device() to get the first node of the list.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -1105,7 +1128,7 @@ int sound_manager_get_device_state(sound_device_h device, sound_device_state_e *
  * @param[in]	callback	The interrupted callback function
  * @param[in]	user_data	The user data to be passed to the callback function
  *
- * @remarks	@a The initial state of sound devices connected is deactivated.
+ * @remarks	The initial state of sound devices connected is deactivated.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value

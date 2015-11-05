@@ -41,6 +41,8 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 				LOGI("<< leave : stream_h(%p), index(%u), user_cb(%p), ret(%p)", stream_h, stream_h->index, stream_h->user_cb, ret);
 			}
 		}
+		if (ret)
+			free(stream_h);
 	}
 
 	return _convert_sound_manager_error_code(__func__, ret);

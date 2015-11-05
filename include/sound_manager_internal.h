@@ -78,10 +78,14 @@ typedef enum {
  * @param[in]	user_data	The user data to be passed to the callback function
  * @param[out]	stream_info	The handle of stream information
  *
+ * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
  * @see sound_manager_destroy_stream_information()
  * @see sound_manager_add_device_for_stream_routing()

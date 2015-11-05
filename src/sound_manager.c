@@ -223,9 +223,11 @@ int sound_manager_destroy_stream_information(sound_stream_info_h stream_info)
 
 	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_stream_info_count_mutex, MM_ERROR_SOUND_INTERNAL);
 	ret = _destroy_pa_connection_and_unregister_focus(stream_h);
-	free(stream_h);
-	stream_h = NULL;
-	SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
+	if (ret == MM_ERROR_NONE) {
+		free(stream_h);
+		stream_h = NULL;
+		SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
+	}
 	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
 	LOGI("<< leave : cnt(%d), ret(%p)", g_stream_info_count, ret);

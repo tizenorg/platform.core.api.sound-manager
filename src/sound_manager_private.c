@@ -46,6 +46,7 @@ int _convert_sound_manager_error_code(const char *func, int code)
 	switch (code) {
 	case MM_ERROR_FILE_WRITE:
 	case MM_ERROR_INVALID_HANDLE:
+	case MM_ERROR_SOUND_INVALID_OPERATION:
 		ret = SOUND_MANAGER_ERROR_INVALID_OPERATION;
 		errorstr = "INVALID_OPERATION";
 		break;
@@ -83,7 +84,6 @@ int _convert_sound_manager_error_code(const char *func, int code)
 		errorstr = "NO_PLAYING_SOUND";
 		break;
 	case MM_ERROR_NOT_SUPPORT_API:
-	case MM_ERROR_SOUND_NOT_SUPPORTED_OPERATION:
 		ret = SOUND_MANAGER_ERROR_NOT_SUPPORTED;
 		errorstr = "NOT_SUPPORTED";
 		break;
@@ -1205,6 +1205,15 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 	int ret = MM_ERROR_NONE;
 	int pa_ret = PA_OK;
 	int i = 0;
+	bool is_focus_cb_thread = false;
+
+	ret = mm_sound_focus_is_cb_thread(&is_focus_cb_thread);
+	if (ret)
+		return ret;
+	else {
+		if (is_focus_cb_thread)
+			return MM_ERROR_SOUND_INVALID_OPERATION;
+	}
 
 	if (!(stream_h->pa_mainloop = pa_threaded_mainloop_new()))
 		goto PA_ERROR;
@@ -1302,7 +1311,6 @@ PA_ERROR:
 		pa_threaded_mainloop_free(stream_h->pa_mainloop);
 		stream_h->pa_mainloop = NULL;
 	}
-	free(stream_h);
 	ret = MM_ERROR_SOUND_INTERNAL;
 	LOGE("pa_ret(%d), ret(%p)", pa_ret, ret);
 
@@ -1314,6 +1322,15 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 {
 	int i = 0;
 	int ret = MM_ERROR_NONE;
+	bool is_focus_cb_thread = false;
+
+	ret = mm_sound_focus_is_cb_thread(&is_focus_cb_thread);
+	if (ret)
+		return ret;
+	else {
+		if (is_focus_cb_thread)
+			return MM_ERROR_SOUND_INVALID_OPERATION;
+	}
 
 	if (stream_h->pa_context) {
 		pa_context_disconnect(stream_h->pa_context);
@@ -1580,7 +1597,7 @@ int _create_virtual_stream(sound_stream_info_s *stream_info, virtual_sound_strea
 			(*virtual_stream)->stream_info = stream_info;
 		}
 	} else
-		ret = MM_ERROR_SOUND_NOT_SUPPORTED_OPERATION;
+		ret = MM_ERROR_NOT_SUPPORT_API;
 
 	return ret;
 }
