@@ -19,6 +19,49 @@
 #include <sound_manager_internal.h>
 #include <mm_sound.h>
 
+int sound_manager_get_master_max_volume(int *max_level)
+{
+	int ret = MM_ERROR_NONE;
+	unsigned int volume_level = 0;
+
+	LOGI(">> enter");
+
+	SM_NULL_ARG_CHECK(max_level);
+
+	ret = _get_volume_max_level(DIRECTION_OUT_STR, SOUND_TYPE_MASTER_STR, &volume_level);
+	if (ret == MM_ERROR_NONE)
+		*max_level = (int)volume_level;
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_set_master_volume(int level)
+{
+	int ret = MM_ERROR_NONE;
+
+	LOGI(">> enter");
+
+	ret = _set_volume_level(DIRECTION_OUT_STR, SOUND_TYPE_MASTER_STR, (unsigned int)level);
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_get_master_volume(int *level)
+{
+	int ret = MM_ERROR_NONE;
+	unsigned int volume_level = 0;
+
+	LOGI(">> enter");
+
+	SM_NULL_ARG_CHECK(level);
+
+	ret = _get_volume_level(DIRECTION_OUT_STR, SOUND_TYPE_MASTER_STR, &volume_level);
+	if (ret == MM_ERROR_NONE)
+		*level = (int)volume_level;
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
 int sound_manager_create_stream_information_internal(sound_stream_type_internal_e stream_type, sound_stream_focus_state_changed_cb callback, void *user_data, sound_stream_info_h *stream_info)
 {
 	int ret = MM_ERROR_NONE;
@@ -59,8 +102,6 @@ int sound_manager_set_stream_routing_option(sound_stream_info_h stream_info, con
 	SM_NULL_ARG_CHECK(name);
 
 	ret = _set_route_option(stream_h->index, name, value);
-
-	LOGI("<< leave : ret(%p)", ret);
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
@@ -125,8 +166,6 @@ int sound_manager_create_virtual_stream(sound_stream_info_h stream_info, virtual
 	if (ret == MM_ERROR_NONE)
 		*virtual_stream = (virtual_sound_stream_h)vstream_h;
 
-	LOGI("<< leave : ret(%p)", ret);
-
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -138,8 +177,6 @@ int sound_manager_destroy_virtual_stream(virtual_sound_stream_h virtual_stream)
 	LOGI(">> enter");
 
 	ret = _destroy_virtual_stream(vstream_h);
-
-	LOGI("<< leave : ret(%p)", ret);
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
@@ -153,8 +190,6 @@ int sound_manager_start_virtual_stream(virtual_sound_stream_h virtual_stream)
 
 	ret = _start_virtual_stream(vstream_h);
 
-	LOGI("<< leave : ret(%p)", ret);
-
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -166,8 +201,6 @@ int sound_manager_stop_virtual_stream(virtual_sound_stream_h virtual_stream)
 	LOGI(">> enter");
 
 	ret = _stop_virtual_stream(vstream_h);
-
-	LOGI("<< leave : ret(%p)", ret);
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
