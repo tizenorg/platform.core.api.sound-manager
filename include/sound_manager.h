@@ -746,6 +746,41 @@ int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_fo
 int sound_manager_get_focus_state(sound_stream_info_h stream_info, sound_stream_focus_state_e *state_for_playback, sound_stream_focus_state_e *state_for_recording);
 
 /**
+ * @brief Sets auto focus reacquisition property.
+ * @since_tizen 3.0
+ * @param[in]	stream_info	The handle of stream information
+ * @param[in]	enable	The auto focus reacquisition property to set : (@c true = enable, @c false = disable)
+ *
+ * @remarks	The focus reacquistion is set as default.
+ *	 If you don't want to reacquire the focus you've lost automatically, disable the focus reacqusition setting by using this API and vice versa.
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Call sound_manager_create_stream_information() before calling this function.
+ * @see sound_manager_create_stream_information()
+ */
+int sound_manager_set_focus_reacquisition(sound_stream_info_h stream_info, bool enable);
+
+/**
+ * @brief Gets auto focus reacquisition property.
+ * @since_tizen 3.0
+ * @param[in]	stream_info	The handle of stream information
+ * @param[out]	enabled	The value of focus auto reacquisition property : (@c true = enabled, @c false = disabled)
+ *
+ * @remarks	The default value is true.
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Call sound_manager_create_stream_information() before calling this function.
+ * @see sound_manager_create_stream_information()
+ */
+int sound_manager_get_focus_reacquisition(sound_stream_info_h stream_info, bool *enabled);
+
+/**
  * @brief Gets the sound type of the stream information.
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
