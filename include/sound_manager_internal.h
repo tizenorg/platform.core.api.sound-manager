@@ -69,6 +69,51 @@ typedef enum {
 
 /**
  * @internal
+ * @brief Gets the maximum master volume level.
+ * @since_tizen 3.0
+ * @param[out]	max_level	The maximum volume level
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
+ * @see sound_manager_set_master_volume()
+ * @see sound_manager_get_master_volume()
+ */
+int sound_manager_get_max_master_volume(int *max_level);
+
+/**
+ * @internal
+ * @brief Sets the master volume level.
+ * @since_tizen 3.0
+ * @param[in]	level	The volume level to be set
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
+ * @see sound_manager_get_max_master_volume()
+ * @see sound_manager_get_master_volume()
+ */
+int sound_manager_set_master_volume(int level);
+
+/**
+ * @internal
+ * @brief Gets the master volume level.
+ * @since_tizen 3.0
+ * @param[out]	level	The current master volume level
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
+ * @see sound_manager_get_max_master_volume()
+ * @see sound_manager_set_master_volume()
+ */
+int sound_manager_get_master_volume(int *level);
+
+/**
+ * @internal
  * @brief Creates a handle for stream information.
  * @since_tizen 3.0
  * @details	To apply the stream policy according to this stream information, this handle should be passed to other APIs\n

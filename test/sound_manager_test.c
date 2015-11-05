@@ -71,7 +71,10 @@ enum {
 	CURRENT_STATUS_CREATE_VIRTUAL_STREAM,
 	CURRENT_STATUS_START_VIRTUAL_STREAM,
 	CURRENT_STATUS_STOP_VIRTUAL_STREAM,
-	CURRENT_STATUS_DESTROY_VIRTUAL_STREAM
+	CURRENT_STATUS_DESTROY_VIRTUAL_STREAM,
+	CURRENT_STATUS_GET_MAX_MASTER_VOLUME,
+	CURRENT_STATUS_SET_MASTER_VOLUME,
+	CURRENT_STATUS_GET_MASTER_VOLUME,
 };
 
 
@@ -85,7 +88,7 @@ virtual_sound_stream_h g_vstream_h = NULL;
 
 void focus_callback(sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data)
 {
-	int ret = 0;
+	int ret = SOUND_MANAGER_ERROR_NONE;
 	sound_stream_focus_state_e playback_focus_state;
 	sound_stream_focus_state_e recording_focus_state;
 	g_print("*** FOCUS callback is called, stream_info(%p) ***\n", stream_info);
@@ -215,6 +218,12 @@ void _interpret_main_menu(char *cmd)
 		g_menu_state = CURRENT_STATUS_STOP_VIRTUAL_STREAM;
 	else if (strncmp(cmd, "vdt", 3) == 0)
 		g_menu_state = CURRENT_STATUS_DESTROY_VIRTUAL_STREAM;
+	if (strncmp(cmd, "mgx", 3) == 0)
+		g_menu_state = CURRENT_STATUS_GET_MAX_MASTER_VOLUME;
+	else if (strncmp(cmd, "msv", 3) == 0)
+		g_menu_state = CURRENT_STATUS_SET_MASTER_VOLUME;
+	else if (strncmp(cmd, "mgv", 3) == 0)
+		g_menu_state = CURRENT_STATUS_GET_MASTER_VOLUME;
 	else if (strncmp(cmd, "q", 3) == 0) {
 		g_print("closing the test suite\n");
 		quit_program();
@@ -228,16 +237,19 @@ void display_sub_basic()
 	g_print("=========================================================================================\n");
 	g_print("                          Sound Manager Test (press q to quit) \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
-	g_print("                                       VOLUME MODULE \n");
+	g_print("                                    VOLUME MODULE \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
-	g_print("gx. Get Max Volume \n");
-	g_print("sv. Set Volume \t");
-	g_print("gv. Get Volume \n");
+	g_print("gx. Get Max Volume \t");
+	g_print("gv. Get Volume \t");
+	g_print("sv. Set Volume \n");
 	g_print("st. Set Current Sound Type \t");
 	g_print("gt. Get Current Sound Type \t");
 	g_print("ut. Unset Current Sound Type \n");
 	g_print("vc. Set Volume Changed CB \t");
 	g_print("uv. Unset Volume Changed CB \n");
+	g_print("mgx. *Get Max Master Volume \t");
+	g_print("mgv. *Get Master Volume \t");
+	g_print("msv. *Set Master Volume \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
 	g_print("                                    SESSION MODULE \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
@@ -386,6 +398,12 @@ static void displaymenu()
 		g_print("*** press enter to stop virtual stream\n");
 	else if (g_menu_state == CURRENT_STATUS_DESTROY_VIRTUAL_STREAM)
 		g_print("*** press enter to destroy virtual stream\n");
+	else if (g_menu_state == CURRENT_STATUS_GET_MAX_MASTER_VOLUME)
+		g_print("*** press enter to get max master volume level\n");
+	else if (g_menu_state == CURRENT_STATUS_SET_MASTER_VOLUME)
+		g_print("*** input master volume level\n");
+	else if (g_menu_state == CURRENT_STATUS_GET_MASTER_VOLUME)
+		g_print("*** press enter to get master volume level\n");
 	else {
 		g_print("*** unknown status.\n");
 		quit_program();
@@ -536,10 +554,10 @@ static void interpret(char *cmd)
 		_interpret_main_menu(cmd);
 		break;
 	case CURRENT_STATUS_GET_MAX_VOLUME: {
-		static sound_type_e type;
-		static int max;
+		sound_type_e type;
+		int max;
 		if (convert_sound_type(&type, cmd) == 1) {
-			if (sound_manager_get_max_volume(type, &max) != 0)
+			if (sound_manager_get_max_volume(type, &max) != SOUND_MANAGER_ERROR_NONE)
 				g_print("failt to get max volume\n");
 			else
 				g_print("the max volume of this type(%d) is %d\n", type, max);
@@ -549,8 +567,8 @@ static void interpret(char *cmd)
 	}
 	case CURRENT_STATUS_SET_VOLUME: {
 		static int cnt = 0;
-		static sound_type_e type;
-		static int volume;
+		sound_type_e type;
+		int volume;
 		switch (cnt) {
 		case 0:
 			if (convert_sound_type(&type, cmd) == 1)
@@ -560,7 +578,7 @@ static void interpret(char *cmd)
 			break;
 		case 1:
 			volume = atoi(cmd);
-			if (sound_manager_set_volume(type, volume) != 0)
+			if (sound_manager_set_volume(type, volume) != SOUND_MANAGER_ERROR_NONE)
 				g_print("fail to set volume(%d) check sound type(%d)'s available volume level\n", volume, type);
 			else
 				g_print("set volume success : sound type(%d), volume(%d)\n", type, volume);
@@ -573,10 +591,10 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_GET_VOLUME: {
-		static sound_type_e type;
-		static int volume;
+		sound_type_e type;
+		int volume;
 		if (convert_sound_type(&type, cmd) == 1) {
-			if (sound_manager_get_volume(type, &volume) != 0)
+			if (sound_manager_get_volume(type, &volume) != SOUND_MANAGER_ERROR_NONE)
 				g_print("fail to get volume\n");
 			else
 				g_print("current volume of this type(%d) is : %d\n", type, volume);
@@ -585,9 +603,9 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_SET_CURRENT_SOUND_TYPE: {
-		static sound_type_e type;
+		sound_type_e type;
 		if (convert_sound_type(&type, cmd) == 1) {
-			if (sound_manager_set_current_sound_type(type) != 0)
+			if (sound_manager_set_current_sound_type(type) != SOUND_MANAGER_ERROR_NONE)
 				g_print("fail to set sound type(%d)\n", type);
 			else
 				g_print("success to set sound type(%d)\n", type);
@@ -596,8 +614,8 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_GET_CURRENT_SOUND_TYPE: {
-		static sound_type_e type;
-		if (sound_manager_get_current_sound_type(&type) != 0)
+		sound_type_e type;
+		if (sound_manager_get_current_sound_type(&type) != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to get current sound type\n");
 		else
 			g_print("current sound type is (%d)\n", type);
@@ -605,7 +623,7 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_UNSET_CURRENT_SOUND_TYPE: {
-		if (sound_manager_unset_current_sound_type() != 0)
+		if (sound_manager_unset_current_sound_type() != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to unset current sound type\n");
 		else
 			g_print("success to unset current sound type\n");
@@ -613,7 +631,7 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_SET_VOLUME_CHANGED_CB: {
-		if (sound_manager_set_volume_changed_cb(_set_volume_changed_cb, NULL) != 0)
+		if (sound_manager_set_volume_changed_cb(_set_volume_changed_cb, NULL) != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to set volume changed cb\n");
 		else
 			g_print("success to set volume changed cb\n");
@@ -621,7 +639,7 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_UNSET_VOLUME_CHANGED_CB: {
-		if (sound_manager_unset_volume_changed_cb() != 0)
+		if (sound_manager_unset_volume_changed_cb() != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to unset volume changed cb\n");
 		else
 			g_print("success to unset volume changed cb\n");
@@ -629,9 +647,9 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_SET_SESSION_TYPE: {
-		static sound_session_type_e type;
+		sound_session_type_e type;
 		if (convert_session_type(&type, cmd) == 1) {
-			if (sound_manager_set_session_type(type) != 0)
+			if (sound_manager_set_session_type(type) != SOUND_MANAGER_ERROR_NONE)
 				g_print("fail to set session type\n");
 			else
 				g_print("success to set session type(%d)\n", type);
@@ -640,8 +658,8 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_GET_SESSION_TYPE: {
-		static sound_session_type_e type;
-		if (sound_manager_get_session_type(&type) != 0)
+		sound_session_type_e type;
+		if (sound_manager_get_session_type(&type) != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to get session type\n");
 		else
 			g_print("current session type is : %d (0:MEDIA, 1:ALARM, 2:NOTIFICATION, 3:EMERGENCY, 4:VOIP, 5:CALL)\n", type);
@@ -649,11 +667,11 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_SET_MEDIA_SESSION_OPTION: {
-		static sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
+		sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
 		static sound_session_option_for_starting_e option_s;
 		static sound_session_option_for_during_play_e option_d;
 		static int cnt = 0;
-		if (sound_manager_set_session_type(type) != 0) {
+		if (sound_manager_set_session_type(type) != SOUND_MANAGER_ERROR_NONE) {
 			g_print("fail to set media session type\n");
 			reset_menu_state();
 		} else {
@@ -670,7 +688,7 @@ static void interpret(char *cmd)
 				if (SOUND_SESSION_OPTION_INTERRUPTIBLE_DURING_PLAY > option_d || SOUND_SESSION_OPTION_UNINTERRUPTIBLE_DURING_PLAY < option_d)
 					g_print("not supported option type\n");
 				else {
-					if (sound_manager_set_media_session_option(option_s, option_d) != 0)
+					if (sound_manager_set_media_session_option(option_s, option_d) != SOUND_MANAGER_ERROR_NONE)
 						g_print("fail to set media session option\n");
 					else
 						g_print("success to set media session option\n");
@@ -685,13 +703,13 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_GET_MEDIA_SESSION_OPTION: {
-		static sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
-		static sound_session_option_for_starting_e option_s;
-		static sound_session_option_for_during_play_e option_d;
-		if (sound_manager_set_session_type(type) != 0)
+		sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
+		sound_session_option_for_starting_e option_s;
+		sound_session_option_for_during_play_e option_d;
+		if (sound_manager_set_session_type(type) != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to set media session type\n");
 		else {
-			if (sound_manager_get_media_session_option(&option_s, &option_d) != 0)
+			if (sound_manager_get_media_session_option(&option_s, &option_d) != SOUND_MANAGER_ERROR_NONE)
 				g_print("fail to get media session option\n");
 			else
 				g_print("current media session options are (%d) for starting, (%d) for ongoing\n", option_s, option_d);
@@ -700,16 +718,16 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_SET_MEDIA_SESSION_RESUMPTION_OPTION: {
-		static sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
-		static sound_session_option_for_resumption_e option_r;
-		if (sound_manager_set_session_type(type) != 0)
+		sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
+		sound_session_option_for_resumption_e option_r;
+		if (sound_manager_set_session_type(type) != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to set media session type\n");
 		else {
 			option_r = (sound_session_option_for_resumption_e)atoi(cmd);
 			if (SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM > option_r || SOUND_SESSION_OPTION_RESUMPTION_BY_SYSTEM_OR_MEDIA_PAUSED < option_r)
 				g_print("not supported option type\n");
 			else {
-				if (sound_manager_set_media_session_resumption_option(option_r) != 0)
+				if (sound_manager_set_media_session_resumption_option(option_r) != SOUND_MANAGER_ERROR_NONE)
 					g_print("fail to set media session resumption option\n");
 				else
 					g_print("succese to set media session resumption option\n");
@@ -719,12 +737,12 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_GET_MEDIA_SESSION_RESUMPTION_OPTION: {
-		static sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
-		static sound_session_option_for_resumption_e option_r;
-		if (sound_manager_set_session_type(type) != 0)
+		sound_session_type_e type = SOUND_SESSION_TYPE_MEDIA;
+		sound_session_option_for_resumption_e option_r;
+		if (sound_manager_set_session_type(type) != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to set media session type\n");
 		else {
-			if (sound_manager_get_media_session_resumption_option(&option_r) != 0)
+			if (sound_manager_get_media_session_resumption_option(&option_r) != SOUND_MANAGER_ERROR_NONE)
 				g_print("fail to get media session resumption option\n");
 			else
 				g_print("current media session resumption option is : %d\n", option_r);
@@ -756,7 +774,7 @@ static void interpret(char *cmd)
 		break;
 	}
 	case CURRENT_STATUS_SET_SESSION_INTERRUPTED_CB: {
-		if (sound_manager_set_session_interrupted_cb(_set_session_interrupted_cb, NULL) != 0)
+		if (sound_manager_set_session_interrupted_cb(_set_session_interrupted_cb, NULL) != SOUND_MANAGER_ERROR_NONE)
 			g_print("fail to set interrupted changed cb\n");
 		else
 			g_print("success to set interrupted changed cb\n");
@@ -1317,6 +1335,37 @@ static void interpret(char *cmd)
 				g_print("success to sound_manager_destroy_virtual_stream(), ret(0x%x)\n", ret);
 			g_vstream_h = NULL;
 		}
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_GET_MAX_MASTER_VOLUME: {
+		int max_level;
+		if (sound_manager_get_max_master_volume(&max_level) != SOUND_MANAGER_ERROR_NONE)
+			g_print("failed to get max master volume\n");
+		else
+			g_print("the max level of master volume is %d\n", max_level);
+
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_SET_MASTER_VOLUME: {
+		int level;
+		level = atoi(cmd);
+		if (sound_manager_set_master_volume(level) != SOUND_MANAGER_ERROR_NONE)
+			g_print("failed to set master volume(%d)\n", level);
+		else
+			g_print("set master volume success : level(%d)\n", level);
+
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_GET_MASTER_VOLUME: {
+		int level;
+		if (sound_manager_get_master_volume(&level) != SOUND_MANAGER_ERROR_NONE)
+			g_print("failed to get master volume\n");
+		else
+			g_print("current master volume is : %d\n", level);
+
 		reset_menu_state();
 		break;
 	}

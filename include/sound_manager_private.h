@@ -117,6 +117,9 @@ if (pthread_mutex_unlock(x_mutex)) { \
 #define SOUND_STREAM_DIRECTION_MAX 2
 #define SOUND_DEVICE_TYPE_LEN 64
 
+#define DIRECTION_OUT_STR         "out"
+#define SOUND_TYPE_MASTER_STR     "master"
+
 typedef enum _sound_stream_direction {
 	SOUND_STREAM_DIRECTION_OUTPUT = 1,
 	SOUND_STREAM_DIRECTION_INPUT
@@ -248,6 +251,10 @@ int _convert_sound_type(sound_type_e sound_type, const char **volume_type);
 int _convert_sound_type_to_enum(const char *sound_type, sound_type_e *sound_type_enum);
 
 int _get_volume_max_level(const char *direction, const char *volume_type, unsigned int *max_level);
+
+int _get_volume_level(const char *direction, const char *volume_type, unsigned int *level);
+
+int _set_volume_level(const char *direction, const char *volume_type, unsigned int level);
 
 int _get_current_volume_type(const char *direction, char **volume_type);
 
