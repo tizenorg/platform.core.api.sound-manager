@@ -23,8 +23,10 @@
 #define PA_STREAM_MANAGER_INTERFACE                             "org.pulseaudio.StreamManager"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_STREAM_INFO           "GetStreamInfo"
 #define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_DEVICES  "SetStreamRouteDevices"
-#define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTION  "SetStreamRouteOption"
+#define PA_STREAM_MANAGER_METHOD_NAME_SET_STREAM_ROUTE_OPTION   "SetStreamRouteOption"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_VOLUME_MAX_LEVEL      "GetVolumeMaxLevel"
+#define PA_STREAM_MANAGER_METHOD_NAME_GET_VOLUME_LEVEL          "GetVolumeLevel"
+#define PA_STREAM_MANAGER_METHOD_NAME_SET_VOLUME_LEVEL          "SetVolumeLevel"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_CURRENT_VOLUME_TYPE   "GetCurrentVolumeType"
 #define PA_STREAM_MANAGER_METHOD_NAME_UPDATE_FOCUS_STATUS       "UpdateFocusStatus"
 
@@ -810,6 +812,99 @@ int _get_volume_max_level(const char *direction, const char *volume_type, unsign
 		const gchar *dbus_ret = NULL;
 		g_variant_get(result, "(u&s)", max_level, &dbus_ret);
 		LOGI("g_dbus_connection_call_sync() success, method return value is (%u, %s)", *max_level, dbus_ret);
+		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+			ret = MM_ERROR_SOUND_INTERNAL;
+
+		g_variant_unref(result);
+	}
+	g_object_unref(conn);
+	return ret;
+}
+
+int _get_volume_level(const char *direction, const char *volume_type, unsigned int *level)
+{
+	int ret = MM_ERROR_NONE;
+
+	GVariant *result = NULL;
+	GDBusConnection *conn = NULL;
+	GError *err = NULL;
+
+	assert(direction);
+	assert(volume_type);
+	assert(level);
+
+	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
+	if (!conn && err) {
+		LOGE("g_bus_get_sync() error (%s)", err->message);
+		g_error_free(err);
+		return MM_ERROR_SOUND_INTERNAL;
+	}
+
+	result = g_dbus_connection_call_sync(conn,
+							PA_BUS_NAME,
+							PA_STREAM_MANAGER_OBJECT_PATH,
+							PA_STREAM_MANAGER_INTERFACE,
+							PA_STREAM_MANAGER_METHOD_NAME_GET_VOLUME_LEVEL,
+							g_variant_new("(ss)", direction, volume_type),
+							G_VARIANT_TYPE("(us)"),
+							G_DBUS_CALL_FLAGS_NONE,
+							2000,
+							NULL,
+							&err);
+	if (!result && err) {
+		LOGE("g_dbus_connection_call_sync() for GET_VOLUME_LEVEL error (%s)", err->message);
+		g_error_free(err);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		const gchar *dbus_ret = NULL;
+		g_variant_get(result, "(u&s)", level, &dbus_ret);
+		LOGI("g_dbus_connection_call_sync() success, method return value is (%u, %s)", *level, dbus_ret);
+		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+			ret = MM_ERROR_SOUND_INTERNAL;
+
+		g_variant_unref(result);
+	}
+	g_object_unref(conn);
+	return ret;
+}
+
+int _set_volume_level(const char *direction, const char *volume_type, unsigned int level)
+{
+	int ret = MM_ERROR_NONE;
+
+	GVariant *result = NULL;
+	GDBusConnection *conn = NULL;
+	GError *err = NULL;
+
+	assert(direction);
+	assert(volume_type);
+
+	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
+	if (!conn && err) {
+		LOGE("g_bus_get_sync() error (%s)", err->message);
+		g_error_free(err);
+		return MM_ERROR_SOUND_INTERNAL;
+	}
+
+	result = g_dbus_connection_call_sync(conn,
+							PA_BUS_NAME,
+							PA_STREAM_MANAGER_OBJECT_PATH,
+							PA_STREAM_MANAGER_INTERFACE,
+							PA_STREAM_MANAGER_METHOD_NAME_SET_VOLUME_LEVEL,
+							g_variant_new("(ssu)", direction, volume_type, level),
+							G_VARIANT_TYPE("(s)"),
+							G_DBUS_CALL_FLAGS_NONE,
+							2000,
+							NULL,
+							&err);
+	if (!result && err) {
+		LOGE("g_dbus_connection_call_sync() for GET_VOLUME_LEVEL error (%s)", err->message);
+		g_error_free(err);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	} else {
+		const gchar *dbus_ret = NULL;
+		g_variant_get(result, "(&s)", &dbus_ret);
+		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
 		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
 			ret = MM_ERROR_SOUND_INTERNAL;
 
