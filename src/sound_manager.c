@@ -276,6 +276,39 @@ int sound_manager_apply_stream_routing(sound_stream_info_h stream_info)
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
+int sound_manager_set_focus_reacquisition(sound_stream_info_h stream_info, bool enable)
+{
+	int ret = MM_ERROR_NONE;
+	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
+
+	LOGI(">> enter");
+
+	SM_INSTANCE_CHECK(stream_h);
+
+	ret = mm_sound_set_focus_reacquisition(stream_h->index, enable);
+
+	LOGI("<< leave : ret(%p)", ret);
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_get_focus_reacquisition(sound_stream_info_h stream_info, bool *enabled)
+{
+	int ret = MM_ERROR_NONE;
+	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
+
+	LOGI(">> enter");
+
+	SM_INSTANCE_CHECK(stream_h);
+	SM_NULL_ARG_CHECK(enabled);
+
+	ret = mm_sound_get_focus_reacquisition(stream_h->index, enabled);
+
+	LOGI("<< leave : ret(%p)", ret);
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
 int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *additional_info)
 {
 	int ret = MM_ERROR_NONE;
