@@ -41,11 +41,10 @@ int sound_manager_get_max_volume(sound_type_e type, int *max)
 	unsigned int max_level = 0;
 	int ret = MM_ERROR_NONE;
 
-	if (max == NULL)
-		return _convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
-
+	SM_NULL_ARG_CHECK(max);
 	if (type >= SOUND_TYPE_NUM || type < 0)
 		return _convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+
 	ret = _convert_sound_type(type, &volume_type);
 	if (ret == MM_ERROR_NONE) {
 		ret = _get_volume_max_level("out", volume_type, &max_level);

@@ -249,6 +249,10 @@ int _convert_sound_type_to_enum(const char *sound_type, sound_type_e *sound_type
 
 int _get_volume_max_level(const char *direction, const char *volume_type, unsigned int *max_level);
 
+int _get_volume_level(const char *direction, const char *volume_type, unsigned int *level);
+
+int _set_volume_level(const char *direction, const char *volume_type, unsigned int level);
+
 int _get_current_volume_type(const char *direction, char **volume_type);
 
 void _update_focus_status(unsigned int index, unsigned int acquired_focus_status);
