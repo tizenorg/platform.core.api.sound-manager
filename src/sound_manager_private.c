@@ -17,6 +17,7 @@
 #include <sound_manager.h>
 #include <sound_manager_private.h>
 #include <mm_sound.h>
+#include <vconf.h>
 
 #define PA_BUS_NAME                                             "org.pulseaudio.Server"
 #define PA_STREAM_MANAGER_OBJECT_PATH                           "/org/pulseaudio/StreamManager"
@@ -29,6 +30,8 @@
 #define PA_STREAM_MANAGER_METHOD_NAME_SET_VOLUME_LEVEL          "SetVolumeLevel"
 #define PA_STREAM_MANAGER_METHOD_NAME_GET_CURRENT_VOLUME_TYPE   "GetCurrentVolumeType"
 #define PA_STREAM_MANAGER_METHOD_NAME_UPDATE_FOCUS_STATUS       "UpdateFocusStatus"
+#define VCONF_PATH_PREFIX_VOLUME                                "file/private/sound/volume/"
+#define VCONF_PATH_MAX                                          64
 
 extern _session_interrupt_info_s g_session_interrupt_cb_table;
 extern _session_mode_e g_cached_session_mode;
@@ -871,6 +874,7 @@ int _get_volume_level(const char *direction, const char *volume_type, unsigned i
 int _set_volume_level(const char *direction, const char *volume_type, unsigned int level)
 {
 	int ret = MM_ERROR_NONE;
+	int vret = 0;
 
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
@@ -898,7 +902,7 @@ int _set_volume_level(const char *direction, const char *volume_type, unsigned i
 							NULL,
 							&err);
 	if (!result && err) {
-		LOGE("g_dbus_connection_call_sync() for GET_VOLUME_LEVEL error (%s)", err->message);
+		LOGE("g_dbus_connection_call_sync() for SET_VOLUME_LEVEL error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
 	} else {
@@ -907,7 +911,13 @@ int _set_volume_level(const char *direction, const char *volume_type, unsigned i
 		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
 		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
 			ret = MM_ERROR_SOUND_INTERNAL;
-
+		else {
+			char volume_path[VCONF_PATH_MAX] = {0,};
+			/* Set volume value to VCONF */
+			snprintf(volume_path, sizeof(volume_path)-1, "%s%s", VCONF_PATH_PREFIX_VOLUME, volume_type);
+			if ((vret = vconf_set_int(volume_path, (int)level)))
+				LOGE("vconf_set_int(%s) failed..ret[%d]\n", volume_path, vret);
+		}
 		g_variant_unref(result);
 	}
 	g_object_unref(conn);
