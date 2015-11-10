@@ -141,35 +141,6 @@ typedef enum {
 } sound_stream_focus_state_e;
 
 /**
- * @brief Called when the state of focus that belongs to the stream_info is changed.
- * @since_tizen 3.0
- * @param[in]   stream_info	The handle of stream information
- * @param[in]   reason_for_change	The reason for state change of the focus
- * @param[in]   additional_info	The additional information
- * @param[in]   user_data	The user data passed from the callback registration function
- *
- * @pre You should register this callback using sound_manager_create_stream_information().
- * @post Use sound_manager_get_focus_state() in this callback to figure out how the focus state of the stream_info has been changed.
- * @see sound_manager_create_stream_information()
- * @see sound_manager_destroy_stream_information()
- */
-typedef void (*sound_stream_focus_state_changed_cb) (sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
-
-/**
- * @brief Called when the focus state for each sound stream type is changed regardless of the process.
- * @since_tizen 3.0
- * @param[in]   changed_focus_mask	The changed focus mask
- * @param[in]   changed_focus_state	The changed focus state
- * @param[in]   reason_for_change	The reason for state change of the focus
- * @param[in]   additional_info	The additional information
- * @param[in]   user_data	The user data passed from the callback registration function
- * @pre You should register this callback using sound_manager_set_focus_state_watch_cb().
- * @see sound_manager_set_focus_state_watch_cb()
- * @see sound_manager_unset_focus_state_watch_cb()
- */
-typedef void (*sound_stream_focus_state_watch_cb) (sound_stream_focus_mask_e changed_focus_mask, sound_stream_focus_state_e changed_focus_state, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
-
-/**
  * @}
  */
 
@@ -249,18 +220,6 @@ typedef enum {
 	SOUND_SESSION_INTERRUPTED_BY_EMERGENCY,         /**< Interrupted by an emergency*/
 	SOUND_SESSION_INTERRUPTED_BY_NOTIFICATION,      /**< Interrupted by a notification*/
 } sound_session_interrupted_code_e;
-
-/**
- * @deprecated Deprecated since 3.0. Use sound_stream_focus_state_changed_cb instead.
- * @brief Called when the playing sound session is interrupted.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
- * @param[in]   code	The interrupted code
- * @param[in]   user_data	The user data passed from the callback registration function
- * @pre You should register this callback using sound_manager_set_session_interrupted_cb().
- * @see sound_manager_set_session_interrupted_cb()
- * @see sound_manager_unset_session_interrupted_cb()
- */
-typedef void (*sound_session_interrupted_cb) (sound_session_interrupted_code_e code, void *user_data);
 
 /**
  * @}
@@ -344,6 +303,102 @@ typedef enum {
 } sound_device_changed_info_e;
 
 /**
+ * @}
+ */
+
+/**
+ * @addtogroup CAPI_MEDIA_SOUND_MANAGER_VOLUME_MODULE
+ * @{
+ */
+
+/**
+ * @brief Called when the system volume has changed.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @param[in]   type	The sound type of the changed volume
+ * @param[in]   volume	The new volume value
+ * @param[in]   user_data	The user data passed from the callback registration function
+ * @pre sound_manager_set_volume() will invoke this callback if you register it using sound_manager_set_volume_changed_cb().
+ * @see sound_manager_set_volume_changed_cb()
+ * @see sound_manager_unset_volume_changed_cb()
+ */
+typedef void (*sound_manager_volume_changed_cb) (sound_type_e type, unsigned int volume, void *user_data);
+
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup CAPI_MEDIA_SOUND_MANAGER_STREAM_POLICY_MODULE
+ * @{
+ */
+
+/**
+ * @brief Called when the state of focus that belongs to the stream_info is changed.
+ * @since_tizen 3.0
+ * @param[in]   stream_info	The handle of stream information
+ * @param[in]   reason_for_change	The reason for state change of the focus
+ * @param[in]   additional_info	The additional information
+ * @param[in]   user_data	The user data passed from the callback registration function
+ *
+ * @remarks	This function is issued in the internal thread of the sound manager.\n
+ *	Therefore it is recommended not to call UI update function in this function.\n
+ *
+ * @pre You should register this callback using sound_manager_create_stream_information().
+ * @post Use sound_manager_get_focus_state() in this callback to figure out how the focus state of the stream_info has been changed.
+ * @see sound_manager_create_stream_information()
+ * @see sound_manager_destroy_stream_information()
+ */
+typedef void (*sound_stream_focus_state_changed_cb) (sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
+
+/**
+ * @brief Called when the focus state for each sound stream type is changed regardless of the process.
+ * @since_tizen 3.0
+ * @param[in]   changed_focus_mask	The changed focus mask
+ * @param[in]   changed_focus_state	The changed focus state
+ * @param[in]   reason_for_change	The reason for state change of the focus
+ * @param[in]   additional_info	The additional information
+ * @param[in]   user_data	The user data passed from the callback registration function
+ *
+ * @remarks	This function is issued in the internal thread of the sound manager.\n
+ *	Therefore it is recommended not to call UI update function in this function.\n
+ *
+ * @pre You should register this callback using sound_manager_set_focus_state_watch_cb().
+ * @see sound_manager_set_focus_state_watch_cb()
+ * @see sound_manager_unset_focus_state_watch_cb()
+ */
+typedef void (*sound_stream_focus_state_watch_cb) (sound_stream_focus_mask_e changed_focus_mask, sound_stream_focus_state_e changed_focus_state, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
+
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup CAPI_MEDIA_SOUND_MANAGER_SESSION_MODULE
+ * @{
+ */
+
+/**
+ * @deprecated Deprecated since 3.0. Use sound_stream_focus_state_changed_cb instead.
+ * @brief Called when the playing sound session is interrupted.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @param[in]   code	The interrupted code
+ * @param[in]   user_data	The user data passed from the callback registration function
+ * @pre You should register this callback using sound_manager_set_session_interrupted_cb().
+ * @see sound_manager_set_session_interrupted_cb()
+ * @see sound_manager_unset_session_interrupted_cb()
+ */
+typedef void (*sound_session_interrupted_cb) (sound_session_interrupted_code_e code, void *user_data);
+
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup CAPI_MEDIA_SOUND_MANAGER_DEVICE_MODULE
+ * @{
+ */
+
+/**
  * @brief Called when the state of connection of a sound device was changed.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in]   sound_device_h	The sound_device
@@ -375,18 +430,6 @@ typedef void (*sound_device_information_changed_cb) (sound_device_h device, soun
  * @addtogroup CAPI_MEDIA_SOUND_MANAGER_VOLUME_MODULE
  * @{
  */
-
-/**
- * @brief Called when the system volume has changed.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
- * @param[in]   type	The sound type of the changed volume
- * @param[in]   volume	The new volume value
- * @param[in]   user_data	The user data passed from the callback registration function
- * @pre sound_manager_set_volume() will invoke this callback if you register it using sound_manager_set_volume_changed_cb().
- * @see sound_manager_set_volume_changed_cb()
- * @see sound_manager_unset_volume_changed_cb()
- */
-typedef void (*sound_manager_volume_changed_cb) (sound_type_e type, unsigned int volume, void *user_data);
 
 /**
  * @brief Gets the maximum volume level supported for a particular sound type.
@@ -521,7 +564,8 @@ int sound_manager_unset_volume_changed_cb(void);
  * @param[in]	user_data	The user data to be passed to the callback function
  * @param[out]	stream_info	The handle of stream information
  *
- * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ * @remarks	The registered callback is issued in the internal thread of the sound manager.\n
+ *	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
  *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
  *
  * @return @c 0 on success,
@@ -728,6 +772,7 @@ int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *
  * @param[in]	user_data	The user data to be passed to the callback function
  *
  * @remarks	You can set this callback only once per process.
+ *	The registered callback is issued in the internal thread of the sound manager.\n
  *	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
  *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
  *
