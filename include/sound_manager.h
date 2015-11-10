@@ -148,6 +148,9 @@ typedef enum {
  * @param[in]   additional_info	The additional information
  * @param[in]   user_data	The user data passed from the callback registration function
  *
+ * @remarks	This function is issued in the internal thread of the sound manager.\n
+ *	Therefore it is recommended not to call UI update function in this function.\n
+ *
  * @pre You should register this callback using sound_manager_create_stream_information().
  * @post Use sound_manager_get_focus_state() in this callback to figure out how the focus state of the stream_info has been changed.
  * @see sound_manager_create_stream_information()
@@ -163,6 +166,10 @@ typedef void (*sound_stream_focus_state_changed_cb) (sound_stream_info_h stream_
  * @param[in]   reason_for_change	The reason for state change of the focus
  * @param[in]   additional_info	The additional information
  * @param[in]   user_data	The user data passed from the callback registration function
+ *
+ * @remarks	This function is issued in the internal thread of the sound manager.\n
+ *	Therefore it is recommended not to call UI update function in this function.\n
+ *
  * @pre You should register this callback using sound_manager_set_focus_state_watch_cb().
  * @see sound_manager_set_focus_state_watch_cb()
  * @see sound_manager_unset_focus_state_watch_cb()
@@ -521,7 +528,8 @@ int sound_manager_unset_volume_changed_cb(void);
  * @param[in]	user_data	The user data to be passed to the callback function
  * @param[out]	stream_info	The handle of stream information
  *
- * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
+ * @remarks	The registered callback is issued in the internal thread of the sound manager.\n
+ *	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
  *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
  *
  * @return @c 0 on success,
@@ -728,6 +736,7 @@ int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *
  * @param[in]	user_data	The user data to be passed to the callback function
  *
  * @remarks	You can set this callback only once per process.
+ *	The registered callback is issued in the internal thread of the sound manager.\n
  *	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
  *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
  *
