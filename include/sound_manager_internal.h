@@ -124,7 +124,7 @@ int sound_manager_get_master_volume(int *level);
  * @param[out]	stream_info	The handle of stream information
  *
  * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
- *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -150,7 +150,7 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
  * @param[in]	name	The name of option
  * @param[in]	value	The value of option
  *
- * @remarks	@a If the stream has not been made yet, this setting will be applied when the stream starts to play.\n
+ * @remarks	If the stream has not been made yet, this setting will be applied when the stream starts to play.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value

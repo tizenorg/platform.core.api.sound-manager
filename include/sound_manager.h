@@ -341,7 +341,7 @@ typedef void (*sound_manager_volume_changed_cb) (sound_type_e type, unsigned int
  * @param[in]   user_data	The user data passed from the callback registration function
  *
  * @remarks	This function is issued in the internal thread of the sound manager.\n
- *	Therefore it is recommended not to call UI update function in this function.\n
+ *	Therefore it is recommended not to call UI update function in this function.
  *
  * @pre You should register this callback using sound_manager_create_stream_information().
  * @post Use sound_manager_get_focus_state() in this callback to figure out how the focus state of the stream_info has been changed.
@@ -360,7 +360,7 @@ typedef void (*sound_stream_focus_state_changed_cb) (sound_stream_info_h stream_
  * @param[in]   user_data	The user data passed from the callback registration function
  *
  * @remarks	This function is issued in the internal thread of the sound manager.\n
- *	Therefore it is recommended not to call UI update function in this function.\n
+ *	Therefore it is recommended not to call UI update function in this function.
  *
  * @pre You should register this callback using sound_manager_set_focus_state_watch_cb().
  * @see sound_manager_set_focus_state_watch_cb()
@@ -566,7 +566,7 @@ int sound_manager_unset_volume_changed_cb(void);
  *
  * @remarks	The registered callback is issued in the internal thread of the sound manager.\n
  *	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
- *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -591,7 +591,7 @@ int sound_manager_create_stream_information(sound_stream_type_e stream_type, sou
  * @param[in]	stream_info	The handle of stream information
  *
  * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
- *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -617,7 +617,7 @@ int sound_manager_destroy_stream_information(sound_stream_info_h stream_info);
  *
  * @remarks	Use sound_manager_get_current_device_list() and sound_manager_get_next_device() to get the device.\n
  *	SOUND_MANAGER_ERROR_POLICY could be returned according to the stream type of the stream_info.\n
- *	The available type of the stream_info for this API is SOUND_STREAM_TYPE_VOIP.
+ *	The available types of the stream_info for this API are SOUND_STREAM_TYPE_VOIP and SOUND_STREAM_TYPE_MEDIA_EXTERNAL_ONLY.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -683,7 +683,7 @@ int sound_manager_apply_stream_routing(sound_stream_info_h stream_info);
  * @param[in]	additional_info	Additional information for this request (optional, this can be null)
  *
  * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
- *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -709,7 +709,7 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
  * @param[in]	additional_info	Additional information for this request (optional, this can be null)
  *
  * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
- *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -771,10 +771,10 @@ int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *
  * @param[in]	callback	The focus state change watch callback function
  * @param[in]	user_data	The user data to be passed to the callback function
  *
- * @remarks	You can set this callback only once per process.
+ * @remarks	You can set this callback only once per process.\n
  *	The registered callback is issued in the internal thread of the sound manager.\n
  *	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
- *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -791,7 +791,7 @@ int sound_manager_set_focus_state_watch_cb(sound_stream_focus_mask_e focus_mask,
  * @since_tizen 3.0
  *
  * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
- *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.\n
+ *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
