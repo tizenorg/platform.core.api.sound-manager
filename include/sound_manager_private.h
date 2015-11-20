@@ -127,10 +127,11 @@ typedef enum _sound_stream_direction {
 
 /* it should be synchronized with pulseaudio's */
 typedef enum stream_route_type {
-	STREAM_ROUTE_TYPE_AUTO,       /* the policy of decision device(s) is automatic and it's routing path is particular to one device */
-	STREAM_ROUTE_TYPE_AUTO_ALL,   /* the policy of decision device(s) is automatic and it's routing path can be several devices */
-	STREAM_ROUTE_TYPE_MANUAL,     /* the policy of decision device(s) is manual */
-	STREAM_ROUTE_TYPE_MANUAL_EXT, /* the policy of decision device(s) is manual and it's routing path is only for external devices */
+	STREAM_ROUTE_TYPE_AUTO,               /* the policy of decision device(s) is automatic and it's routing path is particular to one device based on priority */
+	STREAM_ROUTE_TYPE_AUTO_LAST_CONNECTED,/* the policy of decision device(s) is automatic and it's routing path is particular to one device based on connected time */
+	STREAM_ROUTE_TYPE_AUTO_ALL,           /* the policy of decision device(s) is automatic and it's routing path can be several devices */
+	STREAM_ROUTE_TYPE_MANUAL,             /* the policy of decision device(s) is manual */
+	STREAM_ROUTE_TYPE_MANUAL_EXT,         /* the policy of decision device(s) is manual and it's routing path is only for external devices */
 } stream_route_type;
 #define AVAIL_DEVICES_MAX 16
 #define AVAIL_FRAMEWORKS_MAX 16
