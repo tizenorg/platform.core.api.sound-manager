@@ -1791,8 +1791,12 @@ int _start_virtual_stream(virtual_sound_stream_info_s *virtual_stream)
 				state = pa_stream_get_state(virtual_stream->pa_stream[i]);
 				if (state == PA_STREAM_READY)
 					break;
-				if (!PA_STREAM_IS_GOOD(state))
+				if (!PA_STREAM_IS_GOOD(state)) {
+					LOGE("stream(%d) is not good, state : %d", i, state);
 					pa_ret = pa_context_errno(virtual_stream->pa_context);
+					ret = MM_ERROR_SOUND_INTERNAL;
+					goto ERROR_WITH_UNLOCK;
+				}
 
 				pa_threaded_mainloop_wait(virtual_stream->pa_mainloop);
 			}
