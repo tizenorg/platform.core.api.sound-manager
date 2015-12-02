@@ -588,7 +588,6 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 				}
 			}
 		}
-		g_variant_iter_free(&iter);
 		g_variant_unref(item);
 		g_variant_unref(child);
 
@@ -608,7 +607,6 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 				info->avail_in_devices[i++] = strdup(name);
 			}
 		}
-		g_variant_iter_free(&iter);
 		g_variant_unref(item);
 		g_variant_unref(child);
 
@@ -628,7 +626,6 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 				info->avail_out_devices[i++] = strdup(name);
 			}
 		}
-		g_variant_iter_free(&iter);
 		g_variant_unref(item);
 		g_variant_unref(child);
 
@@ -648,7 +645,6 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 				info->avail_frameworks[i++] = strdup(name);
 			}
 		}
-		g_variant_iter_free(&iter);
 		g_variant_unref(item);
 		g_variant_unref(child);
 		g_variant_unref(result);
