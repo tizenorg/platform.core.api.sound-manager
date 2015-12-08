@@ -579,7 +579,7 @@ static void interpret(char *cmd)
 	}
 	case CURRENT_STATUS_SET_VOLUME: {
 		static int cnt = 0;
-		sound_type_e type;
+		static sound_type_e type;
 		int volume;
 		switch (cnt) {
 		case 0:

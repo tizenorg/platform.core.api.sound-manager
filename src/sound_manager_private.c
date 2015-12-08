@@ -577,7 +577,7 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 		item = g_variant_get_variant(child);
 		g_variant_iter_init(&iter, item);
 		while (g_variant_iter_loop(&iter, "&s", &name)) {
-			if (!strncmp(name, "none", strlen("none"))) {
+			if (name && !strncmp(name, "none", strlen("none"))) {
 				/* skip it */
 			} else {
 				/* we use volume type only for out direction */

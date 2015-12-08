@@ -188,6 +188,8 @@ int sound_manager_create_stream_information(sound_stream_type_e stream_type, sou
 	if (g_session_interrupt_cb_table.is_registered)
 		return _convert_sound_manager_error_code(__func__, MM_ERROR_SOUND_INTERNAL);
 
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_stream_info_count_mutex, MM_ERROR_SOUND_INTERNAL);
+
 	sound_stream_info_s *stream_h = malloc(sizeof(sound_stream_info_s));
 	if (!stream_h) {
 		ret = MM_ERROR_OUT_OF_MEMORY;
@@ -195,18 +197,18 @@ int sound_manager_create_stream_information(sound_stream_type_e stream_type, sou
 		memset(stream_h, 0, sizeof(sound_stream_info_s));
 		ret = _convert_stream_type(stream_type, &stream_h->stream_type);
 		if (ret == MM_ERROR_NONE) {
-			SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_stream_info_count_mutex, MM_ERROR_SOUND_INTERNAL);
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (ret == MM_ERROR_NONE) {
 				*stream_info = (sound_stream_info_h)stream_h;
 				SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
 				LOGI("<< leave : stream_h(%p), index(%u), user_cb(%p), cnt(%d), ret(%p)", stream_h, stream_h->index, stream_h->user_cb, g_stream_info_count, ret);
 			}
-			SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 		}
 		if (ret)
 			free(stream_h);
 	}
+
+	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
