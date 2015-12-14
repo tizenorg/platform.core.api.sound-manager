@@ -71,6 +71,8 @@ enum {
 	CURRENT_STATUS_UNSET_FOCUS_WATCH_CB,
 	CURRENT_STATUS_SET_FOCUS_REACQUISITION,
 	CURRENT_STATUS_GET_FOCUS_REACQUISITION,
+	CURRENT_STATUS_GET_REASON_FOR_P_FOCUS,
+	CURRENT_STATUS_GET_REASON_FOR_R_FOCUS,
 	CURRENT_STATUS_CREATE_VIRTUAL_STREAM,
 	CURRENT_STATUS_START_VIRTUAL_STREAM,
 	CURRENT_STATUS_STOP_VIRTUAL_STREAM,
@@ -217,6 +219,10 @@ void _interpret_main_menu(char *cmd)
 		g_menu_state = CURRENT_STATUS_SET_FOCUS_REACQUISITION;
 	else if (strncmp(cmd, "gfr", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_FOCUS_REACQUISITION;
+	else if (strncmp(cmd, "grp", 3) == 0)
+		g_menu_state = CURRENT_STATUS_GET_REASON_FOR_P_FOCUS;
+	else if (strncmp(cmd, "grr", 3) == 0)
+		g_menu_state = CURRENT_STATUS_GET_REASON_FOR_R_FOCUS;
 	else if (strncmp(cmd, "dsi", 3) == 0)
 		g_menu_state = CURRENT_STATUS_DESTROY_STREAM_INFO;
 	else if (strncmp(cmd, "vcr", 3) == 0)
@@ -301,6 +307,8 @@ void display_sub_basic()
 	g_print("ufw. Unset Focus State Watch CB\n");
 	g_print("sfr. Set Focus Reacquisition\t");
 	g_print("gfr. Get Focus Reacquisition\n");
+	g_print("grp. Get Reason for Current Acquired Playback Focus\t");
+	g_print("grr. Get Reason for Current Acquired Recording Focus\n");
 	g_print("sso. *Set option for stream routing\n");
 	g_print("vcr. *Create VStream\t");
 	g_print("vsr. *Start VStream\t");
@@ -408,6 +416,10 @@ static void displaymenu()
 		g_print("*** input focus reacquisition property (1:enable, 2:disable)\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_FOCUS_REACQUISITION)
 		g_print("*** press enter to get focus reacquisition property (1:enabled, 2:disabled)\n");
+	else if (g_menu_state == CURRENT_STATUS_GET_REASON_FOR_P_FOCUS)
+		g_print("*** press enter to get reason for current playback focus\n");
+	else if (g_menu_state == CURRENT_STATUS_GET_REASON_FOR_R_FOCUS)
+		g_print("*** press enter to get reason for current recording focus\n");
 	else if (g_menu_state == CURRENT_STATUS_CREATE_VIRTUAL_STREAM)
 		g_print("*** press enter to create virtual stream\n");
 	else if (g_menu_state == CURRENT_STATUS_START_VIRTUAL_STREAM)
@@ -1208,7 +1220,7 @@ static void interpret(char *cmd)
 			focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
 			break;
 		}
-		ret = sound_manager_acquire_focus(g_stream_info_h, focus_mask, NULL);
+		ret = sound_manager_acquire_focus(g_stream_info_h, focus_mask, "sound_manager_test_ac");
 		if (ret)
 			g_print("fail to sound_manager_acquire_focus(), ret(0x%x)\n", ret);
 
@@ -1235,7 +1247,7 @@ static void interpret(char *cmd)
 			focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
 			break;
 		}
-		ret = sound_manager_release_focus(g_stream_info_h, focus_mask, NULL);
+		ret = sound_manager_release_focus(g_stream_info_h, focus_mask, "sound_manager_test_rel");
 		if (ret)
 				g_print("fail to sound_manager_acquire_focus(), ret(0x%x)\n", ret);
 
@@ -1353,6 +1365,30 @@ static void interpret(char *cmd)
 			g_print("auto focus reacquisition is enabled\n");
 		else
 			g_print("auto focus reacquisition is disabled\n");
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_GET_REASON_FOR_P_FOCUS: {
+		int ret = SOUND_MANAGER_ERROR_NONE;
+		char *additional_info = NULL;
+		sound_stream_focus_change_reason_e reason;
+		ret = sound_manager_get_reason_for_current_playback_focus(&reason, &additional_info);
+		if (ret)
+			g_print("fail to sound_manager_get_reason_for_current_playback_focus, ret(0x%x)\n", ret);
+		else
+			g_print("reason(%d), additional_info(%s)\n", reason, additional_info);
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_GET_REASON_FOR_R_FOCUS: {
+		int ret = SOUND_MANAGER_ERROR_NONE;
+		char *additional_info = NULL;
+		sound_stream_focus_change_reason_e reason;
+		ret = sound_manager_get_reason_for_current_recording_focus(&reason, &additional_info);
+		if (ret)
+			g_print("fail to sound_manager_get_reason_for_current_recording_focus, ret(0x%x)\n", ret);
+		else
+			g_print("reason(%d), additional_info(%s)\n", reason, additional_info);
 		reset_menu_state();
 		break;
 	}
