@@ -81,7 +81,7 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (!ret) {
 				*stream_info = (sound_stream_info_h)stream_h;
-				LOGI("<< leave : stream_h(%p), index(%u), user_cb(%p), ret(%p)", stream_h, stream_h->index, stream_h->user_cb, ret);
+				LOGI("stream_h(%p), index(%u), user_cb(%p), ret(0x%x)", stream_h, stream_h->index, stream_h->user_cb, ret);
 			}
 		}
 		if (ret)
@@ -150,6 +150,52 @@ int sound_manager_get_index_from_stream_information(sound_stream_info_h stream_i
 
 	*index = stream_h->index;
 	LOGI("stream_index[%d]", stream_h->index);
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_get_reason_for_current_playback_focus(sound_stream_focus_change_reason_e *acquired_by, char **additional_info)
+{
+	int ret = MM_ERROR_NONE;
+	char *stream_type_str = NULL;
+	char *additional_info_str = NULL;
+
+	LOGI(">> enter");
+
+	SM_NULL_ARG_CHECK(acquired_by);
+
+	ret = mm_sound_get_stream_type_of_acquired_focus((int)SOUND_STREAM_FOCUS_FOR_PLAYBACK, &stream_type_str, &additional_info_str);
+	if (ret == MM_ERROR_NONE) {
+		LOGI("current acquired [playback] focus: stream_type=%s", stream_type_str);
+		ret = _convert_stream_type_to_change_reason(stream_type_str, acquired_by);
+		if ((ret == MM_ERROR_NONE) && additional_info) {
+			LOGI("                                  : reason=%d, additional_info=%s", *acquired_by, additional_info_str);
+			*additional_info = additional_info_str;
+		}
+	}
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_get_reason_for_current_recording_focus(sound_stream_focus_change_reason_e *acquired_by, char **additional_info)
+{
+	int ret = MM_ERROR_NONE;
+	char *stream_type_str = NULL;
+	char *additional_info_str = NULL;
+
+	LOGI(">> enter");
+
+	SM_NULL_ARG_CHECK(acquired_by);
+
+	ret = mm_sound_get_stream_type_of_acquired_focus((int)SOUND_STREAM_FOCUS_FOR_RECORDING, &stream_type_str, &additional_info_str);
+	if (ret == MM_ERROR_NONE) {
+		LOGI("current acquired [recording] focus: stream_type=%s", stream_type_str);
+		ret = _convert_stream_type_to_change_reason(stream_type_str, acquired_by);
+		if ((ret == MM_ERROR_NONE) && additional_info) {
+			LOGI("                                  : reason=%d, additional_info=%s", *acquired_by, additional_info_str);
+			*additional_info = additional_info_str;
+		}
+	}
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
