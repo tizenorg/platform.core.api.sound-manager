@@ -96,11 +96,16 @@ int _convert_sound_manager_error_code(const char *func, int code)
 		ret = SOUND_MANAGER_ERROR_INVALID_STATE;
 		errorstr = "INVALID_STATE";
 		break;
+	default:
+		LOGW("it should not be reached here, this error(0x%x) should be defined.", code);
+		ret = SOUND_MANAGER_ERROR_INTERNAL;
+		errorstr = "INTERNAL";
+		break;
 	}
 	if (ret)
-		LOGE("[%s] %s(0x%08x) : core frameworks error code(0x%08x)", func, errorstr, ret, code);
+		LOGE("[%s] >> leave : %s(0x%08x), mm_error(0x%08x)", func, errorstr, ret, code);
 	else
-		LOGD("[%s] %s(0x%08x) : core frameworks error code(0x%08x)", func, errorstr, ret, code);
+		LOGD("[%s] >> leave : %s(0x%08x)", func, errorstr, ret);
 
 	return ret;
 }
@@ -1409,7 +1414,7 @@ PA_ERROR:
 		stream_h->pa_mainloop = NULL;
 	}
 	ret = MM_ERROR_SOUND_INTERNAL;
-	LOGE("pa_ret(%d), ret(%p)", pa_ret, ret);
+	LOGE("pa_ret(%d), ret(0x%x)", pa_ret, ret);
 
 SUCCESS:
 	return ret;
