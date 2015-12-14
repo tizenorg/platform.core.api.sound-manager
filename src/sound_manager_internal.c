@@ -81,7 +81,7 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (!ret) {
 				*stream_info = (sound_stream_info_h)stream_h;
-				LOGI("<< leave : stream_h(%p), index(%u), user_cb(%p), ret(%p)", stream_h, stream_h->index, stream_h->user_cb, ret);
+				LOGI("stream_h(%p), index(%u), user_cb(%p), ret(0x%x)", stream_h, stream_h->index, stream_h->user_cb, ret);
 			}
 		}
 		if (ret)

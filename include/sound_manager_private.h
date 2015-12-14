@@ -233,6 +233,8 @@ int _convert_stream_type(sound_stream_type_e enum_type, char **stream_type);
 
 int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_enum, char **stream_type);
 
+int _convert_stream_type_to_enum(const char *stream_type, sound_stream_type_e *stream_type_enum);
+
 int _convert_stream_type_to_change_reason(const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
 
 int _convert_device_type(sound_device_type_e device_type_enum, char **device_type);

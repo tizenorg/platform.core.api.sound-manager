@@ -800,6 +800,40 @@ int sound_manager_get_focus_reacquisition(sound_stream_info_h stream_info, bool 
 int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *sound_type);
 
 /**
+ * @brief Gets the stream type of the current acquired playback focus.
+ * @since_tizen 3.0
+ * @param[out]	stream_type	The stream type of the current acquired playback focus
+ * @param[out]	additional_info The additional information of the acquired playback focus (this can be null)
+ *
+ * @remarks	If there is no acquired playback focus in this system, it'll return #SOUND_MANAGER_ERROR_NO_DATA.
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
+ * @see sound_manager_get_stream_type_for_recording_focus()
+ */
+int sound_manager_get_stream_type_for_current_playback_focus(sound_stream_type_e *stream_type, char **additional_info);
+
+/**
+ * @brief Gets the stream type of the current acquired recording focus.
+ * @since_tizen 3.0
+ * @param[out]	stream_type	The stream type of the current acquired recording focus
+ * @param[out]	additional_info The additional information of the acquired recording focus (this can be null)
+ *
+ * @remarks	If there is no acquired recording focus in this system, it'll return #SOUND_MANAGER_ERROR_NO_DATA.
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
+ * @see sound_manager_get_stream_type_for_playback_focus()
+ */
+int sound_manager_get_stream_type_for_current_recording_focus(sound_stream_type_e *stream_type, char **additional_info);
+
+/**
  * @brief Registers the watch callback function to be invoked when the focus state for each sound stream type is changed regardless of the process.
  * @since_tizen 3.0
  * @param[in]	focus_mask		The focus mask that user wants to watch

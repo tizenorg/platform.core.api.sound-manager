@@ -96,11 +96,16 @@ int _convert_sound_manager_error_code(const char *func, int code)
 		ret = SOUND_MANAGER_ERROR_INVALID_STATE;
 		errorstr = "INVALID_STATE";
 		break;
+	default:
+		LOGW("it should not be reached here, this error(0x%x) should be defined.");
+		ret = SOUND_MANAGER_ERROR_INTERNAL;
+		errorstr = "INTERNAL";
+		break;
 	}
 	if (ret)
-		LOGE("[%s] %s(0x%08x) : core frameworks error code(0x%08x)", func, errorstr, ret, code);
+		LOGE("[%s] >> leave : %s(0x%08x), mm_error(0x%08x)", func, errorstr, ret, code);
 	else
-		LOGD("[%s] %s(0x%08x) : core frameworks error code(0x%08x)", func, errorstr, ret, code);
+		LOGD("[%s] >> leave : %s(0x%08x)", func, errorstr, ret);
 
 	return ret;
 }
@@ -183,6 +188,59 @@ int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_e
 	}
 	LOGI("stream_type_for_internal[%s]", stream_type);
 
+	return ret;
+}
+
+int _convert_stream_type_to_enum(const char *stream_type, sound_stream_type_e *stream_type_enum)
+{
+	int ret = MM_ERROR_NONE;
+
+	SM_NULL_ARG_CHECK_FOR_PRIV(stream_type);
+	SM_NULL_ARG_CHECK_FOR_PRIV(stream_type_enum);
+
+	if (!strncmp(stream_type, "media", SOUND_STREAM_TYPE_LEN) ||
+		!strncmp(stream_type, "radio", SOUND_STREAM_TYPE_LEN) ||
+		!strncmp(stream_type, "loopback", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_MEDIA;
+
+	} else if (!strncmp(stream_type, "system", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_SYSTEM;
+
+	} else if (!strncmp(stream_type, "alarm", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_ALARM;
+
+	} else if (!strncmp(stream_type, "notification", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_NOTIFICATION;
+
+	} else if (!strncmp(stream_type, "emergency", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_EMERGENCY;
+
+	} else if (!strncmp(stream_type, "voice-information", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_VOICE_INFORMATION;
+
+	} else if (!strncmp(stream_type, "voice-recognition", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_VOICE_RECOGNITION;
+
+	} else if (!strncmp(stream_type, "ringtone-voip", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_RINGTONE_VOIP;
+
+	} else if (!strncmp(stream_type, "ringtone-call", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_RINGTONE_CALL;
+
+	} else if (!strncmp(stream_type, "voip", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_VOIP;
+
+	} else if (!strncmp(stream_type, "call-voice", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "call-video", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_VOICE_CALL;
+
+	} else if (!strncmp(stream_type, "ext-media", SOUND_STREAM_TYPE_LEN)) {
+		*stream_type_enum = SOUND_STREAM_TYPE_MEDIA_EXTERNAL_ONLY;
+
+	} else {
+		ret = MM_ERROR_INVALID_ARGUMENT;
+		LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
+	}
 	return ret;
 }
 
@@ -1409,7 +1467,7 @@ PA_ERROR:
 		stream_h->pa_mainloop = NULL;
 	}
 	ret = MM_ERROR_SOUND_INTERNAL;
-	LOGE("pa_ret(%d), ret(%p)", pa_ret, ret);
+	LOGE("pa_ret(%d), ret(0x%x)", pa_ret, ret);
 
 SUCCESS:
 	return ret;
