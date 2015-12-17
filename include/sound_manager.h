@@ -785,11 +785,15 @@ int sound_manager_get_focus_reacquisition(sound_stream_info_h stream_info, bool 
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
  * @param[out]	sound_type	The sound type
-  *
+ *
+ * @remarks	In case of the stream_info made with #SOUND_STREAM_TYPE_EMERGENCY, it'll return #SOUND_MANAGER_ERROR_NO_DATA.\n
+ *	Because there is no sound_type_e matched to this stream_info.
+ *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
  * @pre Call sound_manager_create_stream_information() before calling this function.
  * @see sound_manager_create_stream_information()
  * @see sound_manager_destroy_stream_information()
