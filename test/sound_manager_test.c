@@ -381,7 +381,7 @@ static void displaymenu()
 	else if (g_menu_state == CURRENT_STATUS_UNSET_DEVICE_INFO_CHANGED_CB)
 		g_print("*** press enter to unset device information changed cb\n");
 	else if (g_menu_state == CURRENT_STATUS_CREATE_STREAM_INFO)
-		g_print("*** input stream type to create stream information (0:media, 1:alarm, 2:notification, 3:ringtone-call, 4:voice-call, 5:voip, 6:media-ext-only)\n");
+		g_print("*** input stream type to create stream information\n(0:media, 1:system, 2:alarm, 3:notification, 4:emergency, 5:ringtone-call, 6:voice-call, 7:voip, 8:media-ext-only)\n");
 	else if (g_menu_state == CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING)
 		g_print("*** input device type to add (0:built-in mic, 1:built-in spk, 2:built-in rcv, 3:audio-jack, 4:bt)\n");
 	else if (g_menu_state == CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING)
@@ -989,22 +989,28 @@ static void interpret(char *cmd)
 		case 0: /* media */
 			type = SOUND_STREAM_TYPE_MEDIA;
 			break;
-		case 1: /* alarm */
+		case 1: /* system */
+			type = SOUND_STREAM_TYPE_SYSTEM;
+			break;
+		case 2: /* alarm */
 			type = SOUND_STREAM_TYPE_ALARM;
 			break;
-		case 2: /* notification */
+		case 3: /* notification */
 			type = SOUND_STREAM_TYPE_NOTIFICATION;
 			break;
-		case 3: /* ringtone for call*/
+		case 4: /* emergency */
+			type = SOUND_STREAM_TYPE_EMERGENCY;
+			break;
+		case 5: /* ringtone for call*/
 			type = SOUND_STREAM_TYPE_RINGTONE_CALL;
 			break;
-		case 4: /* voice call */
+		case 6: /* voice call */
 			type = SOUND_STREAM_TYPE_VOICE_CALL;
 			break;
-		case 5: /* voip */
+		case 7: /* voip */
 			type = SOUND_STREAM_TYPE_VOIP;
 			break;
-		case 6: /* media only for external devices */
+		case 8: /* media only for external devices */
 			type = SOUND_STREAM_TYPE_MEDIA_EXTERNAL_ONLY;
 			break;
 		default:
