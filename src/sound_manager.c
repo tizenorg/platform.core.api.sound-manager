@@ -382,7 +382,12 @@ int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *
 	SM_INSTANCE_CHECK(stream_h);
 	SM_NULL_ARG_CHECK(sound_type);
 
-	ret = _convert_sound_type_to_enum(stream_h->stream_conf_info.volume_type, sound_type);
+	if (stream_h->stream_conf_info.volume_type == NULL)
+		ret = MM_ERROR_SOUND_NO_DATA;
+	else {
+		ret = _convert_sound_type_to_enum(stream_h->stream_conf_info.volume_type, sound_type);
+		LOGI("sound type(%d)", *sound_type);
+	}
 
 	LOGI("<< leave : sound type(%d)", *sound_type);
 
