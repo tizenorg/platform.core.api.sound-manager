@@ -1,6 +1,6 @@
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
-Version:    0.3.34
+Version:    0.3.35
 Release:    0
 Group:      Multimedia/API
 License:    Apache-2.0
@@ -16,7 +16,6 @@ BuildRequires:  pkgconfig(libpulse)
 BuildRequires:  pkgconfig(gio-2.0)
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-Requires(post): libprivilege-control
 
 %description
 A Sound Manager library in Tizen C API
@@ -51,7 +50,6 @@ cp test/sound_manager_test %{buildroot}/usr/bin
 
 %post
 /sbin/ldconfig
-/usr/bin/api_feature_loader --verbose --dir=/usr/share/privilege-control
 
 %postun -p /sbin/ldconfig
 
