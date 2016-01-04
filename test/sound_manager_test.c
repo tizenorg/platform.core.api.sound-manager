@@ -20,6 +20,7 @@
 
 #include <sound_manager.h>
 #include <sound_manager_internal.h>
+#include <mm_sound.h>
 #include <pthread.h>
 #include <glib.h>
 
@@ -1494,16 +1495,33 @@ gboolean input(GIOChannel *channel)
 	return TRUE;
 }
 
+/* it will be removed when session features are deprecated. */
+void signal_callback(mm_sound_signal_name_t signal, int value, void *user_data)
+{
+	g_print("*** signal callback is called: signal(%d), value(%d), user_data(%p)\n", signal, value, user_data);
+}
+
 int main(int argc, char *argv[])
 {
+	unsigned int subscribe_id = 0;
+	int ret = MM_ERROR_NONE;
 	GIOChannel *stdin_channel;
 	stdin_channel = g_io_channel_unix_new(0);
 	g_io_channel_set_flags(stdin_channel, G_IO_FLAG_NONBLOCK, NULL);
 	g_io_add_watch(stdin_channel, G_IO_IN, (GIOFunc)input, NULL);
 	g_loop = g_main_loop_new(NULL, 1);
 
+	/* subscribe a signal for convering session-focus */
+	/* it will be removed when session features are deprecated. */
+	if ((ret = mm_sound_subscribe_signal(MM_SOUND_SIGNAL_RELEASE_INTERNAL_FOCUS, &subscribe_id, signal_callback, NULL)))
+		g_print("failed to subscribe signal, ret(0x%x)\n", ret);
+
 	displaymenu();
 	g_main_loop_run(g_loop);
+
+	/* it will be removed when session features are deprecated. */
+	if (subscribe_id)
+		mm_sound_unsubscribe_signal(subscribe_id);
 
 	return 0;
 }
