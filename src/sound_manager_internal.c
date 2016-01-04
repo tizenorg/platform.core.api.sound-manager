@@ -19,6 +19,10 @@
 #include <sound_manager_internal.h>
 #include <mm_sound.h>
 
+/* These variables will be removed when session features are deprecated. */
+extern int g_stream_info_count;
+extern pthread_mutex_t g_stream_info_count_mutex;
+
 int sound_manager_get_max_master_volume(int *max_level)
 {
 	int ret = MM_ERROR_NONE;
@@ -71,6 +75,8 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 	SM_NULL_ARG_CHECK(stream_info);
 	SM_NULL_ARG_CHECK(callback);
 
+	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_stream_info_count_mutex, MM_ERROR_SOUND_INTERNAL);
+
 	sound_stream_info_s *stream_h = malloc(sizeof(sound_stream_info_s));
 	if (!stream_h) {
 		ret = MM_ERROR_OUT_OF_MEMORY;
@@ -81,12 +87,15 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (!ret) {
 				*stream_info = (sound_stream_info_h)stream_h;
+				SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
 				LOGI("stream_h(%p), index(%u), user_cb(%p), ret(0x%x)", stream_h, stream_h->index, stream_h->user_cb, ret);
 			}
 		}
 		if (ret)
 			free(stream_h);
 	}
+
+	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
