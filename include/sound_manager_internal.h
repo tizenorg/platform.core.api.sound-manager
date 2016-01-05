@@ -61,6 +61,7 @@ typedef enum {
  */
 typedef enum {
 	SOUND_STREAM_TYPE_RINGTONE_CALL = 100, /**< Sound stream type for ringtone for call */
+	SOUND_STREAM_TYPE_RINGBACKTONE_CALL,   /**< Sound stream type for ringback tone for call */
 	SOUND_STREAM_TYPE_VOICE_CALL,          /**< Sound stream type for voice-call */
 	SOUND_STREAM_TYPE_VIDEO_CALL,          /**< Sound stream type for video-call */
 	SOUND_STREAM_TYPE_RADIO,               /**< Sound stream type for radio */

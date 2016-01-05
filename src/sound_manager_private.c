@@ -169,6 +169,9 @@ int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_e
 	case SOUND_STREAM_TYPE_RINGTONE_CALL:
 		*stream_type = "ringtone-call";
 		break;
+	case SOUND_STREAM_TYPE_RINGBACKTONE_CALL:
+		*stream_type = "ringbacktone-call";
+		break;
 	case SOUND_STREAM_TYPE_VOICE_CALL:
 		*stream_type = "call-voice";
 		break;
@@ -222,7 +225,8 @@ int _convert_stream_type_to_change_reason(const char *stream_type, sound_stream_
 		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_VOICE_RECOGNITION;
 
 	} else if (!strncmp(stream_type, "ringtone-voip", SOUND_STREAM_TYPE_LEN) ||
-			!strncmp(stream_type, "ringtone-call", SOUND_STREAM_TYPE_LEN)) {
+			!strncmp(stream_type, "ringtone-call", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "ringbacktone-call", SOUND_STREAM_TYPE_LEN)) {
 		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_RINGTONE;
 
 	} else if (!strncmp(stream_type, "voip", SOUND_STREAM_TYPE_LEN)) {
@@ -269,6 +273,7 @@ static int _convert_stream_type_to_interrupt_reason(const char *stream_type, sou
 
 	} else if (!strncmp(stream_type, "ringtone-voip", SOUND_STREAM_TYPE_LEN) ||
 			!strncmp(stream_type, "ringtone-call", SOUND_STREAM_TYPE_LEN) ||
+			!strncmp(stream_type, "ringbacktone-call", SOUND_STREAM_TYPE_LEN) ||
 			!strncmp(stream_type, "voip", SOUND_STREAM_TYPE_LEN) ||
 			!strncmp(stream_type, "call-voice", SOUND_STREAM_TYPE_LEN) ||
 			!strncmp(stream_type, "call-video", SOUND_STREAM_TYPE_LEN)) {
@@ -653,6 +658,11 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 		g_variant_unref(item);
 		g_variant_unref(child);
 		g_variant_unref(result);
+
+		if (info->priority == -1) {
+			LOGE("could not find the info of stream type(%s)", stream_type);
+			ret = MM_ERROR_SOUND_INTERNAL;
+		}
 	}
 	g_object_unref(conn);
 	return ret;
@@ -1356,7 +1366,8 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 	if (ret)
 		goto PA_ERROR_WITH_UNLOCK;
 	else
-		LOGI("stream_conf_info : priority[%d], route type[%d]", stream_h->stream_conf_info.priority, stream_h->stream_conf_info.route_type);
+		LOGI("stream_conf_info : stream type[%s], priority[%d], route type[%d]",
+			stream_h->stream_type, stream_h->stream_conf_info.priority, stream_h->stream_conf_info.route_type);
 
 	pa_threaded_mainloop_unlock(stream_h->pa_mainloop);
 
