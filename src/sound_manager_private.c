@@ -189,7 +189,7 @@ int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_e
 		ret = MM_ERROR_SOUND_INTERNAL;
 		break;
 	}
-	LOGI("stream_type_for_internal[%s]", stream_type);
+	LOGI("stream_type_for_internal[%s]", *stream_type);
 
 	return ret;
 }
@@ -660,7 +660,7 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 		g_variant_unref(result);
 
 		if (info->priority == -1) {
-			LOGE("could not find the info of stream type(%s)", stream_type);
+			LOGE("could not find the info of stream type(%s)", *stream_type);
 			ret = MM_ERROR_SOUND_INTERNAL;
 		}
 	}
