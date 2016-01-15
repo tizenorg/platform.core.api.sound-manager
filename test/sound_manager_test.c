@@ -392,9 +392,9 @@ static void displaymenu()
 	else if (g_menu_state == CURRENT_STATUS_CREATE_STREAM_INFO)
 		g_print("*** input stream type to create stream information\n(0:media, 1:system, 2:alarm, 3:notification, 4:emergency, 5:ringtone-call, 6:voice-call, 7:voip, 8:media-ext-only, 9:loopback)\n");
 	else if (g_menu_state == CURRENT_STATUS_ADD_DEVICE_FOR_STREAM_ROUTING)
-		g_print("*** input device type to add (0:built-in mic, 1:built-in spk, 2:built-in rcv, 3:audio-jack, 4:bt)\n");
+		g_print("*** input device type to add (0:built-in mic, 1:built-in spk, 2:built-in rcv, 3:audio-jack, 4:bt, 5:usb)\n");
 	else if (g_menu_state == CURRENT_STATUS_REMOVE_DEVICE_FOR_STREAM_ROUTING)
-		g_print("*** input device type to remove (0:built-in mic, 1:built-in spk, 2:built-in rcv, 3:audio-jack, 4:bt)\n");
+		g_print("*** input device type to remove (0:built-in mic, 1:built-in spk, 2:built-in rcv, 3:audio-jack, 4:bt, 5:usb)\n");
 	else if (g_menu_state == CURRENT_STATUS_APPLY_STREAM_ROUTING)
 		g_print("*** press enter to apply devices for stream routing\n");
 	else if (g_menu_state == CURRENT_STATUS_SET_STREAM_ROUTING_OPTION)
@@ -1071,6 +1071,9 @@ static void interpret(char *cmd)
 		case 4: /* bt */
 			selected_type = SOUND_DEVICE_BLUETOOTH;
 			break;
+		case 5: /* usb */
+			selected_type = SOUND_DEVICE_USB_AUDIO;
+			break;
 		default:
 			g_print("invalid argument, device_type(%d) is not valid for this feature\n", device_type);
 			reset_menu_state();
@@ -1127,6 +1130,9 @@ static void interpret(char *cmd)
 			break;
 		case 4: /* bt */
 			selected_type = SOUND_DEVICE_BLUETOOTH;
+			break;
+		case 5: /* usb */
+			selected_type = SOUND_DEVICE_USB_AUDIO;
 			break;
 		default:
 			g_print("invalid argument, device_type(%d) is not valid for this feature\n", device_type);
