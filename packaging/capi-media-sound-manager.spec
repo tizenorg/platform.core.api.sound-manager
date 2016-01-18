@@ -1,6 +1,6 @@
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
-Version:    0.3.41
+Version:    0.3.42
 Release:    0
 Group:      Multimedia/API
 License:    Apache-2.0
