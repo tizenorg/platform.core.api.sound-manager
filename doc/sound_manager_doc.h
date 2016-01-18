@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an AS IS BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -27,7 +27,7 @@
 /**
  * @ingroup CAPI_MEDIA_FRAMEWORK
  * @defgroup CAPI_MEDIA_SOUND_MANAGER_MODULE Sound Manager
- * @brief  The @ref CAPI_MEDIA_SOUND_MANAGER_MODULE  API provides functions to get and set sound parameters like volume and session policy.
+ * @brief  The @ref CAPI_MEDIA_SOUND_MANAGER_MODULE  API provides functions to get and set sound parameters like volume, stream policy, session policy and devices.
  *
  * @section CAPI_MEDIA_SOUND_MANAGER_MODULE_HEADER Required Header
  *   \#include <sound_manager.h>
@@ -38,8 +38,10 @@
  * The Sound Manager API allows you to:
  * - check/control output volumes
  * - handle a volume changed notification
- * - determine a sound session policy
- * - handle the notification of a sound session interruption
+ * - determine/control a sound stream policy
+ * - handle the notification of a sound focus status change
+ * - determine a sound session policy (Deprecated)
+ * - handle the notification of a sound session interruption (Deprecated)
  * - query the basic information of connected sound devices
  * - handle the notification for connection of a sound device, and for changed information of a sound device
  *
@@ -51,7 +53,9 @@
  * <p>
  * <ul>
  *    <li> sound_manager_volume_changed_cb() - invoked when volume level is changed.<p></li>
- *    <li> sound_session_interrupted_cb() - invoked when the session is interrupted.<p></li>
+ *    <li> sound_stream_focus_state_changed_cb() - invoked when the state of focus that belongs to the stream_info is changed.<p></li>
+ *    <li> sound_stream_focus_state_watch_cb() - invoked when the focus state for each sound stream type is changed.<p></li>
+ *    <li> sound_session_interrupted_cb() - invoked when the session is interrupted. (Deprecated)<p></li>
  *    <li> sound_device_connected_cb() - invoked when the connection of a sound device is changed.<p></li>
  *    <li> sound_device_information_changed_cb() - invoked when the information of a sound device is changed.<p></li>
  * </ul>
@@ -61,21 +65,33 @@
  * <div><table class="doxtable" >
  *     <tr>
  *        <th><b> REGISTER</b></th>
- *        <th><b> UNREGISTER</b></th> 
+ *        <th><b> UNREGISTER</b></th>
  *        <th><b> CALLBACK</b></th>
  *        <th><b> DESCRIPTION</b></th>
  *     </tr>
  *     <tr>
  *        <td> sound_manager_set_volume_changed_cb()</td>
- *        <td> sound_manager_unset_volume_changed_cb()</td> 
+ *        <td> sound_manager_unset_volume_changed_cb()</td>
  *        <td> sound_manager_volume_changed_cb()</td>
  *        <td> This callback is called when volume value is changed.</td>
+ *     </tr>
+ *     <tr>
+ *        <td> sound_manager_create_stream_information()</td>
+ *        <td> sound_manager_destroy_stream_information()</td>
+ *        <td> sound_stream_focus_state_changed_cb()</td>
+ *        <td> This callback is called when the state of focus that belongs to the stream_info is changed.</td>
+ *     </tr>
+ *     <tr>
+ *        <td> sound_manager_set_focus_state_watch_cb()</td>
+ *        <td> sound_manager_unset_foucs_state_watch_cb()</td>
+ *        <td> sound_stream_focus_state_watch_cb()</td>
+ *        <td> This callback is called when the focus state for each sound stream type is changed.</td>
  *     </tr>
  *     <tr>
  *        <td> sound_manager_set_session_interrupted_cb()</td>
  *        <td> sound_manager_unset_session_interrupted_cb()</td>
  *        <td> sound_session_interrupted_cb()</td>
- *        <td> This callback is called when audio session is interrupted.</td>
+ *        <td> This callback is called when audio session is interrupted. (Deprecated)</td>
  *     </tr>
  *     <tr>
  *        <td> sound_manager_set_device_connected_cb()</td>
@@ -119,8 +135,24 @@
 
 /**
  * @ingroup CAPI_MEDIA_SOUND_MANAGER_MODULE
+ * @defgroup CAPI_MEDIA_SOUND_MANAGER_STREAM_POLICY_MODULE Stream Policy
+ * @brief The @ref CAPI_MEDIA_SOUND_MANAGER_STREAM_POLICY_MODULE API provides functions to control a sound stream.
+ * @section CAPI_MEDIA_SOUND_MANAGER_STREAM_POLICY_MODULE_HEADER Required Header
+ *    \#include <sound_manager.h>
+ *
+ * @section CAPI_MEDIA_SOUND_MANAGER_STREAM_POLICY_MODULE_OVERVIEW Overview
+ * The Sound Manager Stream API allows you to:
+ * - determine/control a sound stream policy
+ * - handle the notification of a sound focus status change
+ *
+ * The Sound Manager has predefined sound stream types (media, system, alarm, notification, emergency, voip, etc)
+ *
+*/
+
+/**
+ * @ingroup CAPI_MEDIA_SOUND_MANAGER_MODULE
  * @defgroup CAPI_MEDIA_SOUND_MANAGER_SESSION_MODULE Session
- * @brief The @ref CAPI_MEDIA_SOUND_MANAGER_SESSION_MODULE API provides functions to control a session.
+ * @brief The @ref CAPI_MEDIA_SOUND_MANAGER_SESSION_MODULE API provides functions to control a session. (Deprecated)
  * @section CAPI_MEDIA_SOUND_MANAGER_SESSION_MODULE_HEADER Required Header
  *    \#include <sound_manager.h>
  *
