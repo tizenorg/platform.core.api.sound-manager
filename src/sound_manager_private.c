@@ -153,7 +153,7 @@ int _convert_stream_type(sound_stream_type_e stream_type_enum, char **stream_typ
 		ret = MM_ERROR_SOUND_INTERNAL;
 		break;
 	}
-	LOGI("stream_type[%s]", stream_type);
+	LOGI("stream_type[%s]", *stream_type);
 
 	return ret;
 }
@@ -183,6 +183,9 @@ int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_e
 		break;
 	case SOUND_STREAM_TYPE_LOOPBACK:
 		*stream_type = "loopback";
+		break;
+	case SOUND_STREAM_TYPE_SOLO:
+		*stream_type = "solo";
 		break;
 	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
