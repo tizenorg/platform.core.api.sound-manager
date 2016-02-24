@@ -66,6 +66,7 @@ typedef enum {
 	SOUND_STREAM_TYPE_VIDEO_CALL,          /**< Sound stream type for video-call */
 	SOUND_STREAM_TYPE_RADIO,               /**< Sound stream type for radio */
 	SOUND_STREAM_TYPE_LOOPBACK,            /**< Sound stream type for loopback */
+	SOUND_STREAM_TYPE_SOLO,                /**< Sound stream type for solo */
 } sound_stream_type_internal_e;
 
 /**

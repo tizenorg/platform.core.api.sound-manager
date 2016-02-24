@@ -197,6 +197,7 @@ int sound_manager_create_stream_information(sound_stream_type_e stream_type, sou
 		memset(stream_h, 0, sizeof(sound_stream_info_s));
 		ret = _convert_stream_type(stream_type, &stream_h->stream_type);
 		if (ret == MM_ERROR_NONE) {
+			_set_focus_availability(stream_h);
 			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 			if (ret == MM_ERROR_NONE) {
 				*stream_info = (sound_stream_info_h)stream_h;
@@ -310,10 +311,14 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
 
 	SM_INSTANCE_CHECK(stream_h);
 
-	ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
-	if (ret == MM_ERROR_NONE) {
-		stream_h->acquired_focus |= focus_mask;
-		_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
+	if (stream_h->is_focus_unavailable)
+		ret = MM_ERROR_POLICY_INTERNAL;
+	else {
+		ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
+		if (ret == MM_ERROR_NONE) {
+			stream_h->acquired_focus |= focus_mask;
+			_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
+		}
 	}
 
 	return _convert_sound_manager_error_code(__func__, ret);

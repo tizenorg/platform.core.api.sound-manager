@@ -153,7 +153,7 @@ int _convert_stream_type(sound_stream_type_e stream_type_enum, char **stream_typ
 		ret = MM_ERROR_SOUND_INTERNAL;
 		break;
 	}
-	LOGI("stream_type[%s]", stream_type);
+	LOGI("stream_type[%s]", *stream_type);
 
 	return ret;
 }
@@ -184,6 +184,9 @@ int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_e
 	case SOUND_STREAM_TYPE_LOOPBACK:
 		*stream_type = "loopback";
 		break;
+	case SOUND_STREAM_TYPE_SOLO:
+		*stream_type = "solo";
+		break;
 	default:
 		LOGE("could not find the stream_type[%d] in this switch case statement", stream_type_enum);
 		ret = MM_ERROR_SOUND_INTERNAL;
@@ -192,6 +195,20 @@ int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_e
 	LOGI("stream_type_for_internal[%s]", *stream_type);
 
 	return ret;
+}
+
+void _set_focus_availability(sound_stream_info_s *stream_info)
+{
+	if (stream_info == NULL || stream_info->stream_type == NULL) {
+		LOGE("invalid argument");
+		return;
+	}
+	if (!strncmp(stream_info->stream_type, "solo", SOUND_STREAM_TYPE_LEN)) {
+		stream_info->is_focus_unavailable = true;
+		LOGI("this stream_type[%s] does not support focus", stream_info->stream_type);
+	}
+
+	return;
 }
 
 int _convert_stream_type_to_change_reason(const char *stream_type, sound_stream_focus_change_reason_e *change_reason)
