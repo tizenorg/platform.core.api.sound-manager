@@ -451,6 +451,9 @@ const char* _convert_api_name(native_api_e api_name)
 	case NATIVE_API_AUDIO_IO:
 		name = "audio-io";
 		break;
+	case NATIVE_API_RECORDER:
+		name = "recorder";
+		break;
 	}
 	return name;
 }
