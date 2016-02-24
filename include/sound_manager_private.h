@@ -154,6 +154,7 @@ typedef struct _manual_route_info_s {
 typedef struct _sound_stream_info_s {
 	unsigned int index;
 	char *stream_type;
+	bool is_focus_not_available;
 	pa_threaded_mainloop *pa_mainloop;
 	pa_context *pa_context;
 	stream_conf_info_s stream_conf_info;
@@ -232,6 +233,8 @@ int _convert_sound_manager_error_code(const char *func, int code);
 int _convert_stream_type(sound_stream_type_e enum_type, char **stream_type);
 
 int _convert_stream_type_for_internal(sound_stream_type_internal_e stream_type_enum, char **stream_type);
+
+void _set_focus_available(sound_stream_info_s *stream_info);
 
 int _convert_stream_type_to_change_reason(const char *stream_type, sound_stream_focus_change_reason_e *change_reason);
 

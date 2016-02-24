@@ -310,10 +310,14 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
 
 	SM_INSTANCE_CHECK(stream_h);
 
-	ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
-	if (ret == MM_ERROR_NONE) {
-		stream_h->acquired_focus |= focus_mask;
-		_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
+	if (stream_h->is_focus_not_available)
+		ret = MM_ERROR_POLICY_INTERNAL;
+	else {
+		ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
+		if (ret == MM_ERROR_NONE) {
+			stream_h->acquired_focus |= focus_mask;
+			_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
+		}
 	}
 
 	return _convert_sound_manager_error_code(__func__, ret);
