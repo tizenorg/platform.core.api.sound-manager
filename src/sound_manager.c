@@ -193,21 +193,24 @@ int sound_manager_create_stream_information(sound_stream_type_e stream_type, sou
 	sound_stream_info_s *stream_h = malloc(sizeof(sound_stream_info_s));
 	if (!stream_h) {
 		ret = MM_ERROR_OUT_OF_MEMORY;
-	} else {
-		memset(stream_h, 0, sizeof(sound_stream_info_s));
-		ret = _convert_stream_type(stream_type, &stream_h->stream_type);
-		if (ret == MM_ERROR_NONE) {
-			_set_focus_availability(stream_h);
-			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
-			if (ret == MM_ERROR_NONE) {
-				*stream_info = (sound_stream_info_h)stream_h;
-				SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
-				LOGI("stream_h(%p), index(%u), user_cb(%p), cnt(%d), ret(0x%x)", stream_h, stream_h->index, stream_h->user_cb, g_stream_info_count, ret);
-			}
-		}
-		if (ret)
-			free(stream_h);
+		goto LEAVE;
 	}
+
+	memset(stream_h, 0, sizeof(sound_stream_info_s));
+	ret = _convert_stream_type(stream_type, &stream_h->stream_type);
+	if (ret == MM_ERROR_NONE) {
+		_set_focus_availability(stream_h);
+		ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
+		if (ret == MM_ERROR_NONE) {
+			*stream_info = (sound_stream_info_h)stream_h;
+			SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
+			LOGI("stream_h(%p), index(%u), user_cb(%p), cnt(%d), ret(0x%x)", stream_h, stream_h->index, stream_h->user_cb, g_stream_info_count, ret);
+		}
+	}
+
+LEAVE:
+	if (ret && stream_h)
+		free(stream_h);
 
 	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
@@ -349,8 +352,10 @@ int sound_manager_get_focus_state(sound_stream_info_h stream_info, sound_stream_
 	LOGI(">> enter");
 
 	SM_INSTANCE_CHECK(stream_h);
-	if (!state_for_playback && !state_for_recording)
+	if (!state_for_playback && !state_for_recording) {
 		ret = MM_ERROR_INVALID_ARGUMENT;
+		goto LEAVE;
+	}
 
 	if (state_for_playback)
 		*state_for_playback = ((stream_h->acquired_focus & SOUND_STREAM_FOCUS_FOR_PLAYBACK) ? (SOUND_STREAM_FOCUS_STATE_ACQUIRED) : (SOUND_STREAM_FOCUS_STATE_RELEASED));
@@ -359,6 +364,7 @@ int sound_manager_get_focus_state(sound_stream_info_h stream_info, sound_stream_
 
 	LOGI("acquired_focus(0x%x)", stream_h->acquired_focus);
 
+LEAVE:
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -372,13 +378,15 @@ int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *
 	SM_INSTANCE_CHECK(stream_h);
 	SM_NULL_ARG_CHECK(sound_type);
 
-	if (stream_h->stream_conf_info.volume_type == NULL)
+	if (stream_h->stream_conf_info.volume_type == NULL) {
 		ret = MM_ERROR_SOUND_NO_DATA;
-	else {
-		ret = _convert_sound_type_to_enum(stream_h->stream_conf_info.volume_type, sound_type);
-		LOGI("sound type(%d)", *sound_type);
+		goto LEAVE;
 	}
 
+	ret = _convert_sound_type_to_enum(stream_h->stream_conf_info.volume_type, sound_type);
+	LOGI("sound type(%d)", *sound_type);
+
+LEAVE:
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -392,18 +400,20 @@ int sound_manager_set_focus_state_watch_cb(sound_stream_focus_mask_e focus_mask,
 	SM_NULL_ARG_CHECK(callback);
 	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_stream_info_count_mutex, SOUND_MANAGER_ERROR_INTERNAL);
 
-	if (!g_focus_watch_cb_table.user_cb) {
-		SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
-		ret = mm_sound_set_focus_watch_callback((mm_sound_focus_type_e)focus_mask, _focus_watch_callback, user_data, &id);
-		if (ret == MM_ERROR_NONE) {
-			g_focus_watch_cb_table.index = id;
-			g_focus_watch_cb_table.user_cb = callback;
-			g_focus_watch_cb_table.user_data = user_data;
-		}
-	} else {
+	if (g_focus_watch_cb_table.user_cb) {
 		ret = MM_ERROR_SOUND_INTERNAL;
+		goto LEAVE;
 	}
 
+	SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
+	ret = mm_sound_set_focus_watch_callback((mm_sound_focus_type_e)focus_mask, _focus_watch_callback, user_data, &id);
+	if (ret == MM_ERROR_NONE) {
+		g_focus_watch_cb_table.index = id;
+		g_focus_watch_cb_table.user_cb = callback;
+		g_focus_watch_cb_table.user_data = user_data;
+	}
+
+LEAVE:
 	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
 	LOGD("cnt(%d)", g_stream_info_count);
@@ -419,20 +429,23 @@ int sound_manager_unset_focus_state_watch_cb(void)
 
 	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_stream_info_count_mutex, SOUND_MANAGER_ERROR_INTERNAL);
 
-	if (g_focus_watch_cb_table.user_cb) {
-		ret = mm_sound_unset_focus_watch_callback(g_focus_watch_cb_table.index);
-		if (ret == MM_ERROR_NONE) {
-			g_focus_watch_cb_table.index = -1;
-			g_focus_watch_cb_table.user_cb = NULL;
-			g_focus_watch_cb_table.user_data = NULL;
-			SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
-		} else {
-			ret = MM_ERROR_SOUND_INTERNAL;
-		}
-	} else {
+	if (!g_focus_watch_cb_table.user_cb) {
 		ret = MM_ERROR_SOUND_INTERNAL;
+		goto LEAVE;
 	}
 
+	ret = mm_sound_unset_focus_watch_callback(g_focus_watch_cb_table.index);
+	if (ret != MM_ERROR_NONE) {
+		ret = MM_ERROR_SOUND_INTERNAL;
+		goto LEAVE;
+	}
+
+	g_focus_watch_cb_table.index = -1;
+	g_focus_watch_cb_table.user_cb = NULL;
+	g_focus_watch_cb_table.user_data = NULL;
+	SM_UNREF_FOR_STREAM_INFO(g_stream_info_count, ret);
+
+LEAVE:
 	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
 	LOGD("cnt(%d)", g_stream_info_count);
@@ -532,12 +545,13 @@ int sound_manager_get_session_type(sound_session_type_e *type)
 
 	if (type == NULL)
 		return _convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+
 	ret = mm_session_get_current_type(&cur_session);
-	if (ret != 0) {
+	if (ret != MM_ERROR_NONE) {
 		LOGW("session hasn't been set, setting default session");
 		cur_session = SOUND_SESSION_TYPE_DEFAULT;
 		ret = mm_session_init(cur_session);
-		if (ret == 0)
+		if (ret == MM_ERROR_NONE)
 			g_session_interrupt_cb_table.is_registered = 1;
 	}
 	if ((cur_session > MM_SESSION_TYPE_EMERGENCY) &&
@@ -768,6 +782,7 @@ int sound_manager_get_media_session_resumption_option(sound_session_option_for_r
 
 	if (option == NULL)
 		return _convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+
 	ret = mm_session_get_current_information(&session, &session_options);
 	if (ret != 0) {
 		LOGW("session hasn't been set, setting default session");
@@ -805,18 +820,23 @@ int sound_manager_set_voip_session_mode(sound_session_voip_mode_e mode)
 
 	ret = mm_session_get_current_information(&session, &session_options);
 	if (ret != MM_ERROR_NONE)
-		return _convert_sound_manager_error_code(__func__, ret);
-	else if (session != MM_SESSION_TYPE_VOIP)
-		return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+		goto LEAVE;
+
+	if (session != MM_SESSION_TYPE_VOIP) {
+		ret = MM_ERROR_POLICY_INTERNAL;
+		goto LEAVE;
+	}
 
 	if (mode < SOUND_SESSION_VOIP_MODE_RINGTONE || mode > SOUND_SESSION_VOIP_MODE_VOICE_WITH_BLUETOOTH) {
 		ret = MM_ERROR_INVALID_ARGUMENT;
-		return _convert_sound_manager_error_code(__func__, ret);
+		goto LEAVE;
 	}
+
 	ret = _set_session_mode((_session_mode_e)mode);
 
 	LOGI("session=%d, mode=%d", session, mode);
 
+LEAVE:
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -828,20 +848,26 @@ int sound_manager_get_voip_session_mode(sound_session_voip_mode_e *mode)
 
 	if (mode == NULL) {
 		LOGE("mode is null");
-		return _convert_sound_manager_error_code(__func__, MM_ERROR_INVALID_ARGUMENT);
+		ret = MM_ERROR_INVALID_ARGUMENT;
+		goto LEAVE;
 	}
 
 	ret = mm_session_get_current_information(&session, &session_options);
 	if (ret != MM_ERROR_NONE) {
 		LOGI("session = %d, option = %d", session, session_options);
-		return _convert_sound_manager_error_code(__func__, ret);
-	} else if (session != MM_SESSION_TYPE_VOIP || g_cached_session_mode == -1)
-		return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+		goto LEAVE;
+	}
+
+	if (session != MM_SESSION_TYPE_VOIP || g_cached_session_mode == -1) {
+		ret = MM_ERROR_POLICY_INTERNAL;
+		goto LEAVE;
+	}
 
 	*mode = (sound_session_voip_mode_e)g_cached_session_mode;
 
 	LOGI("session=%d, mode=%d", session, *mode);
 
+LEAVE:
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -854,32 +880,33 @@ int sound_manager_set_session_interrupted_cb(sound_session_interrupted_cb callba
 
 	if (callback == NULL) {
 		ret = MM_ERROR_INVALID_ARGUMENT;
-		goto finish;
+		goto LEAVE;
 	}
 
 	/* it is not supported both session and stream feature at the same time */
 	if (g_stream_info_count) {
 		ret =  MM_ERROR_POLICY_INTERNAL;
-		goto finish;
+		goto LEAVE;
 	}
 
 	if (g_session_interrupt_cb_table.user_cb == NULL) {
 		ret = mm_sound_add_device_connected_callback(SOUND_DEVICE_ALL_MASK, (mm_sound_device_connected_cb)_device_connected_cb, NULL, &subs_id);
 		if (ret)
-			goto finish;
+			goto LEAVE;
 		ret = mm_sound_focus_set_session_interrupt_callback((mm_sound_focus_session_interrupt_cb)_focus_session_interrupt_cb, NULL);
 		if (ret) {
 			if (mm_sound_remove_device_connected_callback(subs_id) != MM_ERROR_NONE)
 				LOGW("mm_sound_remove_device_connected_callback failed");
-			goto finish;
+			goto LEAVE;
 		}
 		g_session_interrupt_cb_table.subs_id = subs_id;
 	}
 	g_session_interrupt_cb_table.user_cb = (sound_session_interrupted_cb)callback;
 	g_session_interrupt_cb_table.user_data = user_data;
 
-finish:
+LEAVE:
 	SM_LEAVE_CRITICAL_SECTION(&g_interrupt_cb_mutex);
+
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
@@ -889,31 +916,36 @@ int sound_manager_unset_session_interrupted_cb(void)
 
 	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_interrupt_cb_mutex, SOUND_MANAGER_ERROR_INTERNAL);
 
-	if (g_session_interrupt_cb_table.user_cb) {
-		ret = mm_sound_focus_unset_session_interrupt_callback();
-		if (ret) {
-			if (mm_sound_remove_device_connected_callback(g_session_interrupt_cb_table.subs_id) != MM_ERROR_NONE)
-				LOGW("mm_sound_remove_device_connected_callback failed");
-			goto finish;
-		}
-		ret = mm_sound_remove_device_connected_callback(g_session_interrupt_cb_table.subs_id);
-		if (ret)
-			goto finish;
-		g_session_interrupt_cb_table.subs_id = 0;
-		g_session_interrupt_cb_table.user_cb = NULL;
-		g_session_interrupt_cb_table.user_data = NULL;
-	} else {
+	if (!g_session_interrupt_cb_table.user_cb) {
 		ret = MM_ERROR_SOUND_INTERNAL;
+		goto LEAVE;
 	}
 
-finish:
+	ret = mm_sound_focus_unset_session_interrupt_callback();
+	if (ret) {
+		if (mm_sound_remove_device_connected_callback(g_session_interrupt_cb_table.subs_id) != MM_ERROR_NONE)
+			LOGW("mm_sound_remove_device_connected_callback failed");
+		goto LEAVE;
+	}
+
+	ret = mm_sound_remove_device_connected_callback(g_session_interrupt_cb_table.subs_id);
+	if (ret)
+		goto LEAVE;
+
+	g_session_interrupt_cb_table.subs_id = 0;
+	g_session_interrupt_cb_table.user_cb = NULL;
+	g_session_interrupt_cb_table.user_data = NULL;
+
+LEAVE:
 	SM_LEAVE_CRITICAL_SECTION(&g_interrupt_cb_mutex);
+
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
 int sound_manager_get_current_device_list(sound_device_mask_e device_mask, sound_device_list_h *device_list)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_get_current_device_list((mm_sound_device_flags_e)device_mask, device_list);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -922,6 +954,7 @@ int sound_manager_get_current_device_list(sound_device_mask_e device_mask, sound
 int sound_manager_free_device_list(sound_device_list_h device_list)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_free_device_list(device_list);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -930,6 +963,7 @@ int sound_manager_free_device_list(sound_device_list_h device_list)
 int sound_manager_get_next_device(sound_device_list_h device_list, sound_device_h *device)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_get_next_device(device_list, device);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -938,6 +972,7 @@ int sound_manager_get_next_device(sound_device_list_h device_list, sound_device_
 int sound_manager_get_prev_device(sound_device_list_h device_list, sound_device_h *device)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_get_prev_device(device_list, device);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -946,6 +981,7 @@ int sound_manager_get_prev_device(sound_device_list_h device_list, sound_device_
 int sound_manager_get_device_type(sound_device_h device, sound_device_type_e *type)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_get_device_type(device, (mm_sound_device_type_e*)type);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -955,6 +991,7 @@ int sound_manager_get_device_io_direction(sound_device_h device, sound_device_io
 {
 	int ret = MM_ERROR_NONE;
 	mm_sound_device_io_direction_e mm_sound_io_direction;
+
 	ret = mm_sound_get_device_io_direction(device, &mm_sound_io_direction);
 	if (ret == MM_ERROR_NONE)
 		ret = _convert_device_io_direction(mm_sound_io_direction, io_direction);
@@ -965,6 +1002,7 @@ int sound_manager_get_device_io_direction(sound_device_h device, sound_device_io
 int sound_manager_get_device_id(sound_device_h device, int *id)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_get_device_id(device, id);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -973,6 +1011,7 @@ int sound_manager_get_device_id(sound_device_h device, int *id)
 int sound_manager_get_device_name(sound_device_h device, char **name)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_get_device_name(device, name);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -981,6 +1020,7 @@ int sound_manager_get_device_name(sound_device_h device, char **name)
 int sound_manager_get_device_state(sound_device_h device, sound_device_state_e *state)
 {
 	int ret = MM_ERROR_NONE;
+
 	ret = mm_sound_get_device_state(device, (mm_sound_device_state_e*)state);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -1011,16 +1051,19 @@ int sound_manager_unset_device_connected_cb(void)
 
 	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_device_conn_cb_mutex, SOUND_MANAGER_ERROR_INTERNAL);
 
-	if (g_device_connected_cb_table.subs_id > 0) {
-		ret = mm_sound_remove_device_connected_callback(g_device_connected_cb_table.subs_id);
-		if (ret == MM_ERROR_NONE) {
-			g_device_connected_cb_table.subs_id = 0;
-			g_device_connected_cb_table.user_cb = NULL;
-			g_device_connected_cb_table.user_data = NULL;
-		}
-	} else
+	if (g_device_connected_cb_table.subs_id == 0) {
 		ret = MM_ERROR_SOUND_INTERNAL;
+		goto LEAVE;
+	}
 
+	ret = mm_sound_remove_device_connected_callback(g_device_connected_cb_table.subs_id);
+	if (ret == MM_ERROR_NONE) {
+		g_device_connected_cb_table.subs_id = 0;
+		g_device_connected_cb_table.user_cb = NULL;
+		g_device_connected_cb_table.user_data = NULL;
+	}
+
+LEAVE:
 	SM_LEAVE_CRITICAL_SECTION(&g_device_conn_cb_mutex);
 
 	return _convert_sound_manager_error_code(__func__, ret);
@@ -1051,17 +1094,19 @@ int sound_manager_unset_device_information_changed_cb(void)
 
 	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_device_info_cb_mutex, SOUND_MANAGER_ERROR_INTERNAL);
 
-	if (g_device_info_changed_cb_table.subs_id) {
-		ret = mm_sound_remove_device_information_changed_callback(g_device_info_changed_cb_table.subs_id);
-		if (ret == MM_ERROR_NONE) {
-			g_device_info_changed_cb_table.subs_id = 0;
-			g_device_info_changed_cb_table.user_cb = NULL;
-			g_device_info_changed_cb_table.user_data = NULL;
-		}
-	} else {
+	if (g_device_info_changed_cb_table.subs_id == 0) {
 		ret = MM_ERROR_SOUND_INTERNAL;
+		goto LEAVE;
 	}
 
+	ret = mm_sound_remove_device_information_changed_callback(g_device_info_changed_cb_table.subs_id);
+	if (ret == MM_ERROR_NONE) {
+		g_device_info_changed_cb_table.subs_id = 0;
+		g_device_info_changed_cb_table.user_cb = NULL;
+		g_device_info_changed_cb_table.user_data = NULL;
+	}
+
+LEAVE:
 	SM_LEAVE_CRITICAL_SECTION(&g_device_info_cb_mutex);
 
 	return _convert_sound_manager_error_code(__func__, ret);

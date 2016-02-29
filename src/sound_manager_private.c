@@ -213,8 +213,6 @@ void _set_focus_availability(sound_stream_info_s *stream_info)
 
 int _convert_stream_type_to_change_reason(const char *stream_type, sound_stream_focus_change_reason_e *change_reason)
 {
-	int ret = MM_ERROR_NONE;
-
 	SM_NULL_ARG_CHECK_FOR_PRIV(stream_type);
 	SM_NULL_ARG_CHECK_FOR_PRIV(change_reason);
 
@@ -257,16 +255,15 @@ int _convert_stream_type_to_change_reason(const char *stream_type, sound_stream_
 		*change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA_EXTERNAL_ONLY;
 
 	} else {
-		ret = MM_ERROR_INVALID_ARGUMENT;
-		LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
+		LOGE("not supported stream_type(%s)", stream_type);
+		return MM_ERROR_INVALID_ARGUMENT;
 	}
-	return ret;
+
+	return MM_ERROR_NONE;
 }
 
 static int _convert_stream_type_to_interrupt_reason(const char *stream_type, sound_session_interrupted_code_e *change_reason)
 {
-	int ret = MM_ERROR_NONE;
-
 	SM_NULL_ARG_CHECK_FOR_PRIV(stream_type);
 	SM_NULL_ARG_CHECK_FOR_PRIV(change_reason);
 
@@ -297,16 +294,15 @@ static int _convert_stream_type_to_interrupt_reason(const char *stream_type, sou
 		*change_reason = SOUND_SESSION_INTERRUPTED_BY_CALL;
 
 	} else {
-		ret = MM_ERROR_INVALID_ARGUMENT;
-		LOGE("not supported stream_type(%s), err(0x%08x)", stream_type, ret);
+		LOGE("not supported stream_type(%s)", stream_type);
+		return MM_ERROR_INVALID_ARGUMENT;
 	}
-	return ret;
+
+	return MM_ERROR_NONE;
 }
 
 int _convert_sound_type(sound_type_e sound_type, const char **volume_type)
 {
-	int ret = MM_ERROR_NONE;
-
 	SM_NULL_ARG_CHECK_FOR_PRIV(volume_type);
 
 	switch (sound_type) {
@@ -337,13 +333,11 @@ int _convert_sound_type(sound_type_e sound_type, const char **volume_type)
 	}
 	LOGI("volume_type[%s]", *volume_type);
 
-	return ret;
+	return MM_ERROR_NONE;
 }
 
 int _convert_sound_type_to_enum(const char *sound_type, sound_type_e *sound_type_enum)
 {
-	int ret = MM_ERROR_NONE;
-
 	SM_NULL_ARG_CHECK_FOR_PRIV(sound_type);
 	SM_NULL_ARG_CHECK_FOR_PRIV(sound_type_enum);
 
@@ -364,17 +358,15 @@ int _convert_sound_type_to_enum(const char *sound_type, sound_type_e *sound_type
 	} else if (!strncmp(sound_type, "voice", strlen(sound_type))) {
 		*sound_type_enum = SOUND_TYPE_VOICE;
 	} else {
-		ret = MM_ERROR_INVALID_ARGUMENT;
-		LOGE("not supported sound_type(%s), err(0x%08x)", sound_type, ret);
+		LOGE("not supported sound_type(%s)", sound_type);
+		return MM_ERROR_INVALID_ARGUMENT;
 	}
 
-	return ret;
+	return MM_ERROR_NONE;
 }
 
 int _convert_device_type(sound_device_type_e device_type_enum, char **device_type)
 {
-	int ret = MM_ERROR_NONE;
-
 	SM_NULL_ARG_CHECK_FOR_PRIV(device_type);
 
 	switch (device_type_enum) {
@@ -402,20 +394,18 @@ int _convert_device_type(sound_device_type_e device_type_enum, char **device_typ
 	case SOUND_DEVICE_FORWARDING:
 		*device_type = "forwarding";
 		break;
-	}
-	if (!strncmp(*device_type, "", SOUND_DEVICE_TYPE_LEN)) {
+	default:
 		LOGE("could not find the device_type[%d] in this switch case statement", device_type_enum);
-		ret = MM_ERROR_SOUND_INTERNAL;
-	} else
-		LOGI("device_type[%s]", *device_type);
+		return MM_ERROR_SOUND_INTERNAL;
+	}
 
-	return ret;
+	LOGI("device_type[%s]", *device_type);
+
+	return MM_ERROR_NONE;
 }
 
 int _convert_device_io_direction(mm_sound_device_io_direction_e io_direction, sound_device_io_direction_e *sound_io_direction)
 {
-	int ret = MM_ERROR_NONE;
-
 	SM_NULL_ARG_CHECK(sound_io_direction);
 
 	switch (io_direction) {
@@ -429,12 +419,14 @@ int _convert_device_io_direction(mm_sound_device_io_direction_e io_direction, so
 		*sound_io_direction = SOUND_DEVICE_IO_DIRECTION_BOTH;
 		break;
 	}
-	return ret;
+
+	return MM_ERROR_NONE;
 }
 
 const char* _convert_api_name(native_api_e api_name)
 {
 	const char* name = NULL;
+
 	switch (api_name) {
 	case NATIVE_API_SOUND_MANAGER:
 		name = "sound-manager";
@@ -455,6 +447,7 @@ const char* _convert_api_name(native_api_e api_name)
 		name = "recorder";
 		break;
 	}
+
 	return name;
 }
 
@@ -462,31 +455,33 @@ void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, m
 {
 	int ret = MM_ERROR_NONE;
 	int i = 0;
+	sound_stream_focus_change_reason_e change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
 
 	LOGI(">> enter");
 
-	sound_stream_focus_change_reason_e change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
 	ret = _convert_stream_type_to_change_reason(reason_for_change, &change_reason);
 	if (ret) {
 		LOGE("failed to _convert_stream_type_to_enum(), reason_for_change(%s), err(0x%08x)", reason_for_change, ret);
-	} else {
-		for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
-			if (sound_stream_info_arr[i] && sound_stream_info_arr[i]->index == index) {
-				if (state == FOCUS_IS_RELEASED)
-					sound_stream_info_arr[i]->acquired_focus &= ~focus_type;
-				else if (state == FOCUS_IS_ACQUIRED)
-					sound_stream_info_arr[i]->acquired_focus |= focus_type;
-
-				LOGI("[FOCUS USER CALLBACK(%p) START]", sound_stream_info_arr[i]->user_cb);
-				sound_stream_info_arr[i]->user_cb((sound_stream_info_h)sound_stream_info_arr[i], change_reason, additional_info, sound_stream_info_arr[i]->user_data);
-				LOGI("[FOCUS USER CALLBACK(%p) END]", sound_stream_info_arr[i]->user_cb);
-				break;
-			}
-		}
-		if (i == SOUND_STREAM_INFO_ARR_MAX)
-			LOGE("could not find index(%d), failed to call user callback", index);
+		goto LEAVE;
 	}
 
+	for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
+		if (sound_stream_info_arr[i] && sound_stream_info_arr[i]->index == index) {
+			if (state == FOCUS_IS_RELEASED)
+				sound_stream_info_arr[i]->acquired_focus &= ~focus_type;
+			else if (state == FOCUS_IS_ACQUIRED)
+				sound_stream_info_arr[i]->acquired_focus |= focus_type;
+
+			LOGI("[FOCUS USER CALLBACK(%p) START]", sound_stream_info_arr[i]->user_cb);
+			sound_stream_info_arr[i]->user_cb((sound_stream_info_h)sound_stream_info_arr[i], change_reason, additional_info, sound_stream_info_arr[i]->user_data);
+			LOGI("[FOCUS USER CALLBACK(%p) END]", sound_stream_info_arr[i]->user_cb);
+			break;
+		}
+	}
+	if (i == SOUND_STREAM_INFO_ARR_MAX)
+		LOGE("could not find index(%d), failed to call user callback", index);
+
+LEAVE:
 	LOGI("<< leave");
 
 	return;
@@ -496,11 +491,14 @@ void _focus_watch_callback(int index, mm_sound_focus_type_e focus_type, mm_sound
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_focus_change_reason_e change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
+
 	ret = _convert_stream_type_to_change_reason(reason_for_change, &change_reason);
 	if (ret)
 		LOGE("failed to _convert_stream_type_to_enum(), reason_for_change(%s), err(0x%08x)", reason_for_change, ret);
+
 	if (g_focus_watch_cb_table.user_cb)
 		g_focus_watch_cb_table.user_cb(focus_type, state, change_reason, additional_info, g_focus_watch_cb_table.user_data);
+
 	return;
 }
 
@@ -508,6 +506,7 @@ void _pa_context_state_cb(pa_context *c, void *userdata)
 {
 	pa_context_state_t state;
 	sound_stream_info_s *stream_info_h = (sound_stream_info_s*)userdata;
+
 	assert(c);
 
 	state = pa_context_get_state(c);
@@ -524,12 +523,15 @@ void _pa_context_state_cb(pa_context *c, void *userdata)
 	case PA_CONTEXT_SETTING_NAME:
 		break;
 	}
+
+	return;
 }
 
 void _pa_stream_state_cb(pa_stream *s, void * userdata)
 {
 	pa_stream_state_t state;
 	virtual_sound_stream_info_s *vstream_h = (virtual_sound_stream_info_s*)userdata;
+
 	assert(s);
 
 	state = pa_stream_get_state(s);
@@ -545,6 +547,8 @@ void _pa_stream_state_cb(pa_stream *s, void * userdata)
 	case PA_STREAM_CREATING:
 		break;
 	}
+
+	return;
 }
 
 int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
@@ -554,6 +558,11 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 	GVariant *child = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	GVariantIter iter;
+	GVariant *item = NULL;
+	gchar *name = NULL;
+	gsize size = 0;
+	int i = 0;
 
 	assert(stream_type);
 	assert(info);
@@ -575,116 +584,109 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for GET_STREAM_INFO error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		GVariantIter iter;
-		GVariant *item = NULL;
-		gchar *name = NULL;
-		gsize size = 0;
-		int i = 0;
+		goto LEAVE;
+	}
 
-		/* get priority */
-		child = g_variant_get_child_value(result, 0);
-		item = g_variant_get_variant(child);
-		info->priority = g_variant_get_int32(item);
-		g_variant_unref(item);
-		g_variant_unref(child);
-		LOGI("priority(%d)", info->priority);
+	/* get priority */
+	child = g_variant_get_child_value(result, 0);
+	item = g_variant_get_variant(child);
+	info->priority = g_variant_get_int32(item);
+	g_variant_unref(item);
+	g_variant_unref(child);
+	LOGI("priority(%d)", info->priority);
 
-		/* get route type */
-		child = g_variant_get_child_value(result, 1);
-		item = g_variant_get_variant(child);
-		info->route_type = g_variant_get_int32(item);
-		g_variant_unref(item);
-		g_variant_unref(child);
-		LOGI("route_type(%d)", info->route_type);
+	/* get route type */
+	child = g_variant_get_child_value(result, 1);
+	item = g_variant_get_variant(child);
+	info->route_type = g_variant_get_int32(item);
+	g_variant_unref(item);
+	g_variant_unref(child);
+	LOGI("route_type(%d)", info->route_type);
 
-		/* get volume types */
-		child = g_variant_get_child_value(result, 2);
-		item = g_variant_get_variant(child);
-		g_variant_iter_init(&iter, item);
-		while (g_variant_iter_loop(&iter, "&s", &name)) {
-			if (name && !strncmp(name, "none", strlen("none"))) {
-				/* skip it */
-			} else {
-				/* we use volume type only for out direction */
-				if (name) {
-					LOGI(" volume-type : %s", name);
-					info->volume_type = strdup(name);
-					break;
-				}
-			}
-		}
-		g_variant_unref(item);
-		g_variant_unref(child);
-
-		/* get availabe in-devices */
-		child = g_variant_get_child_value(result, 3);
-		item = g_variant_get_variant(child);
-		size = g_variant_n_children(item);
-		LOGI("num of avail-in-devices are %d", size);
-		g_variant_iter_init(&iter, item);
-		i = 0;
-		while (g_variant_iter_loop(&iter, "&s", &name)) {
-			if (size == 1 && !strncmp(name, "none", strlen("none"))) {
-				LOGI(" in-device is [%s], skip it", name);
-				break;
-			} else {
-				LOGI(" in-device name : %s", name);
-				info->avail_in_devices[i++] = strdup(name);
-			}
-		}
-		g_variant_unref(item);
-		g_variant_unref(child);
-
-		/* get available out-devices */
-		child = g_variant_get_child_value(result, 4);
-		item = g_variant_get_variant(child);
-		size = g_variant_n_children(item);
-		LOGI("num of avail-out-devices are %d", size);
-		g_variant_iter_init(&iter, item);
-		i = 0;
-		while (g_variant_iter_loop(&iter, "&s", &name)) {
-			if (size == 1 && !strncmp(name, "none", strlen("none"))) {
-				LOGI(" out-device is [%s], skip it", name);
-				break;
-			} else {
-				LOGI(" out-device name : %s", name);
-				info->avail_out_devices[i++] = strdup(name);
-			}
-		}
-		g_variant_unref(item);
-		g_variant_unref(child);
-
-		/* get available frameworks */
-		child = g_variant_get_child_value(result, 5);
-		item = g_variant_get_variant(child);
-		size = g_variant_n_children(item);
-		LOGI("num of avail-frameworks are %d", size);
-		g_variant_iter_init(&iter, item);
-		i = 0;
-		while (g_variant_iter_loop(&iter, "&s", &name)) {
-			if (size == 1 && !strncmp(name, "none", strlen("none"))) {
-				LOGI(" framework is [%s], skip it", name);
-				break;
-			} else {
-				LOGI(" framework name : %s", name);
-				info->avail_frameworks[i++] = strdup(name);
-			}
-		}
-		g_variant_unref(item);
-		g_variant_unref(child);
-		g_variant_unref(result);
-
-		if (info->priority == -1) {
-			LOGE("could not find the info of stream type(%s)", *stream_type);
-			ret = MM_ERROR_SOUND_INTERNAL;
+	/* get volume types */
+	child = g_variant_get_child_value(result, 2);
+	item = g_variant_get_variant(child);
+	g_variant_iter_init(&iter, item);
+	while (g_variant_iter_loop(&iter, "&s", &name)) {
+		if (name && !strncmp(name, "none", strlen("none")))
+			continue;
+		/* we use volume type only for out direction */
+		if (name) {
+			LOGI(" volume-type : %s", name);
+			info->volume_type = strdup(name);
+			break;
 		}
 	}
+	g_variant_unref(item);
+	g_variant_unref(child);
+
+	/* get availabe in-devices */
+	child = g_variant_get_child_value(result, 3);
+	item = g_variant_get_variant(child);
+	size = g_variant_n_children(item);
+	LOGI("num of avail-in-devices are %d", size);
+	g_variant_iter_init(&iter, item);
+	i = 0;
+	while (g_variant_iter_loop(&iter, "&s", &name)) {
+		if (size == 1 && !strncmp(name, "none", strlen("none"))) {
+			LOGI(" in-device is [%s], skip it", name);
+			break;
+		}
+		LOGI(" in-device name : %s", name);
+		info->avail_in_devices[i++] = strdup(name);
+	}
+	g_variant_unref(item);
+	g_variant_unref(child);
+
+	/* get available out-devices */
+	child = g_variant_get_child_value(result, 4);
+	item = g_variant_get_variant(child);
+	size = g_variant_n_children(item);
+	LOGI("num of avail-out-devices are %d", size);
+	g_variant_iter_init(&iter, item);
+	i = 0;
+	while (g_variant_iter_loop(&iter, "&s", &name)) {
+		if (size == 1 && !strncmp(name, "none", strlen("none"))) {
+			LOGI(" out-device is [%s], skip it", name);
+			break;
+		}
+		LOGI(" out-device name : %s", name);
+		info->avail_out_devices[i++] = strdup(name);
+	}
+	g_variant_unref(item);
+	g_variant_unref(child);
+
+	/* get available frameworks */
+	child = g_variant_get_child_value(result, 5);
+	item = g_variant_get_variant(child);
+	size = g_variant_n_children(item);
+	LOGI("num of avail-frameworks are %d", size);
+	g_variant_iter_init(&iter, item);
+	i = 0;
+	while (g_variant_iter_loop(&iter, "&s", &name)) {
+		if (size == 1 && !strncmp(name, "none", strlen("none"))) {
+			LOGI(" framework is [%s], skip it", name);
+			break;
+		}
+		LOGI(" framework name : %s", name);
+		info->avail_frameworks[i++] = strdup(name);
+	}
+	g_variant_unref(item);
+	g_variant_unref(child);
+	g_variant_unref(result);
+
+	if (info->priority == -1) {
+		LOGE("could not find the info of stream type(%s)", *stream_type);
+		ret = MM_ERROR_SOUND_INTERNAL;
+	}
+
+LEAVE:
 	g_object_unref(conn);
+
 	return ret;
 }
 
@@ -697,11 +699,12 @@ int _set_manual_route_info(unsigned int index, manual_route_info_s *info)
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	const gchar *dbus_ret = NULL;
 
 	assert(info);
 
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
-	if (!conn && err) {
+	if (!conn) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free(err);
 		return MM_ERROR_SOUND_INTERNAL;
@@ -712,20 +715,16 @@ int _set_manual_route_info(unsigned int index, manual_route_info_s *info)
 	builder_for_in_devices = g_variant_builder_new(G_VARIANT_TYPE("au"));
 	builder_for_out_devices = g_variant_builder_new(G_VARIANT_TYPE("au"));
 	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
-		if (info->route_in_devices[i]) {
-			g_variant_builder_add(builder_for_in_devices, "u", info->route_in_devices[i]);
-			LOGI("[IN] device_id:%u", info->route_in_devices[i]);
-		} else {
+		if (!info->route_in_devices[i])
 			break;
-		}
+		g_variant_builder_add(builder_for_in_devices, "u", info->route_in_devices[i]);
+		LOGI("[IN] device_id:%u", info->route_in_devices[i]);
 	}
 	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
-		if (info->route_out_devices[i]) {
-			g_variant_builder_add(builder_for_out_devices, "u", info->route_out_devices[i]);
-			LOGI("[OUT] device_id:%u", info->route_out_devices[i]);
-		} else {
+		if (!info->route_out_devices[i])
 			break;
-		}
+		g_variant_builder_add(builder_for_out_devices, "u", info->route_out_devices[i]);
+		LOGI("[OUT] device_id:%u", info->route_out_devices[i]);
 	}
 
 	result = g_dbus_connection_call_sync(conn,
@@ -739,24 +738,26 @@ int _set_manual_route_info(unsigned int index, manual_route_info_s *info)
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for SET_STREAM_ROUTE_DEVICES error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		const gchar *dbus_ret = NULL;
-		g_variant_get(result, "(&s)", &dbus_ret);
-		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
-		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
-			ret = MM_ERROR_SOUND_INVALID_STATE;
-		else
-			info->is_set = true;
-
-		g_variant_unref(result);
+		goto LEAVE;
 	}
+
+	g_variant_get(result, "(&s)", &dbus_ret);
+	LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
+	if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+		ret = MM_ERROR_SOUND_INVALID_STATE;
+	else
+		info->is_set = true;
+
+	g_variant_unref(result);
 	g_variant_builder_unref(builder_for_in_devices);
 	g_variant_builder_unref(builder_for_out_devices);
+LEAVE:
 	g_object_unref(conn);
+
 	return ret;
 }
 
@@ -766,6 +767,7 @@ int _set_route_option(unsigned int index, const char *name, int value)
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	const gchar *dbus_ret = NULL;
 
 	assert(name);
 
@@ -778,7 +780,6 @@ int _set_route_option(unsigned int index, const char *name, int value)
 
 	LOGI("[OPTION] %s(%d)", name, value);
 
-
 	result = g_dbus_connection_call_sync(conn,
 							PA_BUS_NAME,
 							PA_STREAM_MANAGER_OBJECT_PATH,
@@ -790,22 +791,24 @@ int _set_route_option(unsigned int index, const char *name, int value)
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for SET_STREAM_ROUTE_OPTION error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		const gchar *dbus_ret = NULL;
-		g_variant_get(result, "(&s)", &dbus_ret);
-		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
-		if (!strncmp("STREAM_MANAGER_RETURN_ERROR_NO_STREAM", dbus_ret, strlen(dbus_ret)))
-			ret = MM_ERROR_SOUND_INVALID_STATE;
-		else if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
-			ret = MM_ERROR_SOUND_INTERNAL;
-
-		g_variant_unref(result);
+		goto LEAVE;
 	}
+
+	g_variant_get(result, "(&s)", &dbus_ret);
+	LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
+	if (!strncmp("STREAM_MANAGER_RETURN_ERROR_NO_STREAM", dbus_ret, strlen(dbus_ret)))
+		ret = MM_ERROR_SOUND_INVALID_STATE;
+	else if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+		ret = MM_ERROR_SOUND_INTERNAL;
+
+	g_variant_unref(result);
+LEAVE:
 	g_object_unref(conn);
+
 	return ret;
 }
 
@@ -815,13 +818,14 @@ int _get_volume_max_level(const char *direction, const char *volume_type, unsign
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	const gchar *dbus_ret = NULL;
 
 	assert(direction);
 	assert(volume_type);
 	assert(max_level);
 
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
-	if (!conn && err) {
+	if (!conn) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free(err);
 		return MM_ERROR_SOUND_INTERNAL;
@@ -838,20 +842,22 @@ int _get_volume_max_level(const char *direction, const char *volume_type, unsign
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for GET_VOLUME_MAX_LEVEL error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		const gchar *dbus_ret = NULL;
-		g_variant_get(result, "(u&s)", max_level, &dbus_ret);
-		LOGI("g_dbus_connection_call_sync() success, method return value is (%u, %s)", *max_level, dbus_ret);
-		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
-			ret = MM_ERROR_SOUND_INTERNAL;
-
-		g_variant_unref(result);
+		goto LEAVE;
 	}
+
+	g_variant_get(result, "(u&s)", max_level, &dbus_ret);
+	LOGI("g_dbus_connection_call_sync() success, method return value is (%u, %s)", *max_level, dbus_ret);
+	if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+		ret = MM_ERROR_SOUND_INTERNAL;
+
+	g_variant_unref(result);
+LEAVE:
 	g_object_unref(conn);
+
 	return ret;
 }
 
@@ -861,13 +867,14 @@ int _get_volume_level(const char *direction, const char *volume_type, unsigned i
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	const gchar *dbus_ret = NULL;
 
 	assert(direction);
 	assert(volume_type);
 	assert(level);
 
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
-	if (!conn && err) {
+	if (!conn) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free(err);
 		return MM_ERROR_SOUND_INTERNAL;
@@ -884,20 +891,22 @@ int _get_volume_level(const char *direction, const char *volume_type, unsigned i
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for GET_VOLUME_LEVEL error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		const gchar *dbus_ret = NULL;
-		g_variant_get(result, "(u&s)", level, &dbus_ret);
-		LOGI("g_dbus_connection_call_sync() success, method return value is (%u, %s)", *level, dbus_ret);
-		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
-			ret = MM_ERROR_SOUND_INTERNAL;
-
-		g_variant_unref(result);
+		goto LEAVE;
 	}
+
+	g_variant_get(result, "(u&s)", level, &dbus_ret);
+	LOGI("g_dbus_connection_call_sync() success, method return value is (%u, %s)", *level, dbus_ret);
+	if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+		ret = MM_ERROR_SOUND_INTERNAL;
+
+	g_variant_unref(result);
+LEAVE:
 	g_object_unref(conn);
+
 	return ret;
 }
 
@@ -907,12 +916,15 @@ int _set_volume_level(const char *direction, const char *volume_type, unsigned i
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	const gchar *dbus_ret = NULL;
+	int vret = 0;
+	char volume_path[VCONF_PATH_MAX] = {0,};
 
 	assert(direction);
 	assert(volume_type);
 
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
-	if (!conn && err) {
+	if (!conn) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free(err);
 		return MM_ERROR_SOUND_INTERNAL;
@@ -929,27 +941,27 @@ int _set_volume_level(const char *direction, const char *volume_type, unsigned i
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for SET_VOLUME_LEVEL error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		const gchar *dbus_ret = NULL;
-		g_variant_get(result, "(&s)", &dbus_ret);
-		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
-		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
-			ret = MM_ERROR_SOUND_INTERNAL;
-		else {
-			int vret = 0;
-			char volume_path[VCONF_PATH_MAX] = {0,};
-			/* Set volume value to VCONF */
-			snprintf(volume_path, sizeof(volume_path)-1, "%s%s", VCONF_PATH_PREFIX_VOLUME, volume_type);
-			if ((vret = vconf_set_int(volume_path, (int)level)))
-				LOGE("vconf_set_int(%s) failed..ret[%d]\n", volume_path, vret);
-		}
-		g_variant_unref(result);
+		goto LEAVE;
 	}
+
+	g_variant_get(result, "(&s)", &dbus_ret);
+	LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
+	if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+		ret = MM_ERROR_SOUND_INTERNAL;
+	else {
+		/* Set volume value to VCONF */
+		snprintf(volume_path, sizeof(volume_path)-1, "%s%s", VCONF_PATH_PREFIX_VOLUME, volume_type);
+		if ((vret = vconf_set_int(volume_path, (int)level)))
+			LOGE("vconf_set_int(%s) failed..ret[%d]\n", volume_path, vret);
+	}
+	g_variant_unref(result);
+LEAVE:
 	g_object_unref(conn);
+
 	return ret;
 }
 
@@ -959,12 +971,14 @@ int _get_current_volume_type(const char *direction, char **volume_type)
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	const gchar *dbus_volume_type = NULL;
+	const gchar *dbus_ret = NULL;
 
 	assert(direction);
 	assert(volume_type);
 
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
-	if (!conn && err) {
+	if (!conn) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free(err);
 		return MM_ERROR_SOUND_INTERNAL;
@@ -981,26 +995,27 @@ int _get_current_volume_type(const char *direction, char **volume_type)
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for GET_CURRENT_VOLUME_TYPE error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
-	} else {
-		const gchar *dbus_volume_type = NULL;
-		const gchar *dbus_ret = NULL;
-		g_variant_get(result, "(&s&s)", &dbus_volume_type, &dbus_ret);
-		LOGI("g_dbus_connection_call_sync() success, method return value is (%s, %s)", dbus_volume_type, dbus_ret);
-		if (!strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
-			ret = MM_ERROR_NONE;
-			*volume_type = strdup(dbus_volume_type);
-		} else if (!strncmp("STREAM_MANAGER_RETURN_ERROR_NO_STREAM", dbus_ret, strlen(dbus_ret)))
-			ret = MM_ERROR_SOUND_VOLUME_NO_INSTANCE;
-		else
-			ret = MM_ERROR_SOUND_INTERNAL;
-
-		g_variant_unref(result);
+		goto LEAVE;
 	}
+
+	g_variant_get(result, "(&s&s)", &dbus_volume_type, &dbus_ret);
+	LOGI("g_dbus_connection_call_sync() success, method return value is (%s, %s)", dbus_volume_type, dbus_ret);
+	if (!strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret))) {
+		ret = MM_ERROR_NONE;
+		*volume_type = strdup(dbus_volume_type);
+	} else if (!strncmp("STREAM_MANAGER_RETURN_ERROR_NO_STREAM", dbus_ret, strlen(dbus_ret)))
+		ret = MM_ERROR_SOUND_VOLUME_NO_INSTANCE;
+	else
+		ret = MM_ERROR_SOUND_INTERNAL;
+
+	g_variant_unref(result);
+LEAVE:
 	g_object_unref(conn);
+
 	return ret;
 }
 
@@ -1009,9 +1024,10 @@ void _update_focus_status(unsigned int index, unsigned int acquired_focus_status
 	GVariant *result = NULL;
 	GDBusConnection *conn = NULL;
 	GError *err = NULL;
+	const gchar *dbus_ret = NULL;
 
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
-	if (!conn && err) {
+	if (!conn) {
 		LOGE("g_bus_get_sync() error (%s)", err->message);
 		g_error_free(err);
 		return;
@@ -1028,19 +1044,20 @@ void _update_focus_status(unsigned int index, unsigned int acquired_focus_status
 							2000,
 							NULL,
 							&err);
-	if (!result && err) {
+	if (!result) {
 		LOGE("g_dbus_connection_call_sync() for UPDATE_FOCUS_STATUS error (%s)", err->message);
 		g_error_free(err);
-	} else {
-		const gchar *dbus_ret = NULL;
-		g_variant_get(result, "(&s)", &dbus_ret);
-		LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
-		if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
-			LOGE("failed to UPDATE_FOCUS_STATUS error (%s)", dbus_ret);
-
-		g_variant_unref(result);
+		goto LEAVE;
 	}
+	g_variant_get(result, "(&s)", &dbus_ret);
+	LOGI("g_dbus_connection_call_sync() success, method return value is (%s)", dbus_ret);
+	if (strncmp("STREAM_MANAGER_RETURN_OK", dbus_ret, strlen(dbus_ret)))
+		LOGE("failed to UPDATE_FOCUS_STATUS error (%s)", dbus_ret);
+
+	g_variant_unref(result);
+LEAVE:
 	g_object_unref(conn);
+
 	return;
 }
 
@@ -1062,29 +1079,34 @@ void _focus_session_interrupt_cb(mm_sound_focus_state_e state, const char *reaso
 		}
 		g_session_interrupt_cb_table.user_cb(e, g_session_interrupt_cb_table.user_data);
 	}
+
+	return;
 }
 
 void _device_connected_cb(sound_device_h device, bool is_connected, void *user_data)
 {
 	mm_sound_device_type_e type;
-	if (mm_sound_get_device_type(device, &type) != MM_ERROR_NONE)
+	if (mm_sound_get_device_type(device, &type) != MM_ERROR_NONE) {
 		LOGE("getting device type failed");
-	else {
-		switch (type) {
-		case MM_SOUND_DEVICE_TYPE_AUDIOJACK:
-		case MM_SOUND_DEVICE_TYPE_BLUETOOTH:
-		case MM_SOUND_DEVICE_TYPE_HDMI:
-		case MM_SOUND_DEVICE_TYPE_MIRRORING:
-		case MM_SOUND_DEVICE_TYPE_USB_AUDIO:
-			if (!is_connected) {
-				LOGI("sound device unplugged");
-				g_session_interrupt_cb_table.user_cb(SOUND_SESSION_INTERRUPTED_BY_EARJACK_UNPLUG, g_session_interrupt_cb_table.user_data);
-			}
-			break;
-		default:
-			break;
-		}
+		return;
 	}
+
+	switch (type) {
+	case MM_SOUND_DEVICE_TYPE_AUDIOJACK:
+	case MM_SOUND_DEVICE_TYPE_BLUETOOTH:
+	case MM_SOUND_DEVICE_TYPE_HDMI:
+	case MM_SOUND_DEVICE_TYPE_MIRRORING:
+	case MM_SOUND_DEVICE_TYPE_USB_AUDIO:
+		if (!is_connected) {
+			LOGI("sound device unplugged");
+			g_session_interrupt_cb_table.user_cb(SOUND_SESSION_INTERRUPTED_BY_EARJACK_UNPLUG, g_session_interrupt_cb_table.user_data);
+		}
+		break;
+	default:
+		break;
+	}
+
+	return;
 }
 
 /* This is an internal callback for the VOIP SESSION */
@@ -1344,10 +1366,9 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 	ret = mm_sound_focus_is_cb_thread(&is_focus_cb_thread);
 	if (ret)
 		return ret;
-	else {
-		if (is_focus_cb_thread)
-			return MM_ERROR_SOUND_INVALID_OPERATION;
-	}
+
+	if (is_focus_cb_thread)
+		return MM_ERROR_SOUND_INVALID_OPERATION;
 
 	if (!(stream_h->pa_mainloop = pa_threaded_mainloop_new()))
 		goto PA_ERROR;
@@ -1462,10 +1483,9 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 	ret = mm_sound_focus_is_cb_thread(&is_focus_cb_thread);
 	if (ret)
 		return ret;
-	else {
-		if (is_focus_cb_thread)
-			return MM_ERROR_SOUND_INVALID_OPERATION;
-	}
+
+	if (is_focus_cb_thread)
+		return MM_ERROR_SOUND_INVALID_OPERATION;
 
 	if (stream_h->pa_context) {
 		pa_context_disconnect(stream_h->pa_context);
@@ -1549,43 +1569,41 @@ int _add_device_for_stream_routing(sound_stream_info_s *stream_info, sound_devic
 
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_IN || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
-				if (stream_info->stream_conf_info.avail_in_devices[i]) {
-					if (!strncmp(stream_info->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
-						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
-							if (!stream_info->manual_route_info.route_in_devices[j]) {
-								stream_info->manual_route_info.route_in_devices[j] = (unsigned int)device_id;
-								added_successfully = true;
-								break;
-							}
-							if (stream_info->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
-								/* it was already set */
-								return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
-							}
+				if (!stream_info->stream_conf_info.avail_in_devices[i])
+					break;
+
+				if (!strncmp(stream_info->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
+						if (!stream_info->manual_route_info.route_in_devices[j]) {
+							stream_info->manual_route_info.route_in_devices[j] = (unsigned int)device_id;
+							added_successfully = true;
+							break;
+						}
+						if (stream_info->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
+							/* it was already set */
+							return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
 						}
 					}
-				} else {
-					break;
 				}
 			}
 		}
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_OUT || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
-				if (stream_info->stream_conf_info.avail_out_devices[i]) {
-					if (!strncmp(stream_info->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
-						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
-							if (!stream_info->manual_route_info.route_out_devices[j]) {
-								stream_info->manual_route_info.route_out_devices[j] = (unsigned int)device_id;
-								added_successfully = true;
-								break;
-							}
-							if (stream_info->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
-								/* it was already set */
-								return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
-							}
+				if (!stream_info->stream_conf_info.avail_out_devices[i])
+					break;
+
+				if (!strncmp(stream_info->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
+						if (!stream_info->manual_route_info.route_out_devices[j]) {
+							stream_info->manual_route_info.route_out_devices[j] = (unsigned int)device_id;
+							added_successfully = true;
+							break;
+						}
+						if (stream_info->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
+							/* it was already set */
+							return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
 						}
 					}
-				} else {
-					break;
 				}
 			}
 		}
@@ -1626,35 +1644,33 @@ int _remove_device_for_stream_routing(sound_stream_info_s *stream_info, sound_de
 
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_IN || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
-				if (stream_info->stream_conf_info.avail_in_devices[i]) {
-					if (!strncmp(stream_info->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
-						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
-							if (stream_info->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
-								removed_successfully = true;
-								stream_info->manual_route_info.route_in_devices[j] = 0;
-								break;
-							}
+				if (!stream_info->stream_conf_info.avail_in_devices[i])
+					break;
+
+				if (!strncmp(stream_info->stream_conf_info.avail_in_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
+						if (stream_info->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
+							removed_successfully = true;
+							stream_info->manual_route_info.route_in_devices[j] = 0;
+							break;
 						}
 					}
-				} else {
-					break;
 				}
 			}
 		}
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_OUT || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
-				if (stream_info->stream_conf_info.avail_out_devices[i]) {
-					if (!strncmp(stream_info->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
-						for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
-							if (stream_info->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
-								removed_successfully = true;
-								stream_info->manual_route_info.route_out_devices[j] = 0;
-								break;
-							}
+				if (!stream_info->stream_conf_info.avail_out_devices[i])
+					break;
+
+				if (!strncmp(stream_info->stream_conf_info.avail_out_devices[i], device_type_str, SOUND_DEVICE_TYPE_LEN)) {
+					for (j = 0; j < AVAIL_DEVICES_MAX; j++) {
+						if (stream_info->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
+							removed_successfully = true;
+							stream_info->manual_route_info.route_out_devices[j] = 0;
+							break;
 						}
 					}
-				} else {
-					break;
 				}
 			}
 		}
@@ -1716,24 +1732,28 @@ int _create_virtual_stream(sound_stream_info_s *stream_info, virtual_sound_strea
 		}
 	}
 	LOGI("stream_type[%s], native api[%s], is_available[%d]", stream_info->stream_type, name, result);
-	if (result == true) {
-		(*virtual_stream) = malloc(sizeof(virtual_sound_stream_info_s));
-		if (!(*virtual_stream))
-			ret = MM_ERROR_OUT_OF_MEMORY;
-		else {
-			memset((*virtual_stream), 0, sizeof(virtual_sound_stream_info_s));
-			(*virtual_stream)->stream_type = stream_info->stream_type;
-			(*virtual_stream)->pa_mainloop = stream_info->pa_mainloop;
-			(*virtual_stream)->pa_context = stream_info->pa_context;
-			(*virtual_stream)->pa_proplist = pa_proplist_new();
-			pa_proplist_sets((*virtual_stream)->pa_proplist, PA_PROP_MEDIA_ROLE, (*virtual_stream)->stream_type);
-			pa_proplist_setf((*virtual_stream)->pa_proplist, PA_PROP_MEDIA_PARENT_ID, "%u", stream_info->index);
-			(*virtual_stream)->state = _VSTREAM_STATE_READY;
-			(*virtual_stream)->stream_info = stream_info;
-		}
-	} else
+	if (result == false) {
 		ret = MM_ERROR_NOT_SUPPORT_API;
+		goto LEAVE;
+	}
 
+	(*virtual_stream) = malloc(sizeof(virtual_sound_stream_info_s));
+	if (!(*virtual_stream)) {
+		ret = MM_ERROR_OUT_OF_MEMORY;
+		goto LEAVE;
+	}
+
+	memset((*virtual_stream), 0, sizeof(virtual_sound_stream_info_s));
+	(*virtual_stream)->stream_type = stream_info->stream_type;
+	(*virtual_stream)->pa_mainloop = stream_info->pa_mainloop;
+	(*virtual_stream)->pa_context = stream_info->pa_context;
+	(*virtual_stream)->pa_proplist = pa_proplist_new();
+	pa_proplist_sets((*virtual_stream)->pa_proplist, PA_PROP_MEDIA_ROLE, (*virtual_stream)->stream_type);
+	pa_proplist_setf((*virtual_stream)->pa_proplist, PA_PROP_MEDIA_PARENT_ID, "%u", stream_info->index);
+	(*virtual_stream)->state = _VSTREAM_STATE_READY;
+	(*virtual_stream)->stream_info = stream_info;
+
+LEAVE:
 	return ret;
 }
 
