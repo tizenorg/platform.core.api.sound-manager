@@ -80,21 +80,24 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 	sound_stream_info_s *stream_h = malloc(sizeof(sound_stream_info_s));
 	if (!stream_h) {
 		ret = MM_ERROR_OUT_OF_MEMORY;
-	} else {
-		memset(stream_h, 0, sizeof(sound_stream_info_s));
-		ret = _convert_stream_type_for_internal(stream_type, &stream_h->stream_type);
-		if (ret == MM_ERROR_NONE) {
-			_set_focus_availability(stream_h);
-			ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
-			if (!ret) {
-				*stream_info = (sound_stream_info_h)stream_h;
-				SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
-				LOGI("stream_h(%p), index(%u), user_cb(%p), ret(0x%x)", stream_h, stream_h->index, stream_h->user_cb, ret);
-			}
-		}
-		if (ret)
-			free(stream_h);
+		goto LEAVE;
 	}
+
+	memset(stream_h, 0, sizeof(sound_stream_info_s));
+	ret = _convert_stream_type_for_internal(stream_type, &stream_h->stream_type);
+	if (ret == MM_ERROR_NONE) {
+		_set_focus_availability(stream_h);
+		ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
+		if (!ret) {
+			*stream_info = (sound_stream_info_h)stream_h;
+			SM_REF_FOR_STREAM_INFO(g_stream_info_count, ret);
+			LOGI("stream_h(%p), index(%u), user_cb(%p), ret(0x%x)", stream_h, stream_h->index, stream_h->user_cb, ret);
+		}
+	}
+
+LEAVE:
+	if (ret && stream_h)
+		free(stream_h);
 
 	SM_LEAVE_CRITICAL_SECTION(&g_stream_info_count_mutex);
 
@@ -135,6 +138,7 @@ int sound_manager_is_available_stream_information(sound_stream_info_h stream_inf
 		}
 	}
 	LOGI("stream_type[%s], native api[%s], is_available[%d]", stream_h->stream_type, name, *is_available);
+
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
