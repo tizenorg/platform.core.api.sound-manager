@@ -680,8 +680,8 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 	g_variant_unref(result);
 
 	if (info->priority == -1) {
-		LOGE("could not find the info of stream type(%s)", *stream_type);
-		ret = MM_ERROR_SOUND_INTERNAL;
+		LOGE("could not find the info of stream type(%s)", stream_type);
+		ret = MM_ERROR_NOT_SUPPORT_API;
 	}
 
 LEAVE:
@@ -1363,12 +1363,18 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 	int i = 0;
 	bool is_focus_cb_thread = false;
 
-	ret = mm_sound_focus_is_cb_thread(&is_focus_cb_thread);
-	if (ret)
+	if ((ret = mm_sound_focus_is_cb_thread(&is_focus_cb_thread)))
 		return ret;
 
 	if (is_focus_cb_thread)
 		return MM_ERROR_SOUND_INVALID_OPERATION;
+
+	/* get configuration information of this stream type */
+	if ((ret = _get_stream_conf_info(stream_h->stream_type, &stream_h->stream_conf_info)))
+		return ret;
+
+	LOGI("stream_conf_info : stream type[%s], priority[%d], route type[%d]",
+		stream_h->stream_type, stream_h->stream_conf_info.priority, stream_h->stream_conf_info.route_type);
 
 	if (!(stream_h->pa_mainloop = pa_threaded_mainloop_new()))
 		goto PA_ERROR;
@@ -1403,14 +1409,6 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 
 	/* get uniq id of this context */
 	stream_h->index = pa_context_get_index(stream_h->pa_context);
-
-	/* get configuration information of this stream type */
-	ret = _get_stream_conf_info(stream_h->stream_type, &stream_h->stream_conf_info);
-	if (ret)
-		goto PA_ERROR_WITH_UNLOCK;
-	else
-		LOGI("stream_conf_info : stream type[%s], priority[%d], route type[%d]",
-			stream_h->stream_type, stream_h->stream_conf_info.priority, stream_h->stream_conf_info.route_type);
 
 	pa_threaded_mainloop_unlock(stream_h->pa_mainloop);
 
