@@ -451,7 +451,7 @@ const char* _convert_api_name(native_api_e api_name)
 	return name;
 }
 
-void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data)
+void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason, const char *extra_info, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
 	int i = 0;
@@ -459,9 +459,9 @@ void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, m
 
 	LOGI(">> enter");
 
-	ret = _convert_stream_type_to_change_reason(reason_for_change, &change_reason);
+	ret = _convert_stream_type_to_change_reason(reason, &change_reason);
 	if (ret) {
-		LOGE("failed to _convert_stream_type_to_enum(), reason_for_change(%s), err(0x%08x)", reason_for_change, ret);
+		LOGE("failed to _convert_stream_type_to_enum(), reason(%s), err(0x%08x)", reason, ret);
 		goto LEAVE;
 	}
 
@@ -473,7 +473,7 @@ void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, m
 				sound_stream_info_arr[i]->acquired_focus |= focus_type;
 
 			LOGI("[FOCUS USER CALLBACK(%p) START]", sound_stream_info_arr[i]->user_cb);
-			sound_stream_info_arr[i]->user_cb((sound_stream_info_h)sound_stream_info_arr[i], change_reason, additional_info, sound_stream_info_arr[i]->user_data);
+			sound_stream_info_arr[i]->user_cb((sound_stream_info_h)sound_stream_info_arr[i], change_reason, extra_info, sound_stream_info_arr[i]->user_data);
 			LOGI("[FOCUS USER CALLBACK(%p) END]", sound_stream_info_arr[i]->user_cb);
 			break;
 		}
@@ -487,17 +487,17 @@ LEAVE:
 	return;
 }
 
-void _focus_watch_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason_for_change, const char *additional_info, void *user_data)
+void _focus_watch_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason, const char *extra_info, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_focus_change_reason_e change_reason = SOUND_STREAM_FOCUS_CHANGED_BY_MEDIA;
 
-	ret = _convert_stream_type_to_change_reason(reason_for_change, &change_reason);
+	ret = _convert_stream_type_to_change_reason(reason, &change_reason);
 	if (ret)
-		LOGE("failed to _convert_stream_type_to_enum(), reason_for_change(%s), err(0x%08x)", reason_for_change, ret);
+		LOGE("failed to _convert_stream_type_to_enum(), reason(%s), err(0x%08x)", reason, ret);
 
 	if (g_focus_watch_cb_table.user_cb)
-		g_focus_watch_cb_table.user_cb(focus_type, state, change_reason, additional_info, g_focus_watch_cb_table.user_data);
+		g_focus_watch_cb_table.user_cb(focus_type, state, change_reason, extra_info, g_focus_watch_cb_table.user_data);
 
 	return;
 }
@@ -1061,21 +1061,21 @@ LEAVE:
 	return;
 }
 
-void _focus_session_interrupt_cb(mm_sound_focus_state_e state, const char *reason_for_change, bool is_wcb, void *user_data)
+void _focus_session_interrupt_cb(mm_sound_focus_state_e state, const char *reason, bool is_wcb, void *user_data)
 {
 	sound_session_interrupted_code_e e;
-	LOGE("session interrupted by [%s]", reason_for_change);
+	LOGE("session interrupted by [%s]", reason);
 	if (g_session_interrupt_cb_table.user_cb) {
 		if (is_wcb) {
 			if (state == FOCUS_IS_RELEASED)
 				e = SOUND_SESSION_INTERRUPTED_COMPLETED;
 			else
-				_convert_stream_type_to_interrupt_reason(reason_for_change, &e);
+				_convert_stream_type_to_interrupt_reason(reason, &e);
 		} else {
 			if (state == FOCUS_IS_ACQUIRED)
 				e = SOUND_SESSION_INTERRUPTED_COMPLETED;
 			else
-				_convert_stream_type_to_interrupt_reason(reason_for_change, &e);
+				_convert_stream_type_to_interrupt_reason(reason, &e);
 		}
 		g_session_interrupt_cb_table.user_cb(e, g_session_interrupt_cb_table.user_data);
 	}
@@ -1110,10 +1110,10 @@ void _device_connected_cb(sound_device_h device, bool is_connected, void *user_d
 }
 
 /* This is an internal callback for the VOIP SESSION */
-void _voip_focus_state_change_callback(sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data)
+void _voip_focus_state_change_callback(sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason, const char *extra_info, void *user_data)
 {
 	sound_stream_info_s *info = (sound_stream_info_s *)stream_info;
-	LOGI(">> enter, stream_info(%p), change_reason(%d), additional_info(%s)", stream_info, reason_for_change, additional_info);
+	LOGI(">> enter, stream_info(%p), change_reason(%d), extra_info(%s)", stream_info, reason, extra_info);
 
 	if (!info) {
 		LOGE("stream info is null");
@@ -1129,7 +1129,7 @@ void _voip_focus_state_change_callback(sound_stream_info_h stream_info, sound_st
 			/* destroy virtual stream handle */
 			_destroy_virtual_stream(g_voip_vstream_h);
 			g_voip_vstream_h = NULL;
-			LOGW("internal voip stream is interrupted by (%d)", reason_for_change);
+			LOGW("internal voip stream is interrupted by (%d)", reason);
 		}
 	}
 
@@ -1407,7 +1407,7 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 		pa_threaded_mainloop_wait(stream_h->pa_mainloop);
 	}
 
-	/* get uniq id of this context */
+	/* get index of this context */
 	stream_h->index = pa_context_get_index(stream_h->pa_context);
 
 	pa_threaded_mainloop_unlock(stream_h->pa_mainloop);

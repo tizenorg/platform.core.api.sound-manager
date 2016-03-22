@@ -222,7 +222,7 @@ int sound_manager_get_index_from_stream_information(sound_stream_info_h stream_i
  * @brief Gets the reason for the current acquired playback focus.
  * @since_tizen 3.0
  * @param[out]	acquired_by	The reason for the current acquired playback focus
- * @param[out]	additional_info The additional information of the acquired playback focus (this can be null)
+ * @param[out]	extra_info The extra information of the acquired playback focus (this can be null)
  *
  * @remarks	If there is no acquired playback focus in this system, it'll return #SOUND_MANAGER_ERROR_NO_DATA.
  *
@@ -233,14 +233,14 @@ int sound_manager_get_index_from_stream_information(sound_stream_info_h stream_i
  * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
  * @see sound_manager_get_reason_for_current_recording_focus()
  */
-int sound_manager_get_reason_for_current_playback_focus(sound_stream_focus_change_reason_e *acquired_by, char **additional_info);
+int sound_manager_get_reason_for_current_playback_focus(sound_stream_focus_change_reason_e *acquired_by, char **extra_info);
 
 /**
  * @internal
  * @brief Gets the reason for the current acquired recording focus.
  * @since_tizen 3.0
  * @param[out]	acquired_by	The reason for the current acquired recording focus
- * @param[out]	additional_info The additional information of the acquired recording focus (this can be null)
+ * @param[out]	extra_info The extra information of the acquired recording focus (this can be null)
  *
  * @remarks	If there is no acquired recording focus in this system, it'll return #SOUND_MANAGER_ERROR_NO_DATA.
  *
@@ -251,7 +251,7 @@ int sound_manager_get_reason_for_current_playback_focus(sound_stream_focus_chang
  * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
  * @see sound_manager_get_reason_for_current_playback_focus()
  */
-int sound_manager_get_reason_for_current_recording_focus(sound_stream_focus_change_reason_e *acquired_by, char **additional_info);
+int sound_manager_get_reason_for_current_recording_focus(sound_stream_focus_change_reason_e *acquired_by, char **extra_info);
 
 /**
  * @internal
