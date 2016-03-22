@@ -336,8 +336,8 @@ typedef void (*sound_manager_volume_changed_cb) (sound_type_e type, unsigned int
  * @brief Called when the state of focus that belongs to the stream_info is changed.
  * @since_tizen 3.0
  * @param[in]   stream_info	The handle of stream information
- * @param[in]   reason_for_change	The reason for state change of the focus
- * @param[in]   additional_info	The additional information
+ * @param[in]   reason		The reason for state change of the focus
+ * @param[in]   extra_info	The extra information
  * @param[in]   user_data	The user data passed from the callback registration function
  *
  * @remarks	This function is issued in the internal thread of the sound manager.\n
@@ -348,15 +348,15 @@ typedef void (*sound_manager_volume_changed_cb) (sound_type_e type, unsigned int
  * @see sound_manager_create_stream_information()
  * @see sound_manager_destroy_stream_information()
  */
-typedef void (*sound_stream_focus_state_changed_cb) (sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
+typedef void (*sound_stream_focus_state_changed_cb) (sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason, const char *extra_info, void *user_data);
 
 /**
  * @brief Called when the focus state for each sound stream type is changed regardless of the process.
  * @since_tizen 3.0
- * @param[in]   changed_focus_mask	The changed focus mask
- * @param[in]   changed_focus_state	The changed focus state
- * @param[in]   reason_for_change	The reason for state change of the focus
- * @param[in]   additional_info	The additional information
+ * @param[in]   focus_mask	The changed focus mask
+ * @param[in]   focus_state	The changed focus state
+ * @param[in]   reason		The reason for state change of the focus
+ * @param[in]   extra_info	The extra information
  * @param[in]   user_data	The user data passed from the callback registration function
  *
  * @remarks	This function is issued in the internal thread of the sound manager.\n
@@ -366,7 +366,7 @@ typedef void (*sound_stream_focus_state_changed_cb) (sound_stream_info_h stream_
  * @see sound_manager_set_focus_state_watch_cb()
  * @see sound_manager_unset_focus_state_watch_cb()
  */
-typedef void (*sound_stream_focus_state_watch_cb) (sound_stream_focus_mask_e changed_focus_mask, sound_stream_focus_state_e changed_focus_state, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data);
+typedef void (*sound_stream_focus_state_watch_cb) (sound_stream_focus_mask_e focus_mask, sound_stream_focus_state_e focus_state, sound_stream_focus_change_reason_e reason, const char *extra_info, void *user_data);
 
 /**
  * @}
@@ -679,8 +679,8 @@ int sound_manager_apply_stream_routing(sound_stream_info_h stream_info);
  * @brief Acquires the stream focus.
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
- * @param[in]	focus_mask		The focus mask that user wants to acquire
- * @param[in]	additional_info	Additional information for this request (optional, this can be null)
+ * @param[in]	focus_mask	The focus mask that user wants to acquire
+ * @param[in]	extra_info	The Extra information for this request (optional, this can be null)
  *
  * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
  *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
@@ -699,14 +699,14 @@ int sound_manager_apply_stream_routing(sound_stream_info_h stream_info);
  * @see sound_manager_release_focus()
  * @see sound_manager_get_focus_state()
  */
-int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *additional_info);
+int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *extra_info);
 
 /**
  * @brief Releases the acquired focus.
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
- * @param[in]	focus_mask		The focus mask that user wants to release
- * @param[in]	additional_info	Additional information for this request (optional, this can be null)
+ * @param[in]	focus_mask	The focus mask that user wants to release
+ * @param[in]	extra_info	TheExtra information for this request (optional, this can be null)
  *
  * @remarks	Do not call this API within sound_stream_focus_state_changed_cb() and sound_stream_focus_state_watch_cb(),\n
  *	otherwise SOUND_MANAGER_ERROR_INVALID_OPERATION will be returned.
@@ -724,7 +724,7 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
  * @see sound_manager_acquire_focus()
  * @see sound_manager_get_focus_state()
  */
-int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *additional_info);
+int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *extra_info);
 
 /**
  * @brief Gets the state of focus.

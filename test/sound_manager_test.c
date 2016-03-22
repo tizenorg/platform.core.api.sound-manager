@@ -92,13 +92,13 @@ sound_device_mask_e g_device_mask = SOUND_DEVICE_ALL_MASK;
 sound_stream_info_h g_stream_info_h = NULL;
 virtual_sound_stream_h g_vstream_h = NULL;
 
-void focus_callback(sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data)
+void focus_callback(sound_stream_info_h stream_info, sound_stream_focus_change_reason_e reason, const char *extra_info, void *user_data)
 {
 	int ret = SOUND_MANAGER_ERROR_NONE;
 	sound_stream_focus_state_e playback_focus_state;
 	sound_stream_focus_state_e recording_focus_state;
 	g_print("*** FOCUS callback is called, stream_info(%p) ***\n", stream_info);
-	g_print(" - reason_for_change(%d), additional_info(%s), user_data(%p)\n", reason_for_change, additional_info, user_data);
+	g_print(" - change_reason(%d), extra_info(%s), user_data(%p)\n", reason, extra_info, user_data);
 
 	ret = sound_manager_get_focus_state(stream_info, &playback_focus_state, &recording_focus_state);
 	if (!ret)
@@ -119,11 +119,11 @@ void focus_callback(sound_stream_info_h stream_info, sound_stream_focus_change_r
 	return;
 }
 
-void focus_watch_callback(sound_stream_focus_mask_e  changed_focus_type, sound_stream_focus_state_e changed_focus_state, sound_stream_focus_change_reason_e reason_for_change, const char *additional_info, void *user_data)
+void focus_watch_callback(sound_stream_focus_mask_e  focus_mask, sound_stream_focus_state_e focus_state, sound_stream_focus_change_reason_e reason, const char *extra_info, void *user_data)
 {
 	g_print("*** FOCUS WATCH callback is called ***\n");
-	g_print(" - changed_focus_type(%d), changed_focus_state(%d), reason_for_change(%d), additional_info(%s), user_data(%p)\n",
-				changed_focus_type, changed_focus_state, reason_for_change, additional_info, user_data);
+	g_print(" - changed_focus_mask(%d), changed_focus_state(%d), change_reason(%d), extra_info(%s), user_data(%p)\n",
+			focus_mask, focus_state, reason, extra_info, user_data);
 	return;
 }
 
@@ -1232,7 +1232,7 @@ static void interpret(char *cmd)
 			focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
 			break;
 		}
-		ret = sound_manager_acquire_focus(g_stream_info_h, focus_mask, "sound_manager_test_ac");
+		ret = sound_manager_acquire_focus(g_stream_info_h, focus_mask, "sound_manager_test(acquire_focus)");
 		if (ret)
 			g_print("fail to sound_manager_acquire_focus(), ret(0x%x)\n", ret);
 
@@ -1259,7 +1259,7 @@ static void interpret(char *cmd)
 			focus_mask = SOUND_STREAM_FOCUS_FOR_PLAYBACK;
 			break;
 		}
-		ret = sound_manager_release_focus(g_stream_info_h, focus_mask, "sound_manager_test_rel");
+		ret = sound_manager_release_focus(g_stream_info_h, focus_mask, "sound_manager_test(release_focus)");
 		if (ret)
 				g_print("fail to sound_manager_acquire_focus(), ret(0x%x)\n", ret);
 

@@ -305,7 +305,7 @@ int sound_manager_get_focus_reacquisition(sound_stream_info_h stream_info, bool 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *additional_info)
+int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *extra_info)
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
@@ -317,7 +317,7 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
 	if (stream_h->is_focus_unavailable)
 		return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 
-	ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
+	ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, extra_info);
 	if (ret == MM_ERROR_NONE) {
 		stream_h->acquired_focus |= focus_mask;
 		_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
@@ -326,7 +326,7 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *additional_info)
+int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_focus_mask_e focus_mask, const char *extra_info)
 {
 	int ret = MM_ERROR_NONE;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
@@ -335,7 +335,7 @@ int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_fo
 
 	SM_INSTANCE_CHECK(stream_h);
 
-	ret = mm_sound_release_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, additional_info);
+	ret = mm_sound_release_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, extra_info);
 	if (ret == MM_ERROR_NONE) {
 		stream_h->acquired_focus &= ~focus_mask;
 		_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
