@@ -122,7 +122,7 @@ int sound_manager_get_master_volume(int *level);
  * @details	To apply the stream policy according to this stream information, this handle should be passed to other APIs\n
  *	related to playback or recording. (e.g., player, wav-player, audio-io, etc.)
  * @param[in]	stream_type	The type of stream for internal usage
- * @param[in]	callback	The focus state change callback function (mandatory)
+ * @param[in]	callback	The focus state change callback function
  * @param[in]	user_data	The user data to be passed to the callback function
  * @param[out]	stream_info	The handle of stream information
  *

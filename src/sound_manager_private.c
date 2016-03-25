@@ -1413,26 +1413,28 @@ int _make_pa_connection_and_register_focus(sound_stream_info_s *stream_h, sound_
 	pa_threaded_mainloop_unlock(stream_h->pa_mainloop);
 
 	/* register focus */
-	ret = mm_sound_register_focus(stream_h->index, stream_h->stream_type, _focus_state_change_callback, user_data);
-	if (ret == MM_ERROR_NONE) {
-		int i = 0;
-		stream_h->user_cb = callback;
-		stream_h->user_data = user_data;
-		for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
-			if (sound_stream_info_arr[i] == NULL) {
-				sound_stream_info_arr[i] = stream_h;
-				break;
+	if (!stream_h->is_focus_unavailable) {
+		ret = mm_sound_register_focus(stream_h->index, stream_h->stream_type, _focus_state_change_callback, user_data);
+		if (ret == MM_ERROR_NONE) {
+			int i = 0;
+			stream_h->user_cb = callback;
+			stream_h->user_data = user_data;
+			for (i = 0; i < SOUND_STREAM_INFO_ARR_MAX; i++) {
+				if (sound_stream_info_arr[i] == NULL) {
+					sound_stream_info_arr[i] = stream_h;
+					break;
+				}
 			}
-		}
-		if (i == SOUND_STREAM_INFO_ARR_MAX) {
-			LOGE("client sound stream info array is full");
-			ret = mm_sound_unregister_focus(stream_h->index);
+			if (i == SOUND_STREAM_INFO_ARR_MAX) {
+				LOGE("client sound stream info array is full");
+				ret = mm_sound_unregister_focus(stream_h->index);
+				goto PA_ERROR;
+			}
+		} else {
+			LOGE("failed to register focus, ret(0x%x)", ret);
+			/* disconnect */
 			goto PA_ERROR;
 		}
-	} else {
-		LOGE("failed to register focus, ret(0x%x)", ret);
-		/* disconnect */
-		goto PA_ERROR;
 	}
 	goto SUCCESS;
 PA_ERROR_WITH_UNLOCK:
@@ -1497,9 +1499,11 @@ int _destroy_pa_connection_and_unregister_focus(sound_stream_info_s *stream_h)
 	}
 
 	/* unregister focus */
-	ret = mm_sound_unregister_focus(stream_h->index);
-	if (ret)
-		LOGE("failed to unregister focus, ret(0x%x)", ret);
+	if (!stream_h->is_focus_unavailable) {
+		ret = mm_sound_unregister_focus(stream_h->index);
+		if (ret)
+			LOGE("failed to unregister focus, ret(0x%x)", ret);
+	}
 
 	for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
 		if (stream_h->stream_conf_info.avail_in_devices[i])

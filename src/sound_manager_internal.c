@@ -73,7 +73,6 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 	LOGI(">> enter");
 
 	SM_NULL_ARG_CHECK(stream_info);
-	SM_NULL_ARG_CHECK(callback);
 
 	SM_ENTER_CRITICAL_SECTION_WITH_RETURN(&g_stream_info_count_mutex, MM_ERROR_SOUND_INTERNAL);
 
@@ -87,6 +86,10 @@ int sound_manager_create_stream_information_internal(sound_stream_type_internal_
 	ret = _convert_stream_type_for_internal(stream_type, &stream_h->stream_type);
 	if (ret == MM_ERROR_NONE) {
 		_set_focus_availability(stream_h);
+		if (!stream_h->is_focus_unavailable && !callback) {
+			ret = MM_ERROR_INVALID_ARGUMENT;
+			goto LEAVE;
+		}
 		ret = _make_pa_connection_and_register_focus(stream_h, callback, user_data);
 		if (!ret) {
 			*stream_info = (sound_stream_info_h)stream_h;
