@@ -584,7 +584,7 @@ int _get_stream_conf_info(const char *stream_type, stream_conf_info_s *info)
 							2000,
 							NULL,
 							&err);
-	if (!result) {
+	if (!result && err) {
 		LOGE("g_dbus_connection_call_sync() for GET_STREAM_INFO error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
@@ -791,7 +791,7 @@ int _set_route_option(unsigned int index, const char *name, int value)
 							2000,
 							NULL,
 							&err);
-	if (!result) {
+	if (!result && err) {
 		LOGE("g_dbus_connection_call_sync() for SET_STREAM_ROUTE_OPTION error (%s)", err->message);
 		g_error_free(err);
 		ret = MM_ERROR_SOUND_INTERNAL;
