@@ -1,6 +1,6 @@
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
-Version:    0.3.52
+Version:    0.3.53
 Release:    0
 Group:      Multimedia/API
 License:    Apache-2.0
@@ -42,9 +42,7 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/license
-mkdir -p %{buildroot}/usr/bin
 cp LICENSE %{buildroot}/usr/share/license/%{name}
-cp test/sound_manager_test %{buildroot}/usr/bin
 
 %make_install
 
@@ -58,7 +56,7 @@ cp test/sound_manager_test %{buildroot}/usr/bin
 %manifest %{name}.manifest
 %{_libdir}/libcapi-media-sound-manager.so.*
 %{_datadir}/license/%{name}
-/usr/bin/sound_manager_test
+%{_bindir}/sound_manager_test
 
 %files devel
 %manifest %{name}.manifest
