@@ -1,6 +1,6 @@
 Name:       capi-media-sound-manager
 Summary:    Sound Manager library
-Version:    0.3.53
+Version:    0.3.54
 Release:    0
 Group:      Multimedia/API
 License:    Apache-2.0
@@ -34,7 +34,18 @@ A Sound Manager library in Tizen C API (DEV)
 %setup -q
 cp %{SOURCE1001} .
 
+%if %{with TIZEN_PRODUCT_TV}
+echo "tizen_product_tv"
+mv include/sound_manager_internal_tv.h include/sound_manager_internal.h
+%else
+rm include/sound_manager_internal_tv.h
+%endif
+
 %build
+%if %{with TIZEN_PRODUCT_TV}
+export CFLAGS+=" -DTIZEN_TV_PROD"
+%endif
+
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %cmake . -DFULLVER=%{version} -DMAJORVER=${MAJORVER}
 %__make %{?jobs:-j%jobs}
