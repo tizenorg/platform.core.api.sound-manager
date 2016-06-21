@@ -23,6 +23,7 @@
 extern int g_stream_info_count;
 extern pthread_mutex_t g_stream_info_count_mutex;
 
+#ifndef TIZEN_TV_PROD
 int sound_manager_get_max_master_volume(int *max_level)
 {
 	int ret = MM_ERROR_NONE;
@@ -65,6 +66,7 @@ int sound_manager_get_master_volume(int *level)
 
 	return _convert_sound_manager_error_code(__func__, ret);
 }
+#endif
 
 int sound_manager_create_stream_information_internal(sound_stream_type_internal_e stream_type, sound_stream_focus_state_changed_cb callback, void *user_data, sound_stream_info_h *stream_info)
 {
