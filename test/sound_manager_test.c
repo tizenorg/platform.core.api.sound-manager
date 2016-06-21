@@ -78,9 +78,11 @@ enum {
 	CURRENT_STATUS_START_VIRTUAL_STREAM,
 	CURRENT_STATUS_STOP_VIRTUAL_STREAM,
 	CURRENT_STATUS_DESTROY_VIRTUAL_STREAM,
+#ifndef TIZEN_TV_PROD
 	CURRENT_STATUS_GET_MAX_MASTER_VOLUME,
 	CURRENT_STATUS_SET_MASTER_VOLUME,
 	CURRENT_STATUS_GET_MASTER_VOLUME,
+#endif
 };
 
 
@@ -234,12 +236,14 @@ void _interpret_main_menu(char *cmd)
 		g_menu_state = CURRENT_STATUS_STOP_VIRTUAL_STREAM;
 	else if (strncmp(cmd, "vdt", 3) == 0)
 		g_menu_state = CURRENT_STATUS_DESTROY_VIRTUAL_STREAM;
+#ifndef TIZEN_TV_PROD
 	if (strncmp(cmd, "mgx", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_MAX_MASTER_VOLUME;
 	else if (strncmp(cmd, "msv", 3) == 0)
 		g_menu_state = CURRENT_STATUS_SET_MASTER_VOLUME;
 	else if (strncmp(cmd, "mgv", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_MASTER_VOLUME;
+#endif
 	else if (strncmp(cmd, "q", 3) == 0) {
 		g_print("closing the test suite\n");
 		quit_program();
@@ -263,9 +267,11 @@ void display_sub_basic()
 	g_print("ut. Unset Current Sound Type \n");
 	g_print("vc. Set Volume Changed CB \t");
 	g_print("uv. Unset Volume Changed CB \n");
+#ifndef TIZEN_TV_PROD
 	g_print("mgx. *Get Max Master Volume \t");
 	g_print("mgv. *Get Master Volume \t");
 	g_print("msv. *Set Master Volume \n");
+#endif
 	g_print("-----------------------------------------------------------------------------------------\n");
 	g_print("                                    SESSION MODULE \n");
 	g_print("-----------------------------------------------------------------------------------------\n");
@@ -429,12 +435,14 @@ static void displaymenu()
 		g_print("*** press enter to stop virtual stream\n");
 	else if (g_menu_state == CURRENT_STATUS_DESTROY_VIRTUAL_STREAM)
 		g_print("*** press enter to destroy virtual stream\n");
+#ifndef TIZEN_TV_PROD
 	else if (g_menu_state == CURRENT_STATUS_GET_MAX_MASTER_VOLUME)
 		g_print("*** press enter to get max master volume level\n");
 	else if (g_menu_state == CURRENT_STATUS_SET_MASTER_VOLUME)
 		g_print("*** input master volume level\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_MASTER_VOLUME)
 		g_print("*** press enter to get master volume level\n");
+#endif
 	else {
 		g_print("*** unknown status.\n");
 		quit_program();
@@ -1466,6 +1474,7 @@ static void interpret(char *cmd)
 		reset_menu_state();
 		break;
 	}
+#ifndef TIZEN_TV_PROD
 	case CURRENT_STATUS_GET_MAX_MASTER_VOLUME: {
 		int max_level;
 		if (sound_manager_get_max_master_volume(&max_level) != SOUND_MANAGER_ERROR_NONE)
@@ -1497,6 +1506,7 @@ static void interpret(char *cmd)
 		reset_menu_state();
 		break;
 	}
+#endif
 	}
 	g_timeout_add(100, timeout_menu_display, 0);
 }
