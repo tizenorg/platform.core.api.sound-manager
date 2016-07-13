@@ -1549,25 +1549,20 @@ int _add_device_for_stream_routing(sound_stream_info_s *stream_info, sound_devic
 #if 0
 		/* not ready yet. after preparing in libmm-sound, it'll be enabled */
 		if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL_EXT) {
-			ret = mm_sound_get_device_use_internal_codec(device, &use_internal_codec);
-			if (ret)
-				return _convert_sound_manager_error_code(__func__, ret);
+			if ((ret = mm_sound_get_device_use_internal_codec(device, &use_internal_codec)))
+				return ret;
 			if (use_internal_codec)
-				return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
+				return MM_ERROR_POLICY_INTERNAL;
 		}
 #endif
-		ret = mm_sound_get_device_id(device, &device_id);
-		if (ret)
-			return _convert_sound_manager_error_code(__func__, ret);
-		ret = mm_sound_get_device_type(device, &device_type);
-		if (ret)
-			return _convert_sound_manager_error_code(__func__, ret);
-		ret = _convert_device_type(device_type, &device_type_str);
-		if (ret)
-			return _convert_sound_manager_error_code(__func__, ret);
-		ret = mm_sound_get_device_io_direction(device, &device_direction);
-		if (ret)
-			return _convert_sound_manager_error_code(__func__, ret);
+		if ((ret = mm_sound_get_device_id(device, &device_id)))
+			return ret;
+		if ((ret = mm_sound_get_device_type(device, &device_type)))
+			return ret;
+		if ((ret = _convert_device_type(device_type, &device_type_str)))
+			return ret;
+		if ((ret = mm_sound_get_device_io_direction(device, &device_direction)))
+			return ret;
 
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_IN || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
@@ -1583,7 +1578,7 @@ int _add_device_for_stream_routing(sound_stream_info_s *stream_info, sound_devic
 						}
 						if (stream_info->manual_route_info.route_in_devices[j] == (unsigned int)device_id) {
 							/* it was already set */
-							return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
+							return MM_ERROR_POLICY_DUPLICATED;
 						}
 					}
 				}
@@ -1603,7 +1598,7 @@ int _add_device_for_stream_routing(sound_stream_info_s *stream_info, sound_devic
 						}
 						if (stream_info->manual_route_info.route_out_devices[j] == (unsigned int)device_id) {
 							/* it was already set */
-							return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_DUPLICATED);
+							return MM_ERROR_POLICY_DUPLICATED;
 						}
 					}
 				}
@@ -1633,16 +1628,14 @@ int _remove_device_for_stream_routing(sound_stream_info_s *stream_info, sound_de
 
 	if (stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL ||
 			stream_info->stream_conf_info.route_type == STREAM_ROUTE_TYPE_MANUAL_EXT) {
-		ret = mm_sound_get_device_id(device, &device_id);
-		if (ret)
-			return _convert_sound_manager_error_code(__func__, ret);
-		ret = mm_sound_get_device_type(device, &device_type);
-		if (ret)
-			return _convert_sound_manager_error_code(__func__, ret);
-		ret = _convert_device_type(device_type, &device_type_str);
-		ret = mm_sound_get_device_io_direction(device, &device_direction);
-		if (ret)
-			return _convert_sound_manager_error_code(__func__, ret);
+		if ((ret = mm_sound_get_device_id(device, &device_id)))
+			return ret;
+		if ((ret = mm_sound_get_device_type(device, &device_type)))
+			return ret;
+		if ((ret = _convert_device_type(device_type, &device_type_str)))
+			return ret;
+		if ((ret = mm_sound_get_device_io_direction(device, &device_direction)))
+			return ret;
 
 		if (device_direction == MM_SOUND_DEVICE_IO_DIRECTION_IN || device_direction == MM_SOUND_DEVICE_IO_DIRECTION_BOTH) {
 			for (i = 0; i < AVAIL_DEVICES_MAX; i++) {
@@ -1707,7 +1700,7 @@ int _apply_stream_routing(sound_stream_info_s *stream_info)
 		if (need_to_apply)
 			ret = _set_manual_route_info(stream_info->index, &stream_info->manual_route_info);
 		else
-			_convert_sound_manager_error_code(__func__, MM_ERROR_SOUND_INVALID_STATE);
+			return MM_ERROR_SOUND_INVALID_STATE;
 
 	} else
 		ret = MM_ERROR_SOUND_INVALID_STATE;
