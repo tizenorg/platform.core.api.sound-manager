@@ -159,6 +159,8 @@ typedef struct _sound_stream_info_s {
 	pa_context *pa_context;
 	stream_conf_info_s stream_conf_info;
 	sound_stream_focus_mask_e acquired_focus;
+	sound_behavior_flag_e request_flags;
+	sound_behavior_flag_e required_flags;
 	sound_stream_focus_state_changed_cb user_cb;
 	void *user_data;
 	manual_route_info_s manual_route_info;
@@ -224,7 +226,7 @@ void _voip_focus_state_change_callback(sound_stream_info_h stream_info, sound_st
 
 void _device_connected_cb(sound_device_h device, bool is_connected, void *user_data);
 
-void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason, const char *extra_info, void *user_data);
+void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason, int option, const char *extra_info, void *user_data);
 
 void _focus_watch_callback(int id, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason, const char *extra_info, void *user_data);
 

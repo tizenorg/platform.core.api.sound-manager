@@ -141,6 +141,16 @@ typedef enum {
 } sound_stream_focus_state_e;
 
 /**
+ * @brief Enumeration for sound behavior flag.
+ * @since_tizen 3.0
+ */
+typedef enum {
+	SOUND_BEHAVIOR_NONE          = 0x0000,   /**< Flag for none (default) */
+	SOUND_BEHAVIOR_NO_RESUME     = 0x0001,   /**< Flag for no resumption */
+	SOUND_BEHAVIOR_FADING        = 0x0002,   /**< Flag for the fading effect */
+} sound_behavior_flag_e;
+
+/**
  * @}
  */
 
@@ -155,11 +165,11 @@ typedef enum {
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  */
 typedef enum {
-	SOUND_SESSION_TYPE_MEDIA = 0,		/**< Media type */
-	SOUND_SESSION_TYPE_ALARM,			/**< Alarm type */
-	SOUND_SESSION_TYPE_NOTIFICATION,		/**< Notification type */
-	SOUND_SESSION_TYPE_EMERGENCY,			/**< Emergency type */
-	SOUND_SESSION_TYPE_VOIP,			/**< VOIP type */
+	SOUND_SESSION_TYPE_MEDIA = 0,      /**< Media type */
+	SOUND_SESSION_TYPE_ALARM,          /**< Alarm type */
+	SOUND_SESSION_TYPE_NOTIFICATION,   /**< Notification type */
+	SOUND_SESSION_TYPE_EMERGENCY,      /**< Emergency type */
+	SOUND_SESSION_TYPE_VOIP,           /**< VoIP type */
 } sound_session_type_e;
 
 /**
@@ -529,7 +539,7 @@ int sound_manager_unset_current_sound_type(void);
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #SOUND_MANAGER_ERROR_INTERNAL Internal error inside the sound system
- * @post  sound_manager_volume_changed_cb() will be invoked.
+ * @post sound_manager_volume_changed_cb() will be invoked.
  * @see sound_manager_unset_volume_changed_cb()
  * @see sound_manager_volume_changed_cb()
  */
@@ -608,6 +618,28 @@ int sound_manager_create_stream_information(sound_stream_type_e stream_type, sou
  * @see sound_manager_get_focus_state()
  */
 int sound_manager_destroy_stream_information(sound_stream_info_h stream_info);
+
+/**
+ * @brief Gets the sound type of the stream information.
+ * @since_tizen 3.0
+ * @param[in]	stream_info	The handle of stream information
+ * @param[out]	sound_type	The sound type
+ *
+ * @remarks	In case of the stream_info made with #SOUND_STREAM_TYPE_EMERGENCY, it'll return #SOUND_MANAGER_ERROR_NO_DATA.\n
+ *	Because there is no sound_type_e matched to this stream_info.
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
+ * @pre Call sound_manager_create_stream_information() before calling this function.
+ * @see sound_manager_create_stream_information()
+ * @see sound_manager_set_volume()
+ * @see sound_manager_get_max_volume()
+ * @see sound_manager_get_volume()
+ */
+int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *sound_type);
 
 /**
  * @brief Adds the device to the stream information for the stream routing.
@@ -751,8 +783,8 @@ int sound_manager_get_focus_state(sound_stream_info_h stream_info, sound_stream_
  * @param[in]	stream_info	The handle of stream information
  * @param[in]	enable	The auto focus reacquisition property to set : (@c true = enable, @c false = disable)
  *
- * @remarks	The focus reacquistion is set as default.
- *	 If you don't want to reacquire the focus you've lost automatically, disable the focus reacqusition setting by using this API and vice versa.
+ * @remarks	The focus reacquisition is set as default.
+ *	If you don't want to reacquire the focus you've lost automatically, disable the focus reacqusition setting by using this API and vice versa.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -781,27 +813,84 @@ int sound_manager_set_focus_reacquisition(sound_stream_info_h stream_info, bool 
 int sound_manager_get_focus_reacquisition(sound_stream_info_h stream_info, bool *enabled);
 
 /**
- * @brief Gets the sound type of the stream information.
+ * @brief Updates flags for sound behavior to be passed to the others when acquiring or releasing of the stream focus.
  * @since_tizen 3.0
  * @param[in]	stream_info	The handle of stream information
- * @param[out]	sound_type	The sound type
+ * @param[in]	flags	The flags for the requiring sound behavior
  *
- * @remarks	In case of the stream_info made with #SOUND_STREAM_TYPE_EMERGENCY, it'll return #SOUND_MANAGER_ERROR_NO_DATA.\n
- *	Because there is no sound_type_e matched to this stream_info.
+ * @remarks	This API is to update the sound behavior to be applied by others when acquiring or releasing of a stream focus.\n
+ *	The others who will be affected by this handle can get this information by using sound_manager_focus_get_required_behavior()\n
+ *	after getting sound_stream_focus_state_changed_cb().
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Call sound_manager_create_stream_information() before calling this function.
+ * @post It will be passed to the others right after calling sound_manager_acquire_focus() or sound_manager_release_focus().
+ * @see sound_manager_create_stream_information()
+ * @see sound_manager_acquire_focus()
+ * @see sound_manager_release_focus()
+ * @see sound_manager_focus_get_required_behavior()
+ */
+int sound_manager_focus_update_requiring_behavior(sound_stream_info_h stream_info, sound_behavior_flag_e flags);
+
+/**
+ * @brief Gets flags for the required sound behavior.
+ * @since_tizen 3.0
+ * @param[in]	stream_info	The handle of stream information
+ * @param[out]	flags	The flags for the required sound behavior to be conformed
+ *
+ * @remarks	The flags could be used as a guide to how to change the sound behavior right after getting\n
+ *	sound_stream_focus_state_changed_cb(). It is highly recommended to follow this sound behavior information\n
+ *	for enhanced sound experience. Note that this API should be called within sound_stream_focus_state_changed_cb().\n
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_INVALID_OPERATION Invalid operation
+ * @pre Called sound_stream_focus_state_changed_cb() before calling this function.
+ * @see sound_manager_create_stream_information()
+ * @see sound_manager_focus_update_requiring_behavior()
+ * @see sound_manager_acquire_focus()
+ * @see sound_manager_release_focus()
+ */
+int sound_manager_focus_get_required_behavior(sound_stream_info_h stream_info, sound_behavior_flag_e *flags);
+
+/**
+ * @brief Gets the reason for the current acquired playback focus.
+ * @since_tizen 3.0
+ * @param[out]	acquired_by	The reason for the current acquired playback focus
+ * @param[out]	extra_info The extra information of the acquired playback focus (this can be null)
+ *
+ * @remarks	If there is no acquired playback focus in this system, it'll return #SOUND_MANAGER_ERROR_NO_DATA.
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
  * @retval #SOUND_MANAGER_ERROR_NONE Success
  * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
- * @pre Call sound_manager_create_stream_information() before calling this function.
- * @see sound_manager_create_stream_information()
- * @see sound_manager_destroy_stream_information()
- * @see sound_manager_set_volume()
- * @see sound_manager_get_max_volume()
- * @see sound_manager_get_volume()
+ * @see sound_manager_get_current_recording_focus()
  */
-int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *sound_type);
+int sound_manager_get_current_playback_focus(sound_stream_focus_change_reason_e *acquired_by, char **extra_info);
+
+/**
+ * @brief Gets the reason for the current acquired recording focus.
+ * @since_tizen 3.0
+ * @param[out]	acquired_by	The reason for the current acquired recording focus
+ * @param[out]	extra_info The extra information of the acquired recording focus (this can be null)
+ *
+ * @remarks	If there is no acquired recording focus in this system, it'll return #SOUND_MANAGER_ERROR_NO_DATA.
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ * @retval #SOUND_MANAGER_ERROR_NONE Success
+ * @retval #SOUND_MANAGER_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #SOUND_MANAGER_ERROR_NO_DATA No data
+ * @see sound_manager_get_current_playback_focus()
+ */
+int sound_manager_get_current_recording_focus(sound_stream_focus_change_reason_e *acquired_by, char **extra_info);
 
 /**
  * @brief Registers the watch callback function to be invoked when the focus state for each sound stream type is changed regardless of the process.

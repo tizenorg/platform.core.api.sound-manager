@@ -451,7 +451,7 @@ const char* _convert_api_name(native_api_e api_name)
 	return name;
 }
 
-void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason, const char *extra_info, void *user_data)
+void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, mm_sound_focus_state_e state, const char *reason, int option, const char *extra_info, void *user_data)
 {
 	int ret = MM_ERROR_NONE;
 	int i = 0;
@@ -472,9 +472,15 @@ void _focus_state_change_callback(int index, mm_sound_focus_type_e focus_type, m
 			else if (state == FOCUS_IS_ACQUIRED)
 				sound_stream_info_arr[i]->acquired_focus |= focus_type;
 
+			/* set flags for required behavior */
+			sound_stream_info_arr[i]->required_flags = option;
+
 			LOGI("[FOCUS USER CALLBACK(%p) START]", sound_stream_info_arr[i]->user_cb);
 			sound_stream_info_arr[i]->user_cb((sound_stream_info_h)sound_stream_info_arr[i], change_reason, extra_info, sound_stream_info_arr[i]->user_data);
 			LOGI("[FOCUS USER CALLBACK(%p) END]", sound_stream_info_arr[i]->user_cb);
+
+			/* unset flags for required behavior */
+			sound_stream_info_arr[i]->required_flags = 0;
 			break;
 		}
 	}

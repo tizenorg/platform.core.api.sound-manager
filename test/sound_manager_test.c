@@ -72,6 +72,8 @@ enum {
 	CURRENT_STATUS_UNSET_FOCUS_WATCH_CB,
 	CURRENT_STATUS_SET_FOCUS_REACQUISITION,
 	CURRENT_STATUS_GET_FOCUS_REACQUISITION,
+	CURRENT_STATUS_UPDATE_REQUIRING_BEHAVIOR,
+	CURRENT_STATUS_GET_REQUIRED_BEHAVIOR,
 	CURRENT_STATUS_GET_REASON_FOR_P_FOCUS,
 	CURRENT_STATUS_GET_REASON_FOR_R_FOCUS,
 	CURRENT_STATUS_CREATE_VIRTUAL_STREAM,
@@ -99,24 +101,18 @@ void focus_callback(sound_stream_info_h stream_info, sound_stream_focus_change_r
 	int ret = SOUND_MANAGER_ERROR_NONE;
 	sound_stream_focus_state_e playback_focus_state;
 	sound_stream_focus_state_e recording_focus_state;
-	g_print("*** FOCUS callback is called, stream_info(%p) ***\n", stream_info);
-	g_print(" - change_reason(%d), extra_info(%s), user_data(%p)\n", reason, extra_info, user_data);
+	sound_behavior_flag_e flags = SOUND_BEHAVIOR_NONE;
+
+	g_print("\n*** FOCUS callback is called, stream_info(%p) ***\n", stream_info);
+
+	sound_manager_focus_get_required_behavior(stream_info, &flags);
+	g_print(" - change_reason(%d), behavior(0x%x), extra_info(%s), user_data(%p)\n", reason, flags, extra_info, user_data);
 
 	ret = sound_manager_get_focus_state(stream_info, &playback_focus_state, &recording_focus_state);
 	if (!ret)
-		g_print(" - focus_state(playback_focus:%d, recording_focus:%d)\n", playback_focus_state, recording_focus_state);
+		g_print(" - focus_state : PLAYBACK(%d), RECORDING(%d) (0:released, 1:acquired)\n", playback_focus_state, recording_focus_state);
 
-	if (playback_focus_state == SOUND_STREAM_FOCUS_STATE_ACQUIRED)
-		g_print(" -- PLAYBACK_FOCUS acquired\n");
-	else
-		g_print(" -- PLAYBACK_FOCUS released\n");
-
-	if (recording_focus_state == SOUND_STREAM_FOCUS_STATE_ACQUIRED)
-		g_print(" -- FOCUS_RECORDING acquired\n");
-	else
-		g_print(" -- FOCUS_RECORDING released\n");
-
-	g_print("*** FOCUS callback is ended, stream_info(%p) ****\n", stream_info);
+	g_print("*** FOCUS callback is ended, stream_info(%p) ****\n\n", stream_info);
 
 	return;
 }
@@ -222,6 +218,10 @@ void _interpret_main_menu(char *cmd)
 		g_menu_state = CURRENT_STATUS_SET_FOCUS_REACQUISITION;
 	else if (strncmp(cmd, "gfr", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_FOCUS_REACQUISITION;
+	else if (strncmp(cmd, "urb", 3) == 0)
+		g_menu_state = CURRENT_STATUS_UPDATE_REQUIRING_BEHAVIOR;
+	else if (strncmp(cmd, "grb", 3) == 0)
+		g_menu_state = CURRENT_STATUS_GET_REQUIRED_BEHAVIOR;
 	else if (strncmp(cmd, "grp", 3) == 0)
 		g_menu_state = CURRENT_STATUS_GET_REASON_FOR_P_FOCUS;
 	else if (strncmp(cmd, "grr", 3) == 0)
@@ -304,9 +304,9 @@ void display_sub_basic()
 	g_print("csi. Create Stream Info\t");
 	g_print("dsi. Destroy Stream Info\n");
 	g_print("gst. Get Sound Type\n");
-	g_print("ads. Add device for stream routing\t");
-	g_print("rds. Remove device for stream routing\t");
-	g_print("aps. Apply devices for stream routing\n");
+	g_print("ads. Add Device for Stream Routing\t");
+	g_print("rds. Remove Device for Stream Routing\t");
+	g_print("aps. Apply devices for Stream Routing\n");
 	g_print("afc. Acquire Focus\t");
 	g_print("rfc. Release Focus\t");
 	g_print("gfs. Get Focus State\n");
@@ -314,6 +314,8 @@ void display_sub_basic()
 	g_print("ufw. Unset Focus State Watch CB\n");
 	g_print("sfr. Set Focus Reacquisition\t");
 	g_print("gfr. Get Focus Reacquisition\n");
+	g_print("urb. Update Requiring Sound Behavior\t");
+	g_print("grb. Get Required Sound Behavior\n");
 	g_print("grp. Get Reason for Current Acquired Playback Focus\t");
 	g_print("grr. Get Reason for Current Acquired Recording Focus\n");
 	g_print("sso. *Set option for stream routing\n");
@@ -422,7 +424,11 @@ static void displaymenu()
 	else if (g_menu_state == CURRENT_STATUS_SET_FOCUS_REACQUISITION)
 		g_print("*** input focus reacquisition property (1:enable, 2:disable)\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_FOCUS_REACQUISITION)
-		g_print("*** press enter to get focus reacquisition property (1:enabled, 2:disabled)\n");
+		g_print("*** press enter to get focus reacquisition property\n");
+	else if (g_menu_state == CURRENT_STATUS_UPDATE_REQUIRING_BEHAVIOR)
+		g_print("*** input flags for updating recommending audio behavior (0:none, 1:no_resume, 2:fading, 3:no_resume+fading)\n");
+	else if (g_menu_state == CURRENT_STATUS_GET_REQUIRED_BEHAVIOR)
+		g_print("*** press enter to get the required audio behavior\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_REASON_FOR_P_FOCUS)
 		g_print("*** press enter to get reason for current playback focus\n");
 	else if (g_menu_state == CURRENT_STATUS_GET_REASON_FOR_R_FOCUS)
@@ -1397,13 +1403,55 @@ static void interpret(char *cmd)
 		reset_menu_state();
 		break;
 	}
+	case CURRENT_STATUS_UPDATE_REQUIRING_BEHAVIOR: {
+		int ret = SOUND_MANAGER_ERROR_NONE;
+		sound_behavior_flag_e flags;
+
+		switch (atoi(cmd)) {
+		case 0: /* none */
+			flags = SOUND_BEHAVIOR_NONE;
+			break;
+		case 1: /* no resumption */
+			flags = SOUND_BEHAVIOR_NO_RESUME;
+			break;
+		case 2: /* fading effect */
+			flags = SOUND_BEHAVIOR_FADING;
+			break;
+		case 3: /* no resumption + fading effect */
+			flags = SOUND_BEHAVIOR_NO_RESUME | SOUND_BEHAVIOR_FADING;
+			break;
+		default:
+			flags = SOUND_BEHAVIOR_NONE;
+			break;
+		}
+
+		ret = sound_manager_focus_update_requiring_behavior(g_stream_info_h, flags);
+		if (ret)
+			g_print("fail to sound_manager_focus_update_requring_behavior, ret(0x%x)\n", ret);
+
+		reset_menu_state();
+		break;
+	}
+	case CURRENT_STATUS_GET_REQUIRED_BEHAVIOR: {
+		int ret = SOUND_MANAGER_ERROR_NONE;
+		sound_behavior_flag_e flags;
+
+		ret = sound_manager_focus_get_required_behavior(g_stream_info_h, &flags);
+		if (ret)
+			g_print("fail to sound_manager_focus_get_required_behavior, ret(0x%x)\n", ret);
+		else
+			g_print("required behavior is (0x%x)\n", flags);
+
+		reset_menu_state();
+		break;
+	}
 	case CURRENT_STATUS_GET_REASON_FOR_P_FOCUS: {
 		int ret = SOUND_MANAGER_ERROR_NONE;
 		char *extra_info = NULL;
 		sound_stream_focus_change_reason_e reason;
-		ret = sound_manager_get_reason_for_current_playback_focus(&reason, &extra_info);
+		ret = sound_manager_get_current_playback_focus(&reason, &extra_info);
 		if (ret)
-			g_print("fail to sound_manager_get_reason_for_current_playback_focus, ret(0x%x)\n", ret);
+			g_print("fail to sound_manager_get_current_playback_focus, ret(0x%x)\n", ret);
 		else
 			g_print("reason(%d), extra_info(%s)\n", reason, extra_info);
 		reset_menu_state();
@@ -1413,9 +1461,9 @@ static void interpret(char *cmd)
 		int ret = SOUND_MANAGER_ERROR_NONE;
 		char *extra_info = NULL;
 		sound_stream_focus_change_reason_e reason;
-		ret = sound_manager_get_reason_for_current_recording_focus(&reason, &extra_info);
+		ret = sound_manager_get_current_recording_focus(&reason, &extra_info);
 		if (ret)
-			g_print("fail to sound_manager_get_reason_for_current_recording_focus, ret(0x%x)\n", ret);
+			g_print("fail to sound_manager_get_current_recording_focus, ret(0x%x)\n", ret);
 		else
 			g_print("reason(%d), extra_info(%s)\n", reason, extra_info);
 		reset_menu_state();

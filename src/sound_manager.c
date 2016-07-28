@@ -239,6 +239,28 @@ int sound_manager_destroy_stream_information(sound_stream_info_h stream_info)
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
+int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *sound_type)
+{
+	int ret = MM_ERROR_NONE;
+	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
+
+	LOGI(">> enter");
+
+	SM_INSTANCE_CHECK(stream_h);
+	SM_NULL_ARG_CHECK(sound_type);
+
+	if (stream_h->stream_conf_info.volume_type == NULL) {
+		ret = MM_ERROR_SOUND_NO_DATA;
+		goto LEAVE;
+	}
+
+	ret = _convert_sound_type_to_enum(stream_h->stream_conf_info.volume_type, sound_type);
+	LOGI("sound type(%d)", *sound_type);
+
+LEAVE:
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
 int sound_manager_add_device_for_stream_routing(sound_stream_info_h stream_info, sound_device_h device)
 {
 	int ret = MM_ERROR_NONE;
@@ -316,7 +338,7 @@ int sound_manager_acquire_focus(sound_stream_info_h stream_info, sound_stream_fo
 	if (stream_h->is_focus_unavailable)
 		return _convert_sound_manager_error_code(__func__, MM_ERROR_POLICY_INTERNAL);
 
-	ret = mm_sound_acquire_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, extra_info);
+	ret = mm_sound_acquire_focus_with_option(stream_h->index, (mm_sound_focus_type_e)focus_mask, stream_h->request_flags, extra_info);
 	if (ret == MM_ERROR_NONE) {
 		stream_h->acquired_focus |= focus_mask;
 		_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
@@ -334,7 +356,7 @@ int sound_manager_release_focus(sound_stream_info_h stream_info, sound_stream_fo
 
 	SM_INSTANCE_CHECK(stream_h);
 
-	ret = mm_sound_release_focus(stream_h->index, (mm_sound_focus_type_e)focus_mask, extra_info);
+	ret = mm_sound_release_focus_with_option(stream_h->index, (mm_sound_focus_type_e)focus_mask, stream_h->request_flags, extra_info);
 	if (ret == MM_ERROR_NONE) {
 		stream_h->acquired_focus &= ~focus_mask;
 		_update_focus_status(stream_h->index, (unsigned int)stream_h->acquired_focus);
@@ -367,25 +389,93 @@ LEAVE:
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
-int sound_manager_get_sound_type(sound_stream_info_h stream_info, sound_type_e *sound_type)
+int sound_manager_focus_update_requiring_behavior(sound_stream_info_h stream_info, sound_behavior_flag_e flags)
 {
-	int ret = MM_ERROR_NONE;
 	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
 
 	LOGI(">> enter");
 
 	SM_INSTANCE_CHECK(stream_h);
-	SM_NULL_ARG_CHECK(sound_type);
+	SM_RANGE_ARG_CHECK(flags,
+				SOUND_BEHAVIOR_NONE,
+				(SOUND_BEHAVIOR_NO_RESUME|SOUND_BEHAVIOR_FADING));
 
-	if (stream_h->stream_conf_info.volume_type == NULL) {
-		ret = MM_ERROR_SOUND_NO_DATA;
-		goto LEAVE;
+	stream_h->request_flags = flags;
+
+	LOGI("sound behavior(0x%x) is set", stream_h->request_flags);
+
+	return SOUND_MANAGER_ERROR_NONE;
+}
+
+int sound_manager_focus_get_required_behavior(sound_stream_info_h stream_info, sound_behavior_flag_e *flags)
+{
+	int ret = MM_ERROR_NONE;
+	sound_stream_info_s *stream_h = (sound_stream_info_s*)stream_info;
+	bool is_focus_cb_thread = false;
+
+	LOGI(">> enter");
+
+	SM_INSTANCE_CHECK(stream_h);
+	SM_INSTANCE_CHECK(flags);
+
+	if ((ret = mm_sound_focus_is_cb_thread(&is_focus_cb_thread)))
+		_convert_sound_manager_error_code(__func__, ret);
+
+	if (!is_focus_cb_thread) {
+		LOGE("this API should be called in focus state changed callback");
+		return SOUND_MANAGER_ERROR_INVALID_OPERATION;
 	}
 
-	ret = _convert_sound_type_to_enum(stream_h->stream_conf_info.volume_type, sound_type);
-	LOGI("sound type(%d)", *sound_type);
+	*flags = stream_h->required_flags;
 
-LEAVE:
+	LOGI("required sound behavior is (0x%x)", stream_h->required_flags);
+
+	return SOUND_MANAGER_ERROR_NONE;
+}
+
+int sound_manager_get_current_playback_focus(sound_stream_focus_change_reason_e *acquired_by, char **extra_info)
+{
+	int ret = MM_ERROR_NONE;
+	char *stream_type_str = NULL;
+	char *extra_info_str = NULL;
+
+	LOGI(">> enter");
+
+	SM_NULL_ARG_CHECK(acquired_by);
+
+	ret = mm_sound_get_stream_type_of_acquired_focus((int)SOUND_STREAM_FOCUS_FOR_PLAYBACK, &stream_type_str, &extra_info_str);
+	if (ret == MM_ERROR_NONE) {
+		LOGI("current acquired PLAYBACK focus : stream_type[%s]", stream_type_str);
+		ret = _convert_stream_type_to_change_reason(stream_type_str, acquired_by);
+		if ((ret == MM_ERROR_NONE) && extra_info) {
+			LOGI("                                : reason[%d], extra_info[%s]", *acquired_by, extra_info_str);
+			*extra_info = extra_info_str;
+		}
+	}
+
+	return _convert_sound_manager_error_code(__func__, ret);
+}
+
+int sound_manager_get_current_recording_focus(sound_stream_focus_change_reason_e *acquired_by, char **extra_info)
+{
+	int ret = MM_ERROR_NONE;
+	char *stream_type_str = NULL;
+	char *extra_info_str = NULL;
+
+	LOGI(">> enter");
+
+	SM_NULL_ARG_CHECK(acquired_by);
+
+	ret = mm_sound_get_stream_type_of_acquired_focus((int)SOUND_STREAM_FOCUS_FOR_RECORDING, &stream_type_str, &extra_info_str);
+	if (ret == MM_ERROR_NONE) {
+		LOGI("current acquired RECORDING focus : stream_type[%s]", stream_type_str);
+		ret = _convert_stream_type_to_change_reason(stream_type_str, acquired_by);
+		if ((ret == MM_ERROR_NONE) && extra_info) {
+			LOGI("                                 : reason[%d], extra_info[%s]", *acquired_by, extra_info_str);
+			*extra_info = extra_info_str;
+		}
+	}
+
 	return _convert_sound_manager_error_code(__func__, ret);
 }
 
